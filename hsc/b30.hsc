@@ -146,11 +146,20 @@
 
 (global "boolean" play_music_b30_032_alt false )
 
+; Variable used to trigger events on the server side instead of the client side
+(global boolean is_server false)
+
 (script static "unit" player0
 (unit (list_get (players )0 )))
 
 (script static "unit" player1
 (unit (list_get (players )1 )))
+
+(script static "unit" player2
+(unit (list_get (players )2 )))
+
+(script static "unit" player3
+(unit (list_get (players )3 )))
 
 (script static "short" player_count
 (list_count (players )))
@@ -1056,8 +1065,9 @@
 (sleep_until (or (volume_test_objects downed_trigger (players ))
 (volume_test_objects downed_trigger_2 (players ))(objects_can_see_object (players )downed_dropship 5 ))1 )(ai_conversation downed_seen ))
 
-; Main custscene
-(script startup cutscene_insertion
+; Main custscene execution
+; Changed to dormant in order to trigger it when needed instead of at startup
+(script dormant cutscene_insertion
 (sound_looping_start "sound\sinomatixx_foley\b30_insertion_foley" none 1 )
 (sound_class_set_gain "vehicle" 0.3 0 )
 (fade_out 0 0 0 0 )
@@ -1069,23 +1079,34 @@
 (fade_in 0 0 0 60 )
 (camera_set insertion_1b 0 )
 (sleep 60 )
-(object_create insertion_pelican_1 )
-(object_create insertion_pelican_2 )
-(object_beautify insertion_pelican_1 true )
-(ai_place beach_lz_marine )
-(ai_place beach_lz )
-(unit_enter_vehicle (player0 )insertion_pelican_1 "p-riderlf" )
-(unit_enter_vehicle (player1 )insertion_pelican_2 "p-riderlf" )
-(vehicle_load_magic insertion_pelican_1 "rider" (ai_actors beach_lz_marine/left_marine ))
-(vehicle_load_magic insertion_pelican_2 "rider" (ai_actors beach_lz_marine/right_marine ))
-(object_teleport insertion_pelican_1 insertion_pelican_flag_1 )
-(recording_play_and_hover insertion_pelican_1 insertion_pelican_1_in )
-(object_teleport insertion_pelican_2 insertion_pelican_flag_2 )
-(recording_play_and_hover insertion_pelican_2 insertion_pelican_2_in )
-(objects_predict insertion_pelican_1 )
-(objects_predict insertion_pelican_2 )
-(objects_predict (ai_actors beach_lz_marine ))
-(objects_predict (ai_actors beach_lz ))
+; Spawn IAs on the server side
+(if (= is_server true)
+    (begin
+        (object_create insertion_pelican_1 )
+        (object_create insertion_pelican_2 )
+        ; TODO Check what this function means
+        (object_beautify insertion_pelican_1 true )
+        (ai_place beach_lz_marine )
+        (ai_place beach_lz )
+        ; TODO Check if this validation
+        (unit_enter_vehicle (player0 )insertion_pelican_1 "p-riderlf" )
+        (unit_enter_vehicle (player1 )insertion_pelican_1 "p-riderlf" )
+        (unit_enter_vehicle (player2 )insertion_pelican_2 "p-riderlf" )
+        (unit_enter_vehicle (player3 )insertion_pelican_2 "p-riderlf" )
+        ; FIXME This probably going to cause some problems due to bipeds not syncing on vehicles
+        (vehicle_load_magic insertion_pelican_1 "rider" (ai_actors beach_lz_marine/left_marine ))
+        (vehicle_load_magic insertion_pelican_2 "rider" (ai_actors beach_lz_marine/right_marine ))
+        (object_teleport insertion_pelican_1 insertion_pelican_flag_1 )
+        (recording_play_and_hover insertion_pelican_1 insertion_pelican_1_in )
+        (object_teleport insertion_pelican_2 insertion_pelican_flag_2 )
+        (recording_play_and_hover insertion_pelican_2 insertion_pelican_2_in )
+        (objects_predict insertion_pelican_1 )
+        (objects_predict insertion_pelican_2 )
+        (objects_predict (ai_actors beach_lz_marine ))
+        (objects_predict (ai_actors beach_lz ))
+    )
+)
+; TODO Check if this is needed on the server side
 (object_type_predict "scenery\c_storage\c_storage" )
 (object_type_predict "scenery\c_uplink\c_uplink" )
 (object_type_predict "scenery\c_field_generator\c_field_generator" )
@@ -1114,25 +1135,29 @@
 (sleep (max 0 (- (recording_time insertion_pelican_1 )120 )))
 (cinematic_stop )
 (show_hud true )
-(unit_exit_vehicle (player0 ))
-(unit_exit_vehicle (player1 ))
-(unit_set_enterable_by_player insertion_pelican_1 false )
-(unit_set_enterable_by_player insertion_pelican_2 false )
-(set global_mission_start true )
 (sound_class_set_gain "vehicle" 1 2 )
 (sleep 60 )
-(vehicle_unload insertion_pelican_2 "rider" )
-(sound_impulse_start "sound\dialog\b30\b30_insert_050_sarge2" none 1 )
-(sleep 30 )
-(vehicle_unload insertion_pelican_1 "rider" )
-(sleep_until (not (volume_test_objects mission_start (players ))))
-(vehicle_hover insertion_pelican_1 false )
-(recording_play_and_delete insertion_pelican_1 insertion_pelican_1_out )
-(sleep 120 )
-(vehicle_hover insertion_pelican_2 false )
-(sleep (recording_time insertion_pelican_2 ))(recording_play_and_delete insertion_pelican_2 insertion_pelican_2_out ))
+(if (= is_server true)
+    (begin
+        (unit_exit_vehicle (player0 ))
+        (unit_exit_vehicle (player1 ))
+        (unit_set_enterable_by_player insertion_pelican_1 false )
+        (unit_set_enterable_by_player insertion_pelican_2 false )
+        (set global_mission_start true )
+        (vehicle_unload insertion_pelican_2 "rider" )   
+        (vehicle_unload insertion_pelican_1 "rider" )
+        (sleep 30 )
+        (sleep_until (not (volume_test_objects mission_start (players ))))
+        (vehicle_hover insertion_pelican_1 false )
+        (recording_play_and_delete insertion_pelican_1 insertion_pelican_1_out )
+        (sleep 120 )
+        (vehicle_hover insertion_pelican_2 false )
+        (sleep (recording_time insertion_pelican_2 ))(recording_play_and_delete insertion_pelican_2 insertion_pelican_2_out )
+    )
+)
+(sound_impulse_start "sound\dialog\b30\b30_insert_050_sarge2" none 1 ))
 
-(script startup main_b30
+(script dormant main_b30
 (ai_allegiance player human )
 (wake objectives_b30 )
 (sleep 90 )
