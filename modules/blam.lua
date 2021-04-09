@@ -745,6 +745,9 @@ end
 ---@field animation number Current animation index
 ---@field animationFrame number Current animation frame
 ---@field isNotDamageable boolean Make the object undamageable
+---@field weaponObjectId number Current weapon objectId of this object
+---@field vehicleObjectId number Current vehicle objectId of this object
+---@field vehicleSeatIndex number Current vehicle seat index of this object
 ---@field regionPermutation1 number
 ---@field regionPermutation2 number
 ---@field regionPermutation3 number
@@ -801,6 +804,9 @@ local objectStructure = {
     animation = {type = "word", offset = 0xD0},
     animationFrame = {type = "word", offset = 0xD2},
     isNotDamageable = {type = "bit", offset = 0x106, bitLevel = 11},
+    weaponObjectId = {type = "dword", offset = 0118},
+    vehicleObjectId = {type = "dword", offset = 0x11C},
+    vehicleSeatIndex = {type = "dword", offset = 0x120},
     regionPermutation1 = {type = "byte", offset = 0x180},
     regionPermutation2 = {type = "byte", offset = 0x181},
     regionPermutation3 = {type = "byte", offset = 0x182},
@@ -837,6 +843,7 @@ local objectStructure = {
 ---@field primaryNades number Primary grenades count
 ---@field secondaryNades number Secondary grenades count
 ---@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard, blam.isNull otherwise
+---@field bumpedObjectId number Object ID that the biped is bumping, vehicles, bipeds, etc, keeps the previous value if not bumping a new object
 
 -- Biped structure (extends object structure)
 local bipedStructure = extendStructure(objectStructure, {
@@ -864,7 +871,8 @@ local bipedStructure = extendStructure(objectStructure, {
     invisibleScale = {type = "byte", offset = 0x37C},
     primaryNades = {type = "byte", offset = 0x31E},
     secondaryNades = {type = "byte", offset = 0x31F},
-    landing = {type = "byte", offset = 0x508}
+    landing = {type = "byte", offset = 0x508},
+    bumpedObjectId = {type = "dword", offset = 0x4FC}
 })
 
 -- Tag data header structure
@@ -1292,9 +1300,26 @@ local modelAnimationsStructure = {
 -- Weapon structure
 local weaponTagStructure = {model = {type = "dword", offset = 0x34}}
 
----@class model
+---@class modelMarkers
+---@field name string
+---@field nodeIndex number
+-- TODO Add rotation fields, check Guerilla tag
+---@field x number
+---@field y number
+---@field z number
+
+---@class modelRegion
+---@field permutationCount number
+---@field markersList modelMarkers[]
+
+---@class modelNode
+---@field x number
+---@field y number
+---@field z number
+
+---@class gbxModelTag
 ---@field nodeCount number Number of nodes
----@field nodeList table List of the model nodes
+---@field nodeList modelNode[] List of the model nodes
 ---@field regionCount number Number of regions
 ---@field regionList table List of regions
 
@@ -1316,7 +1341,21 @@ local modelStructure = {
         type = "table",
         offset = 0xC8,
         jump = 76,
-        rows = {permutationCount = {type = "dword", offset = 0x40}}
+        rows = {
+            permutationCount = {type = "dword", offset = 0x40},
+            permutationsList = {
+                type = "table",
+                offset = 0x16C,
+                jump = 0x0,
+                rows = {
+                    name = {type = "string", offset = 0x0},
+                    markersList = {type = "table", offset = 0x4C, jump = 0x0, rows = {
+                        name = {type = "string", offset = 0x0},
+                        nodeIndex = {type = "word", offset = 0x20}
+                    }}
+                }
+            }
+        }
     }
 }
 
@@ -1422,7 +1461,7 @@ local function weaponTagClassNew(address)
     return createObject(address, weaponTagStructure)
 end
 
----@return model
+---@return gbxModelTag
 local function modelClassNew(address)
     return createObject(address, modelStructure)
 end
@@ -1695,7 +1734,7 @@ end
 
 --- Create a Model Animation object from a tag path or id
 ---@param tag string | number
----@return model
+---@return gbxModelTag
 function blam.model(tag)
     if (isValid(tag)) then
         local modelTag = blam.getTag(tag, tagClasses.model)

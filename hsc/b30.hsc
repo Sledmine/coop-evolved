@@ -172,34 +172,6 @@
 (script static "void" cinematic_skip_stop
 (cinematic_skip_stop_internal ))
 
-(script static "void" script_dialog_start
-(sleep_until (not global_dialog_on ))
-(set global_dialog_on true )(ai_dialogue_triggers false ))
-
-(script static "void" script_dialog_stop
-(ai_dialogue_triggers true )
-(sleep 30 )(set global_dialog_on false ))
-
-(script static "void" player_effect_impact
-(player_effect_set_max_translation 0.05 0.05 0.075 )
-(player_effect_set_max_rotation 0 0 0 )
-(player_effect_set_max_rumble 0.4 1 )(player_effect_start (real_random_range 0.7 0.9 )0.1 ))
-
-(script static "void" player_effect_explosion
-(player_effect_set_max_translation 0.01 0.01 0.025 )
-(player_effect_set_max_rotation 0.5 0.5 1 )
-(player_effect_set_max_rumble 0.5 0.4 )(player_effect_start (real_random_range 0.7 0.9 )0.1 ))
-
-(script static "void" player_effect_rumble
-(player_effect_set_max_translation 0.01 0 0.02 )
-(player_effect_set_max_rotation 0.1 0.1 0.2 )
-(player_effect_set_max_rumble 0.5 0.3 )(player_effect_start (real_random_range 0.7 0.9 )0.5 ))
-
-(script static "void" player_effect_vibration
-(player_effect_set_max_translation 0.0075 0.0075 0.0125 )
-(player_effect_set_max_rotation 0.01 0.01 0.05 )
-(player_effect_set_max_rumble 0.2 0.5 )(player_effect_start (real_random_range 0.7 0.9 )1 ))
-
 (script dormant music_b30_01
 (sleep_until play_music_b30_01 1 )
 (print "levels\b30\music\b30_01" )
@@ -855,8 +827,12 @@
 (cinematic_skip_stop )(game_won ))
 
 (script dormant mission_shafta
-(ai_place shafta_entrance )
-(wake flavor_shafta_entrance_cship )
+(if (= is_server true)
+    (begin
+        (ai_place shafta_entrance )
+        (wake flavor_shafta_entrance_cship )    
+    )
+)
 (wake obj_shafta_goal )
 (sleep_until (volume_test_objects shafta_beach (players ))10 )
 (set global_shafta_beach_start true )
@@ -1085,31 +1061,32 @@
         (object_create insertion_pelican_1 )
         (object_create insertion_pelican_2 )
         ; TODO Check what this function means
-        (object_beautify insertion_pelican_1 true )
-        (ai_place beach_lz_marine )
+        ;(object_beautify insertion_pelican_1 true)
+        ; Ally units are buggy due them trying to enter to a vehicle, remove any ally unit
+        ;(ai_place beach_lz_marine )
         (ai_place beach_lz )
-        ; TODO Check if this validation
+        ; TODO Using this function does not sync properly on client, use SAPP instead
         (unit_enter_vehicle (player0 )insertion_pelican_1 "p-riderlf" )
         (unit_enter_vehicle (player1 )insertion_pelican_1 "p-riderlf" )
         (unit_enter_vehicle (player2 )insertion_pelican_2 "p-riderlf" )
         (unit_enter_vehicle (player3 )insertion_pelican_2 "p-riderlf" )
-        ; FIXME This probably going to cause some problems due to bipeds not syncing on vehicles
-        (vehicle_load_magic insertion_pelican_1 "rider" (ai_actors beach_lz_marine/left_marine ))
-        (vehicle_load_magic insertion_pelican_2 "rider" (ai_actors beach_lz_marine/right_marine ))
+        ; This was disabled for multiplayer purposes, it helps gameplay experience
+        ;(vehicle_load_magic insertion_pelican_1 "rider" (ai_actors beach_lz_marine/left_marine ))
+        ;(vehicle_load_magic insertion_pelican_2 "rider" (ai_actors beach_lz_marine/right_marine ))
         (object_teleport insertion_pelican_1 insertion_pelican_flag_1 )
         (recording_play_and_hover insertion_pelican_1 insertion_pelican_1_in )
         (object_teleport insertion_pelican_2 insertion_pelican_flag_2 )
         (recording_play_and_hover insertion_pelican_2 insertion_pelican_2_in )
-        (objects_predict insertion_pelican_1 )
-        (objects_predict insertion_pelican_2 )
-        (objects_predict (ai_actors beach_lz_marine ))
-        (objects_predict (ai_actors beach_lz ))
+        ;(objects_predict insertion_pelican_1 )
+        ;(objects_predict insertion_pelican_2 )
+        ;(objects_predict (ai_actors beach_lz_marine ))
+        ;(objects_predict (ai_actors beach_lz ))
     )
 )
-; TODO Check if this is needed on the server side
-(object_type_predict "scenery\c_storage\c_storage" )
-(object_type_predict "scenery\c_uplink\c_uplink" )
-(object_type_predict "scenery\c_field_generator\c_field_generator" )
+; As explained on the BSL 1 Bible, this probably is not needed anymore due to PC rendering
+;(object_type_predict "scenery\c_storage\c_storage" )
+;(object_type_predict "scenery\c_uplink\c_uplink" )
+;(object_type_predict "scenery\c_field_generator\c_field_generator" )
 (camera_set insertion_2a 120 )
 (sleep 60 )
 (camera_set insertion_2b 90 )
@@ -1141,11 +1118,14 @@
     (begin
         (unit_exit_vehicle (player0 ))
         (unit_exit_vehicle (player1 ))
+        (unit_exit_vehicle (player2 ))
+        (unit_exit_vehicle (player3 ))
         (unit_set_enterable_by_player insertion_pelican_1 false )
         (unit_set_enterable_by_player insertion_pelican_2 false )
         (set global_mission_start true )
-        (vehicle_unload insertion_pelican_2 "rider" )   
-        (vehicle_unload insertion_pelican_1 "rider" )
+        ; There are no riders any more on these vehicles
+        ;(vehicle_unload insertion_pelican_2 "rider" )   
+        ;(vehicle_unload insertion_pelican_1 "rider" )
         (sleep 30 )
         (sleep_until (not (volume_test_objects mission_start (players ))))
         (vehicle_hover insertion_pelican_1 false )
@@ -1155,7 +1135,9 @@
         (sleep (recording_time insertion_pelican_2 ))(recording_play_and_delete insertion_pelican_2 insertion_pelican_2_out )
     )
 )
-(sound_impulse_start "sound\dialog\b30\b30_insert_050_sarge2" none 1 ))
+; Marines were removed so this audio is not needed anymore
+;(sound_impulse_start "sound\dialog\b30\b30_insert_050_sarge2" none 1 )
+)
 
 (script dormant main_b30
 (ai_allegiance player human )
@@ -1163,7 +1145,8 @@
 (sleep 90 )
 (set mark_lz true )
 (sleep_until global_mission_start )
-(wake save_mission_start )
+; As far as I know this has something to do with checkpoints, that is not needed anymore
+;(wake save_mission_start )
 (wake mission_beach_lz )
 (sleep_until (or (volume_test_objects beach_1 (players ))(volume_test_objects beach_2 (players )))1 delay_lost )
 (wake mission_beach )
