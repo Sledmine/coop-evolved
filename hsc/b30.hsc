@@ -146,8 +146,10 @@
 
 (global "boolean" play_music_b30_032_alt false )
 
-; Variable used to trigger events on the server side instead of the client side
-(global boolean is_server false)
+(global "string" sync_hsc_command "")
+
+; Used to trigger events only on server side
+(global boolean is_host false)
 
 (script static "unit" player0
 (unit (list_get (players )0 )))
@@ -161,6 +163,42 @@
 (script static "unit" player3
 (unit (list_get (players )3 )))
 
+(script static "unit" player4
+(unit (list_get (players )4 )))
+
+(script static "unit" player5
+(unit (list_get (players )5 )))
+
+(script static "unit" player6
+(unit (list_get (players )6 )))
+
+(script static "unit" player7
+(unit (list_get (players )7 )))
+
+(script static "unit" player8
+(unit (list_get (players )8 )))
+
+(script static "unit" player9
+(unit (list_get (players )9 )))
+
+(script static "unit" player10
+(unit (list_get (players )10 )))
+
+(script static "unit" player11
+(unit (list_get (players )11 )))
+
+(script static "unit" player12
+(unit (list_get (players )12 )))
+
+(script static "unit" player13
+(unit (list_get (players )13 )))
+
+(script static "unit" player14
+(unit (list_get (players )14 )))
+
+(script static "unit" player15
+(unit (list_get (players )15 )))
+
 (script static "short" player_count
 (list_count (players )))
 
@@ -171,6 +209,34 @@
 
 (script static "void" cinematic_skip_stop
 (cinematic_skip_stop_internal ))
+
+(script static "void" script_dialog_start
+(sleep_until (not global_dialog_on ))
+(set global_dialog_on true )(ai_dialogue_triggers false ))
+
+(script static "void" script_dialog_stop
+(ai_dialogue_triggers true )
+(sleep 30 )(set global_dialog_on false ))
+
+(script static "void" player_effect_impact
+(player_effect_set_max_translation 0.05 0.05 0.075 )
+(player_effect_set_max_rotation 0 0 0 )
+(player_effect_set_max_rumble 0.4 1 )(player_effect_start (real_random_range 0.7 0.9 )0.1 ))
+
+(script static "void" player_effect_explosion
+(player_effect_set_max_translation 0.01 0.01 0.025 )
+(player_effect_set_max_rotation 0.5 0.5 1 )
+(player_effect_set_max_rumble 0.5 0.4 )(player_effect_start (real_random_range 0.7 0.9 )0.1 ))
+
+(script static "void" player_effect_rumble
+(player_effect_set_max_translation 0.01 0 0.02 )
+(player_effect_set_max_rotation 0.1 0.1 0.2 )
+(player_effect_set_max_rumble 0.5 0.3 )(player_effect_start (real_random_range 0.7 0.9 )0.5 ))
+
+(script static "void" player_effect_vibration
+(player_effect_set_max_translation 0.0075 0.0075 0.0125 )
+(player_effect_set_max_rotation 0.01 0.01 0.05 )
+(player_effect_set_max_rumble 0.2 0.5 )(player_effect_start (real_random_range 0.7 0.9 )1 ))
 
 (script dormant music_b30_01
 (sleep_until play_music_b30_01 1 )
@@ -827,12 +893,8 @@
 (cinematic_skip_stop )(game_won ))
 
 (script dormant mission_shafta
-(if (= is_server true)
-    (begin
-        (ai_place shafta_entrance )
-        (wake flavor_shafta_entrance_cship )    
-    )
-)
+(ai_place shafta_entrance )
+(wake flavor_shafta_entrance_cship )
 (wake obj_shafta_goal )
 (sleep_until (volume_test_objects shafta_beach (players ))10 )
 (set global_shafta_beach_start true )
@@ -1041,118 +1103,103 @@
 (sleep_until (or (volume_test_objects downed_trigger (players ))
 (volume_test_objects downed_trigger_2 (players ))(objects_can_see_object (players )downed_dropship 5 ))1 )(ai_conversation downed_seen ))
 
-; Main custscene execution
-; Changed to dormant in order to trigger it when needed instead of at startup
+; This script types have been changed to dormant, preventing client execution
 (script dormant cutscene_insertion
-(sound_looping_start "sound\sinomatixx_foley\b30_insertion_foley" none 1 )
-(sound_class_set_gain "vehicle" 0.3 0 )
-(fade_out 0 0 0 0 )
-(cinematic_start )
-(show_hud false )
-(camera_control true )
-(wake music_b30 )
-(set play_music_b30_01 true )
-(fade_in 0 0 0 60 )
-(camera_set insertion_1b 0 )
-(sleep 60 )
-; Spawn IAs on the server side
-(if (= is_server true)
-    (begin
-        (object_create insertion_pelican_1 )
-        (object_create insertion_pelican_2 )
-        ; TODO Check what this function means
-        ;(object_beautify insertion_pelican_1 true)
-        ; Ally units are buggy due them trying to enter to a vehicle, remove any ally unit
-        ;(ai_place beach_lz_marine )
-        (ai_place beach_lz )
-        ; TODO Using this function does not sync properly on client, use SAPP instead
-        (unit_enter_vehicle (player0 )insertion_pelican_1 "p-riderlf" )
-        (unit_enter_vehicle (player1 )insertion_pelican_1 "p-riderlf" )
-        (unit_enter_vehicle (player2 )insertion_pelican_2 "p-riderlf" )
-        (unit_enter_vehicle (player3 )insertion_pelican_2 "p-riderlf" )
-        ; This was disabled for multiplayer purposes, it helps gameplay experience
-        ;(vehicle_load_magic insertion_pelican_1 "rider" (ai_actors beach_lz_marine/left_marine ))
-        ;(vehicle_load_magic insertion_pelican_2 "rider" (ai_actors beach_lz_marine/right_marine ))
-        (object_teleport insertion_pelican_1 insertion_pelican_flag_1 )
-        (recording_play_and_hover insertion_pelican_1 insertion_pelican_1_in )
-        (object_teleport insertion_pelican_2 insertion_pelican_flag_2 )
-        (recording_play_and_hover insertion_pelican_2 insertion_pelican_2_in )
-        ;(objects_predict insertion_pelican_1 )
-        ;(objects_predict insertion_pelican_2 )
-        ;(objects_predict (ai_actors beach_lz_marine ))
-        ;(objects_predict (ai_actors beach_lz ))
-    )
-)
-; As explained on the BSL 1 Bible, this probably is not needed anymore due to PC rendering
-;(object_type_predict "scenery\c_storage\c_storage" )
-;(object_type_predict "scenery\c_uplink\c_uplink" )
-;(object_type_predict "scenery\c_field_generator\c_field_generator" )
-(camera_set insertion_2a 120 )
-(sleep 60 )
-(camera_set insertion_2b 90 )
-(sleep 90 )
-(camera_set_relative insertion_3 0 insertion_pelican_1 )
-(sleep 90 )
-(fade_in 1 1 1 30 )
-(camera_control false )
-(sleep 15 )
-(cinematic_set_title insertion )
-(sleep 30 )
-(sound_impulse_start "sound\dialog\b30\b30_insert_010_cortana" none 1 )
-(sleep (sound_impulse_time "sound\dialog\b30\b30_insert_010_cortana" ))
-(sleep 30 )
-(sound_impulse_start "sound\dialog\b30\b30_insert_020_cortana" none 1 )
-(sleep (sound_impulse_time "sound\dialog\b30\b30_insert_020_cortana" ))
-(sleep (max 0 (- (recording_time insertion_pelican_1 )900 )))
-(sound_impulse_start "sound\dialog\b30\b30_insert_030_pilot" none 1 )
-(sleep (sound_impulse_time "sound\dialog\b30\b30_insert_030_pilot" ))
-(sleep (max 0 (- (recording_time insertion_pelican_1 )300 )))
-(sound_impulse_start "sound\dialog\b30\b30_insert_040_pilot" none 1 )
-(sleep (sound_impulse_time "sound\dialog\b30\b30_insert_040_pilot" ))
-(sleep (max 0 (- (recording_time insertion_pelican_1 )120 )))
-(cinematic_stop )
-(show_hud true )
-(sound_class_set_gain "vehicle" 1 2 )
-(sleep 60 )
-(if (= is_server true)
-    (begin
-        (unit_exit_vehicle (player0 ))
-        (unit_exit_vehicle (player1 ))
-        (unit_exit_vehicle (player2 ))
-        (unit_exit_vehicle (player3 ))
-        (unit_set_enterable_by_player insertion_pelican_1 false )
-        (unit_set_enterable_by_player insertion_pelican_2 false )
-        (set global_mission_start true )
-        ; There are no riders any more on these vehicles
-        ;(vehicle_unload insertion_pelican_2 "rider" )   
-        ;(vehicle_unload insertion_pelican_1 "rider" )
-        (sleep 30 )
-        (sleep_until (not (volume_test_objects mission_start (players ))))
-        (vehicle_hover insertion_pelican_1 false )
-        (recording_play_and_delete insertion_pelican_1 insertion_pelican_1_out )
-        (sleep 120 )
-        (vehicle_hover insertion_pelican_2 false )
-        (sleep (recording_time insertion_pelican_2 ))(recording_play_and_delete insertion_pelican_2 insertion_pelican_2_out )
-    )
-)
-; Marines were removed so this audio is not needed anymore
-;(sound_impulse_start "sound\dialog\b30\b30_insert_050_sarge2" none 1 )
+    (sound_looping_start "sound\sinomatixx_foley\b30_insertion_foley" none 1 )
+    (sound_class_set_gain "vehicle" 0.3 0 )
+    (fade_out 0 0 0 0 )
+    (cinematic_start )
+    (show_hud false )
+    (camera_control true )
+    (wake music_b30 )
+    (set play_music_b30_01 true )
+    (fade_in 0 0 0 60 )
+    (camera_set insertion_1b 0 )
+    (sleep 60 )
+    (object_create insertion_pelican_1 )
+    (object_create insertion_pelican_2 )
+    (object_beautify insertion_pelican_1 true )
+    (ai_place beach_lz_marine )
+    (ai_place beach_lz )
+    (unit_enter_vehicle (player0 )insertion_pelican_1 "p-riderlf" )
+    (unit_enter_vehicle (player1 )insertion_pelican_2 "p-riderlf" )
+    (vehicle_load_magic insertion_pelican_1 "rider" (ai_actors beach_lz_marine/left_marine ))
+    (vehicle_load_magic insertion_pelican_2 "rider" (ai_actors beach_lz_marine/right_marine ))
+    (object_teleport insertion_pelican_1 insertion_pelican_flag_1 )
+    (recording_play_and_hover insertion_pelican_1 insertion_pelican_1_in )
+    (object_teleport insertion_pelican_2 insertion_pelican_flag_2 )
+    (recording_play_and_hover insertion_pelican_2 insertion_pelican_2_in )
+    (objects_predict insertion_pelican_1 )
+    (objects_predict insertion_pelican_2 )
+    (objects_predict (ai_actors beach_lz_marine ))
+    (objects_predict (ai_actors beach_lz ))
+    (object_type_predict "scenery\c_storage\c_storage" )
+    (object_type_predict "scenery\c_uplink\c_uplink" )
+    (object_type_predict "scenery\c_field_generator\c_field_generator" )
+    (camera_set insertion_2a 120 )
+    (sleep 60 )
+    (camera_set insertion_2b 90 )
+    (sleep 90 )
+    (camera_set_relative insertion_3 0 insertion_pelican_1 )
+    (sleep 90 )
+    (fade_in 1 1 1 30 )
+    (camera_control false )
+    (sleep 15 )
+    (cinematic_set_title insertion )
+    (sleep 30 )
+    (sound_impulse_start "sound\dialog\b30\b30_insert_010_cortana" none 1 )
+    (sleep (sound_impulse_time "sound\dialog\b30\b30_insert_010_cortana" ))
+    (sleep 30 )
+    (sound_impulse_start "sound\dialog\b30\b30_insert_020_cortana" none 1 )
+    (sleep (sound_impulse_time "sound\dialog\b30\b30_insert_020_cortana" ))
+    (sleep (max 0 (- (recording_time insertion_pelican_1 )900 )))
+    (sound_impulse_start "sound\dialog\b30\b30_insert_030_pilot" none 1 )
+    (sleep (sound_impulse_time "sound\dialog\b30\b30_insert_030_pilot" ))
+    (sleep (max 0 (- (recording_time insertion_pelican_1 )300 )))
+    (sound_impulse_start "sound\dialog\b30\b30_insert_040_pilot" none 1 )
+    (sleep (sound_impulse_time "sound\dialog\b30\b30_insert_040_pilot" ))
+    (sleep (max 0 (- (recording_time insertion_pelican_1 )120 )))
+    (cinematic_stop )
+    (show_hud true )
+    (unit_exit_vehicle (player0 ))
+    (unit_exit_vehicle (player1 ))
+    (unit_set_enterable_by_player insertion_pelican_1 false )
+    (unit_set_enterable_by_player insertion_pelican_2 false )
+    (set global_mission_start true )
+    (sound_class_set_gain "vehicle" 1 2 )
+    (sleep 60 )
+    (vehicle_unload insertion_pelican_2 "rider" )
+    (sound_impulse_start "sound\dialog\b30\b30_insert_050_sarge2" none 1 )
+    (sleep 30 )
+    (vehicle_unload insertion_pelican_1 "rider" )
+    (sleep_until (not (volume_test_objects mission_start (players ))))
+    (vehicle_hover insertion_pelican_1 false )
+    (recording_play_and_delete insertion_pelican_1 insertion_pelican_1_out )
+    (sleep 120 )
+    (vehicle_hover insertion_pelican_2 false )
+    (sleep (recording_time insertion_pelican_2 ))
+    (recording_play_and_delete insertion_pelican_2 insertion_pelican_2_out )
 )
 
+; This script types have been changed to dormant, preventing client execution
+; Every sync friendly script should have a main dormant script using this format: main_<map_name>
 (script dormant main_b30
-(ai_allegiance player human )
-(wake objectives_b30 )
-(sleep 90 )
-(set mark_lz true )
-(sleep_until global_mission_start )
-; As far as I know this has something to do with checkpoints, that is not needed anymore
-;(wake save_mission_start )
-(wake mission_beach_lz )
-(sleep_until (or (volume_test_objects beach_1 (players ))(volume_test_objects beach_2 (players )))1 delay_lost )
-(wake mission_beach )
-(wake mission_shafta )
-(wake mission_shaftb )
-(wake mission_crash )
-(wake mission_shafta_inv )
-(wake flavor_cutscene_ledge )
-(wake crack_arrival )(wake shaftb_arrival ))
+    ; Wake cutscene_insertion on script start as cutscene_insertion is not a startup script anymore
+    (wake cutscene_insertion)
+    (ai_allegiance player human )
+    (wake objectives_b30 )
+    (sleep 90 )
+    (set mark_lz true )
+    (sleep_until global_mission_start )
+    (wake save_mission_start )
+    (wake mission_beach_lz )
+    (sleep_until (or (volume_test_objects beach_1 (players ))(volume_test_objects beach_2 (players )))1 delay_lost )
+    (wake mission_beach )
+    (wake mission_shafta )
+    (wake mission_shaftb )
+    (wake mission_crash )
+    (wake mission_shafta_inv )
+    (wake flavor_cutscene_ledge )
+    (wake crack_arrival )
+    (wake shaftb_arrival )
+)
