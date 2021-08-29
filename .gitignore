@@ -39,3 +39,21 @@ luac.out
 *.x86_64
 *.hex
 
+# IntelliJ IDEA
+.idea
+
+# Distribution and script files
+# Do not upload dist scripts as they should be handle by Mercury to avoid code mismatching
+dist/
+temp/
+
+# Map files
+tags
+data
+six-shooter.ini
+project
+
+# Cloud files
+*.db*
+*.log
+Desktop.ini

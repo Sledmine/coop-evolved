@@ -1,0 +1,5 @@
+(fade_in 1 1 1 15)
+(camera_set 1)
+(hud_set_objective_text dia_map )
+(show_hud_help_text true )
+(hud_set_help_text obj_map )
