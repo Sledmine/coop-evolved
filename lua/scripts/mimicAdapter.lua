@@ -18,10 +18,6 @@ local actions = {
     "show_hud",
     -- Verify if this is needed on the client side
     -- "set",
-    -- Replace with player spawn reallocation
-    --"game_save_totally_unsafe",
-    -- Replace with general server printing
-    -- "print"
     "fade_in",
     "fade_out",
     "camera_control",
@@ -65,8 +61,7 @@ local actions = {
 }
 
 local replacements = {
-    --game_won = "sv_map_next",
-    --["%(object_teleport %(player"] = ";(object_teleport (player",
+    game_won = "sv_map_next",
     ["activate_team_nav_point_flag default_red player"] = "activate_nav_point_flag default_red (player0)",
     ["deactivate_team_nav_point_flag player"] = "deactivate_nav_point_flag (player0)",
     --print = "sv_say"
@@ -128,8 +123,6 @@ if (hsc) then
                     hsc = hsc:override(fixedAction, actionStart - 1, actionCloseStart)
                     --print(actionStart)
                 end
-
-                
             end
         end
     end
