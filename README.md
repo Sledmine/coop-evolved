@@ -4,12 +4,12 @@
     </p>
     <h1 align="center">Coop Evolved</h1>
     <p align="center">
-        Cooperative adaptation of singleplayer maps for Halo Custom Edition
+        Cooperative Multiplayer adaptation of Singleplayer maps for Halo Custom Edition
     </p>
 </html>
 
 An adaptation and recreation of the campaign maps for Halo Combat Evolved, modified to work with
-Halo Custom Edition with support for a multiplayer gameplay experience.
+Halo Custom Edition with support for an online multiplayer gameplay experience.
 
 # How it works?
 
@@ -18,12 +18,12 @@ but requires setup and a reinvention of the campaign mechanisms to work with mul
 This project has different tools that can help in the procedure of adapting campaign maps to
 multiplayer:
 
-- **Mimic** - Lua server andCore of all the synchronization mechanism for multiplayer events
-- **Mimic Adapter** - A lua script that is capable of rewriting the campaign HSC scripts for compatibility with multiplayer
+- **Mimic** - Core of all the synchronization mechanism for multiplayer events
+- **Mimic Adapter** - Script capable of rewriting the campaign HSC scripts for compatibility with multiplayer
 - **Harmony SAPP** - A hook DLL provider to intercept script events for synchronization purposes via Mimic
 
 **NOTE:** This is not a just 2 players or splitscreen coop project, this is a fully 16 players
-over network capable project for **Halo Custom Edition 1.0.10**.
+over network project for **Halo Custom Edition 1.0.10**.
 
 # Can I contribute/help?
 
