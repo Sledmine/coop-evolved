@@ -222,7 +222,7 @@
 (objects_predict monitor )
 (objects_predict monitor_teleport_in )
 (object_beautify chief true )
-(objects_attach chief "right hand" rifle "" )
+(begin (objects_attach chief "right hand" rifle "" )(set sync_hsc_command "sync_objects_attach chief 'right hand' rifle '' "))
 (object_set_scale chief 0.1 0 )
 (object_set_scale monitor 0.1 0 )
 (sleep 7 )
@@ -263,7 +263,7 @@
 (sleep 30 )
 (begin (object_teleport chief chief_teleport_base )(set sync_hsc_command "sync_object_teleport chief chief_teleport_base "))
 (object_set_scale chief 1 15 )
-(custom_animation chief "cinematics\animations\chief\level_specific\c20\c20" "c20chiefteleport" false )
+(begin (custom_animation chief "cinematics\animations\chief\level_specific\c20\c20" "c20chiefteleport" false )(set sync_hsc_command "sync_custom_animation chief 'cinematics\animations\chief\level_specific\c20\c20' 'c20chiefteleport' false "))
 (sleep (- (unit_get_custom_animation_time chief )15 ))
 (begin (fade_out 1 1 1 15 )(set sync_hsc_command "sync_fade_out 1 1 1 15 "))
 (sleep 15 )
@@ -364,12 +364,12 @@
 (ai_command_list_by_unit monitor look_at_chief_index )
 (begin (object_create_anew chief )(set sync_hsc_command "sync_object_create_anew chief "))
 (begin (object_create_anew rifle )(set sync_hsc_command "sync_object_create_anew rifle "))
-(objects_attach chief "right hand" rifle "" )
+(begin (objects_attach chief "right hand" rifle "" )(set sync_hsc_command "sync_objects_attach chief 'right hand' rifle '' "))
 (object_beautify chief true )
 (time_code_show true )
 (time_code_start true )
-(custom_animation chief "cinematics\animations\chief\level_specific\c20\c20" "c20grabindex" false )
-(scenery_animation_start index "scenery\index\index" "c20grabindex" )
+(begin (custom_animation chief "cinematics\animations\chief\level_specific\c20\c20" "c20grabindex" false )(set sync_hsc_command "sync_custom_animation chief 'cinematics\animations\chief\level_specific\c20\c20' 'c20grabindex' false "))
+(begin (scenery_animation_start index "scenery\index\index" "c20grabindex" )(set sync_hsc_command "sync_scenery_animation_start index 'scenery\index\index' 'c20grabindex' "))
 (begin (camera_set grab_index_1a 0 )(set sync_hsc_command "sync_camera_set grab_index_1a 0 "))
 (begin (camera_set grab_index_1b 400 )(set sync_hsc_command "sync_camera_set grab_index_1b 400 "))
 (begin (sound_impulse_start "sound\dialog\c20\c20_320_monitor" monitor 1 )(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_320_monitor' monitor 1 "))
@@ -380,10 +380,10 @@
 (begin (camera_set inspect_index_1b 0 )(set sync_hsc_command "sync_camera_set inspect_index_1b 0 "))
 (begin (object_destroy index_shard )(set sync_hsc_command "sync_object_destroy index_shard "))
 (begin (object_create index_shard )(set sync_hsc_command "sync_object_create index_shard "))
-(objects_attach chief "left hand" index_shard "left hand index" )
+(begin (objects_attach chief "left hand" index_shard "left hand index" )(set sync_hsc_command "sync_objects_attach chief 'left hand' index_shard 'left hand index' "))
 (sleep 93 )
 (object_set_permutation monitor "unamed" "lightning-100" )
-(custom_animation monitor "cinematics\animations\monitor\level_specific\c20\c20" "c20grabindex" false )
+(begin (custom_animation monitor "cinematics\animations\monitor\level_specific\c20\c20" "c20grabindex" false )(set sync_hsc_command "sync_custom_animation monitor 'cinematics\animations\monitor\level_specific\c20\c20' 'c20grabindex' false "))
 (begin (camera_set index_steal_1a 0 )(set sync_hsc_command "sync_camera_set index_steal_1a 0 "))
 (begin (camera_set index_steal_1b 60 )(set sync_hsc_command "sync_camera_set index_steal_1b 60 "))
 (sleep 42 )
@@ -414,139 +414,139 @@
 (begin (camera_control false )(set sync_hsc_command "sync_camera_control false "))
 (begin (cinematic_stop )(set sync_hsc_command "sync_cinematic_stop "))
 (begin (sound_class_set_gain "device_machinery" 1 0 )(set sync_hsc_command "sync_sound_class_set_gain 'device_machinery' 1 0 "))
-(begin (sound_class_set_gain "ambient" 1 0 )(set sync_hsc_command "sync_sound_class_set_gain 'ambient' 1 0 "))(game_won ))
+(begin (sound_class_set_gain "ambient" 1 0 )(set sync_hsc_command "sync_sound_class_set_gain 'ambient' 1 0 "))(sv_map_next ))
 
 (script static "void" cinematic_floor1_door1_opened
 (cutscene_extraction ))
 
 (script static "void" c20_010_monitor
 (if cinematics_debug (print "c20_010_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_010_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_010_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_010_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_010_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_010_monitor" )30 ))))
 
 (script static "void" c20_020_monitor
 (if cinematics_debug (print "c20_020_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_020_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_020_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_020_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_020_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_020_monitor" )30 ))))
 
 (script static "void" c20_040_monitor
 (if cinematics_debug (print "c20_040_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_040_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_040_monitor" )60 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_040_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_040_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_040_monitor" )60 ))))
 
 (script static "void" c20_050_monitor
 (if cinematics_debug (print "c20_050_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_050_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_050_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_050_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_050_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_050_monitor" )30 ))))
 
 (script static "void" c20_060_monitor
 (if cinematics_debug (print "c20_060_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_060_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_060_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_060_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_060_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_060_monitor" )30 ))))
 
 (script static "void" c20_flavor_010_monitor
 (if cinematics_debug (print "c20_flavor_010_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_010_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_010_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_010_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_010_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_010_monitor" )30 ))))
 
 (script static "void" c20_flavor_020_monitor
 (if cinematics_debug (print "c20_flavor_020_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_020_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_020_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_020_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_020_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_020_monitor" )30 ))))
 
 (script static "void" c20_flavor_040_monitor
 (if cinematics_debug (print "c20_flavor_040_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_040_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (+ (sound_impulse_time "sound\dialog\c20\c20_flavor_040_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_040_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_040_monitor' none  1"))(sleep (max 0 (+ (sound_impulse_time "sound\dialog\c20\c20_flavor_040_monitor" )30 ))))
 
 (script static "void" c20_flavor_050_monitor
 (if cinematics_debug (print "c20_flavor_050_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_050_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_050_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_050_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_050_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_050_monitor" )30 ))))
 
 (script static "void" c20_130_monitor
 (if cinematics_debug (print "c20_130_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_130_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_130_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_130_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_130_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_130_monitor" )30 ))))
 
 (script static "void" c20_flavor_110_monitor
 (if cinematics_debug (print "c20_flavor_110_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_110_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_110_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_110_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_110_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_110_monitor" )30 ))))
 
 (script static "void" c20_070_monitor
 (if cinematics_debug (print "c20_070_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_070_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_070_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_070_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_070_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_070_monitor" )30 ))))
 
 (script static "void" c20_090_monitor
 (if cinematics_debug (print "c20_090_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_090_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_090_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_090_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_090_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_090_monitor" )30 ))))
 
 (script static "void" c20_180_monitor
 (if cinematics_debug (print "c20_180_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_180_monitor" (list_get (ai_actors bsp0_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_180_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_180_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_180_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_180_monitor" )30 ))))
 
 (script static "void" c20_120_monitor
 (if cinematics_debug (print "c20_120_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_120_monitor" (list_get (ai_actors bsp1_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_120_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_120_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_120_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_120_monitor" )30 ))))
 
 (script static "void" c20_140_monitor
 (if cinematics_debug (print "c20_140_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_140_monitor" (list_get (ai_actors bsp1_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_140_monitor" )90 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_140_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_140_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_140_monitor" )90 ))))
 
 (script static "void" c20_flavor_030_monitor
 (sleep 30 )
 (if cinematics_debug (print "c20_flavor_030_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_030_monitor" (list_get (ai_actors bsp1_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_030_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_030_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_030_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_030_monitor" )30 ))))
 
 (script static "void" c20_200_monitor
 (if cinematics_debug (print "c20_200_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_200_monitor" (list_get (ai_actors bsp1_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_200_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_200_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_200_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_200_monitor" )30 ))))
 
 (script static "void" c20_190_monitor
 (if cinematics_debug (print "c20_190_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_190_monitor" (list_get (ai_actors bsp1_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_190_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_190_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_190_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_190_monitor" )30 ))))
 
 (script static "void" c20_flavor_070_monitor
 (if cinematics_debug (print "c20_flavor_070_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_070_monitor" (list_get (ai_actors bsp1_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_070_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_070_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_070_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_070_monitor" )30 ))))
 
 (script static "void" c20_flavor_060_monitor
 (if cinematics_debug (print "c20_flavor_060_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_060_monitor" (list_get (ai_actors bsp1_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_060_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_060_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_060_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_060_monitor" )30 ))))
 
 (script static "void" c20_flavor_080_monitor
 (if cinematics_debug (print "c20_flavor_080_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_080_monitor" (list_get (ai_actors bsp1_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_080_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_080_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_080_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_080_monitor" )30 ))))
 
 (script static "void" c20_flavor_090_monitor
 (if cinematics_debug (print "c20_flavor_090_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_090_monitor" (list_get (ai_actors bsp2_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_090_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_090_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_090_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_090_monitor" )30 ))))
 
 (script static "void" c20_flavor_150_monitor
 (if cinematics_debug (print "c20_flavor_150_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_150_monitor" (list_get (ai_actors bsp2_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_150_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_150_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_150_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_150_monitor" )30 ))))
 
 (script static "void" c20_135_monitor
 (if cinematics_debug (print "c20_135_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_130_monitor" (list_get (ai_actors bsp2_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_130_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_130_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_130_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_130_monitor" )30 ))))
 
 (script static "void" c20_flavor_130_monitor
 (if cinematics_debug (print "c20_flavor_130_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_130_monitor" (list_get (ai_actors bsp2_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_130_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_130_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_130_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_130_monitor" )30 ))))
 
 (script static "void" c20_flavor_140_monitor
 (if cinematics_debug (print "c20_flavor_140_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_140_monitor" (list_get (ai_actors bsp2_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_140_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_140_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_140_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_140_monitor" )30 ))))
 
 (script static "void" c20_210_monitor
 (if cinematics_debug (print "c20_210_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_210_monitor" (list_get (ai_actors bsp2_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_210_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_210_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_210_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_210_monitor" )30 ))))
 
 (script static "void" c20_125_monitor
 (if cinematics_debug (print "c20_125_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_120_monitor" (list_get (ai_actors bsp2_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_120_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_120_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_120_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_120_monitor" )30 ))))
 
 (script static "void" c20_flavor_100_monitor
 (if cinematics_debug (print "c20_flavor_100_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_flavor_100_monitor" (list_get (ai_actors bsp3_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_100_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_flavor_100_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_flavor_100_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_flavor_100_monitor" )30 ))))
 
 (script static "void" c20_310_monitor
 (if cinematics_debug (print "c20_310_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_310_monitor" (list_get (ai_actors bsp3_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_310_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_310_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_310_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_310_monitor" )30 ))))
 
 (script static "void" c20_320_monitor
 (if cinematics_debug (print "c20_320_monitor" ))
-(sound_impulse_start "sound\dialog\c20\c20_320_monitor" (list_get (ai_actors bsp3_monitor )0 )monitor_dialogue_scale )(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_320_monitor" )30 ))))
+(begin (sound_impulse_start "sound\dialog\c20\c20_320_monitor" none  1)(set sync_hsc_command "sync_sound_impulse_start 'sound\dialog\c20\c20_320_monitor' none  1"))(sleep (max 0 (- (sound_impulse_time "sound\dialog\c20\c20_320_monitor" )30 ))))
 
 (script static "void" c20_flavor_120_monitor
 (print "monitor: this construct's research facilities are, of course, most impressive. perhaps you will have time to reaquaint yourself to them soon." ))
@@ -1995,5 +1995,5 @@
 
 (script static "void" test
     (begin (object_teleport monitor monitor_index_base )(set sync_hsc_command "sync_object_teleport monitor monitor_index_base "))
-    (custom_animation monitor "cinematics\animations\monitor\level_specific\c20\c20" "c20grabindex" false )
+    (begin (custom_animation monitor "cinematics\animations\monitor\level_specific\c20\c20" "c20grabindex" false )(set sync_hsc_command "sync_custom_animation monitor 'cinematics\animations\monitor\level_specific\c20\c20' 'c20grabindex' false "))
 )
