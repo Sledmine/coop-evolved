@@ -39,6 +39,10 @@ luac.out
 *.x86_64
 *.hex
 
+
+# VS Code
+.vscode
+
 # IntelliJ IDEA
 .idea
 
