@@ -21,8 +21,7 @@ local actions = {
     "fade_out",
     "camera_control",
     "camera_set",
-    -- Replace with a vehicle enter function from SAPP
-    -- "unit_enter_vehicle",
+    "camera_set_first_person",
     "cinematic_start",
     "cinematic_set_title",
     "cinematic_show_letterbox",
@@ -34,7 +33,9 @@ local actions = {
     "sound_class_set_gain",
     "ai_conversation",
     "ai_conversation_stop",
-    "switch_bsp",
+    -- Probably can cause issues with Mimic
+    "ai_attach_free",
+    --"switch_bsp",
     "player_enable_input",
     "object_create",
     "object_create_anew",
@@ -42,13 +43,17 @@ local actions = {
     "object_destroy",
     "unit_set_seat",
     "unit_set_emotion",
+    "unit_suspended",
+    "unit_stop_custom_animation",
+    "unit_custom_animation_at_frame",
+    -- Replace with a vehicle enter function from SAPP
+    -- "unit_enter_vehicle",
     "object_teleport",
     "object_pvs_activate",
     -- "device_set_position",
     "device_set_position_immediate",
     "device_set_power",
     "device_one_sided_set",
-    "unit_suspended",
     "breakable_surfaces_enable",
     "breakable_surfaces_reset",
     "activate_nav_point_flag",
@@ -62,7 +67,9 @@ local actions = {
 }
 
 local replacements = {
+    ["startup mission_"] = "dormant main_",
     game_won = "sv_map_next",
+    game_is_cooperative = "= is_multiplayer true",
     -- C20 hardcoded replacements
     ["monitor_dialogue_scale )"] = " 1)",
     ["\" (list_get (ai_actors bsp0_monitor )0 )"] = "\" none ",
@@ -118,19 +125,29 @@ if (hsc) then
                 -- This function is almost impossible to sync with Mimic, ignore it if present
                 local syncAction = "sync_" .. actionName .. actionBody
                 if (not originalAction:find("ai_actors")) then
-                    local syncActionLength = #syncAction
+                    local syncActionLength = string.len(syncAction)
                     if (syncActionLength > maximumActionLength) then
-                        print(("Warning: " .. syncAction .. " is too long for rcon (%s)"):format(
-                                  syncActionLength))
+                        print(("Warning: " .. syncAction .. " is too long for rcon -> ") .. syncActionLength)
                     end
                     local newAction = "(set sync_hsc_command \"" .. syncAction:gsub("\"", "'") ..
-                                          "\")"
+                    "\")"
+                    --if (originalAction:find(("object_teleport (player1"))) then
+                    --    for i = 2, 15 do
+                    --        local modifiedAction = originalAction:gsub(("player1"), "player" .. i)
+                    --        originalAction = originalAction .. modifiedAction
+                    --    end
+                    --end
+                    --local fixedAction = originalAction .. newAction
                     local fixedAction = "(begin " .. originalAction .. newAction .. ")"
                     print("Orig:\t", originalAction)
                     print("Sync:\t", newAction)
                     print("Fixd:\t", fixedAction)
-                    -- hsc = hsc:insert(newAction, actionCloseStart)
-                    hsc = hsc:override(fixedAction, actionStart - 1, actionCloseStart)
+                    
+                    if (name == "ai_conversation") then
+                        hsc = hsc:override(fixedAction, actionStart - 1, actionCloseStart)
+                    else
+                        hsc = hsc:insert(newAction, actionCloseStart)
+                    end
                     -- print(actionStart)
                 else
                     print("Warning, ai_actors sync is not supported: " .. syncAction)
