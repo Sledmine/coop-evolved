@@ -1,25 +1,24 @@
 local glue = require "glue"
 
-local projectPath = [[D:\Program Files (x86)\Microsoft Games\Halo Custom Edition\projects\TSCCoop]]
+local projectPath = [[H:\coop-evolved]]
 local dataPath = projectPath .. [[\data]]
 local tagsPath = projectPath .. [[\tags]]
 
-local fixedTagPath = arg[1]:gsub("..\\tags\\", "")
+local fixedTagPath = arg[1]:gsub([[..\tags\]], "")
 
 print("Converting scenario type to multiplayer...")
-local invaderSet = "invader-edit -t tags\\ %s -S type multiplayer"
+local invaderSet = [[invader-edit -t tags\ %s -S type multiplayer]]
 os.execute(invaderSet:format(fixedTagPath))
 
 local invaderCount = [[invader-edit -t tags\ %s -C encounters]]
-local invaderGet = "invader-edit -t tags\\ %s -G encounters[%s].name"
-local invaderSet = "invader-edit -t tags\\ %s -S encounters[%s].team_index %s"
+local invaderGet = [[invader-edit -t tags\ %s -G encounters[%s].name]]
+local invaderSet = [[invader-edit -t tags\ %s -S encounters[%s].team_index %s]]
 
 local fieldsCount = tonumber(glue.readpipe(invaderCount:format(fixedTagPath), "r"))
 
-
 for i = 0, fieldsCount - 1 do
     local name = glue.readpipe(invaderGet:format(fixedTagPath, i), "r"):gsub("\n", "")
-    if (name:find("cov") or name:find("ghost") or name:find("banshee") or name:find("wraith")) then
+    if (name:find("cov") or name:find("ghost") or name:find("banshee") or name:find("wraith") or name:find("hunters")) then
         print("Setting to Covenant team: " .. name)
         os.execute(invaderSet:format(fixedTagPath, i, "covenant"))
     elseif (name:find("flood")) then
@@ -28,9 +27,10 @@ for i = 0, fieldsCount - 1 do
     elseif (name:find("sents") or name:find("monitor")) then
         print("Setting to Sentinel team: " .. name)
         os.execute(invaderSet:format(fixedTagPath, i, "sentinel"))
-    elseif (name:find("marine") or name:find("tank") or name:find("jeep")) then
+    elseif (name:find("marine") or name:find("tank") or name:find("jeep") or name:find("hangar_captain") or name:find("prison")) then
         print("Setting to Human team: " .. name)
-        os.execute(invaderSet:format(fixedTagPath, i, "human"))
+        -- Default by unit means "red team" in multiplayer games
+        os.execute(invaderSet:format(fixedTagPath, i, "default_by_unit"))
     else
         print("UNKNOWN AI team type for: " .. name)
         --os.execute(invaderSet:format(fixedTagPath, i, "flood"))

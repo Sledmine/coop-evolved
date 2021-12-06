@@ -50,12 +50,13 @@ luac.out
 # Do not upload dist scripts as they should be handle by Mercury to avoid code mismatching
 dist/
 temp/
+package/
 
 # Map files
 tags
 data
 six-shooter.ini
-project
+project/
 
 # Cloud files
 *.db*
