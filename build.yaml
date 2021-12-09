@@ -1,6 +1,6 @@
 version: 1
 user: gravemind
-projectpath: CoopEvolved
+cloudpath: CoopEvolved
 engine: gbx-custom
 tagsize: 64M
 extendlimits: true
