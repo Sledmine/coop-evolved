@@ -1,0 +1,16 @@
+{
+    "manifestVersion": "1.1.0",
+    "files": {},
+    "label": "coopevolved",
+    "version": "1.6.0",
+    "category": "map",
+    "author": "Shadowmods",
+    "name": "Coop Evolved",
+    "description": "Cooperative Multiplayer adaptation of Singleplayer maps for Halo Custom Edition",
+    "dependencies": [
+        {
+            "label": "mimic",
+            "version": "2.1.0"
+        }
+    ]
+}
