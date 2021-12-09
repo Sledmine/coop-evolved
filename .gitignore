@@ -50,7 +50,7 @@ luac.out
 # Do not upload dist scripts as they should be handle by Mercury to avoid code mismatching
 dist/
 temp/
-package/game-maps
+package/game-maps/*.map
 
 # Map files
 tags
