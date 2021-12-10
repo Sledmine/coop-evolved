@@ -13,5 +13,5 @@ outputpath: package/game-maps
 packagelabel: coopevolved
 postbuild:
   - echo Building mercury package...
-  - mercury pack ./package $MERCURY_ARCHIVE
+  - mercury pack $PROJECT_PATH/package $MERCURY_ARCHIVE
   - mercury packdiff $MERCURY_ARCHIVE/$(ls -1 $MERCURY_ARCHIVE | grep $MERCURY_PACKAGE | tail -2 | head -n 1) $MERCURY_ARCHIVE/$(ls $MERCURY_ARCHIVE | grep $MERCURY_PACKAGE | tail -1)
