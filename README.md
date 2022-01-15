@@ -45,7 +45,7 @@ mercury install coopserver
 ## Running the server
 
 After that you should be ready to go, just run the `haloceded.exe` in your root game folder and
-it should display a terminal with your server running with some messages like these:
+it should display a terminal with your server running, you will see some messages like these:
 
 ```
 -- Loading SAPP settings finished --
