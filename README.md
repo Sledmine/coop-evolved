@@ -32,9 +32,8 @@ multiplayer:
 - [Harmony SAPP](https://github.com/JerryBrick/harmony) - A hook DLL provider to intercept script events for synchronization purposes via Mimic
 
 # How can I mount my own coop server?
-You have to download a modified and preconfigured version of the **Halo CE Dedicated Server**,
-
-this modified version includes another mod called **SAPP**, it expands the legacy server functionality
+You have to download a modified and preconfigured version of the **Halo CE Dedicated Server**, this
+modified version includes another mod called **SAPP**, it expands the legacy server functionality
 including the patches and modifications required for the Coop Evolved mod to work.
 
 You can install all the server files required using this Mercury command:
@@ -63,6 +62,9 @@ halo(
 Share your server IP to your friends and ensure you all are on the same network, your server is not
 public to the internet unless you do another hard process to achieve that, try virtual local network
 services as Hamachi or a VPN service like RadminVPN if you want to play over the internet for free.
+
+**WARNING:** SAPP package hosted in the Mercury repository contains a modified version of
+the **Halo CE Dedicated Server** that is capable of loading huge maps built with a custom [Invader](https://github.com/SnowyMouse/invader) build.
 
 ## Can I configure the server?
 Yes! but there are a lot of parameters to set up, so I'll try to explain you the basic fields
