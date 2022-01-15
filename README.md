@@ -78,7 +78,7 @@ sv_name "Coop Evolved Server" ; Name for your server, choose whatever you want
 ;sv_password 1234 ; Enable a password for your server, players will have to use it to join
 sv_rcon_password "1234" ; WARNING! Change this value asap, it is used to manage your server as an admin
 sv_friendly_fire 1 ; (0 - default, 1 / off, 2 - shields, 3 - on)
-sv_timelimit 0 ; Time limit for every play session (in minutes)
+sv_timelimit 0 ; Time limit for every play session (in minutes, 0 - no limit)
 sv_motd motd.txt
 sv_maxplayers 16 ; Max players allowed to connect to the server
 allow_client_side_weapon_projectiles 0
