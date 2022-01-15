@@ -38,7 +38,7 @@ including the patches and modifications required for the Coop Evolved mod to wor
 
 You can install all the server files required using this Mercury command:
 ```
-mercury install coopserver -f
+mercury install coopserver
 ```
 **NOTE:** You have to install the coopevolved package as well!
 

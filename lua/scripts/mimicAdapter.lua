@@ -43,7 +43,7 @@ local actions = {
     "object_destroy",
     "unit_set_seat",
     "unit_set_emotion",
-    "unit_suspended",
+    --"unit_suspended",
     "unit_stop_custom_animation",
     "unit_custom_animation_at_frame",
     -- Replace with a vehicle enter function from SAPP
