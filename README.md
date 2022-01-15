@@ -38,7 +38,7 @@ including the patches and modifications required for the Coop Evolved mod to wor
 
 You can install all the server files required using this Mercury command:
 ```
-mercury install coopserver
+mercury install coopserver -f
 ```
 **NOTE:** You have to install the coopevolved package as well!
 
@@ -64,16 +64,18 @@ public to the internet unless you do another hard process to achieve that, try v
 services as Hamachi or a VPN service like RadminVPN if you want to play over the internet for free.
 
 **WARNING:** SAPP package hosted in the Mercury repository contains a modified version of
-the **Halo CE Dedicated Server** that is capable of loading huge maps built with a custom [Invader](https://github.com/SnowyMouse/invader) build.
+the **Halo CE Dedicated Server** that is capable of loading huge maps built with a custom [Invader](https://github.com/SnowyMouse/invader) build, also it uses different initialization files to allow installing it among
+a Halo Custom Edition folder.
 
 ## Can I configure the server?
 Yes! but there are a lot of parameters to set up, so I'll try to explain you the basic fields
 you would like to play with, if you want to take a deeper look into how to configure your server,
 check [this documentation](https://github.com/Sledmine/lua-blam/blob/master/SAPP_DOCS_2.5.pdf).
 
-Open the `init.txt` file placed in the root folder of your game, you will find a config like this:
-```lisp
-sv_public 0 ; Allow your server to appear on the master server list (0 - private, 1 - public)
+Edit the `load.txt` file in the root folder of your game, change the properties in there as needed, 
+here is a short description of properties you should edit:
+```
+sv_public 0
 sv_name "Coop Evolved Server" ; Name for your server, choose whatever you want
 ;sv_password 1234 ; Enable a password for your server, players will have to use it to join
 sv_rcon_password "1234" ; WARNING! Change this value asap, it is used to manage your server as an admin
@@ -87,7 +89,8 @@ sv_map a50_coop_evolved coop ; Map and gametype the server will run at load
 set is_multiplayer true
 load
 ```
-**NOTE:** Only edit the fields that have comments on them, the other properties are set that way in purpose.
+**NOTE:** Only edit the fields that have comments on them, the other properties are set that way in
+purpose.
 
 # Known Issues
 - AI/Bipeds do not hold weapons as they shoot (AI bipeds have weapons on the server side but their weapons are not syncing yet on the client side)
