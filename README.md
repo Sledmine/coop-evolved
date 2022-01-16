@@ -31,6 +31,12 @@ multiplayer:
 - **Mimic Adapter** - Tool capable of rewriting the campaign HSC scripts for compatibility with multiplayer
 - [Harmony SAPP](https://github.com/JerryBrick/harmony) - A hook DLL provider to intercept script events for synchronization purposes via Mimic
 
+# Known Issues
+- AI/Bipeds do not hold weapons as they shoot (AI bipeds have weapons on the server side but their weapons are not syncing yet on the client side)
+- AI/Bipeds appear to be "shaking" sometimes (this seems to be an issue with the Chimera FPS interpolation feature and the position of the AI being sync from the server)
+- Vehicles in special pelicans, appear to shake in a similar way to AI (some vehicles like the pelicans are supossed to be in a state of levitation when no driver is inside the vehicle, this is common in campaign but the game netcode does not sync this levitation state in multiplayer)
+- Low FPS depending on network ping, higher ping, less FPS (in summary this is caused due to the low rate of receiving AI data from the server, we are working on a solution for this)
+
 # How can I mount my own coop server?
 You have to download a modified and preconfigured version of the **Halo CE Dedicated Server**, this
 modified version includes another mod called **SAPP**, it expands the legacy server functionality
@@ -63,6 +69,11 @@ Share your server IP to your friends and ensure you all are on the same network,
 public to the internet unless you do another hard process to achieve that, try virtual local network
 services as Hamachi or a VPN service like RadminVPN if you want to play over the internet for free.
 
+If you want to connect to your own server locally (in the same machine that is hosting the server)
+you will have to change these in game settings located on Settings/Network Settings, set them in
+the same way as in the image from below:
+![network-settings](images/network-settings.png)
+
 **WARNING:** SAPP package hosted in the Mercury repository contains a modified version of
 the **Halo CE Dedicated Server** that is capable of loading huge maps built with a custom [Invader](https://github.com/SnowyMouse/invader) build, also it uses different initialization files to allow installing it among
 a Halo Custom Edition folder.
@@ -74,7 +85,7 @@ check [this documentation](https://github.com/Sledmine/lua-blam/blob/master/SAPP
 
 Edit the `load.txt` file in the root folder of your game, change the properties in there as needed, 
 here is a short description of properties you should edit:
-```
+```lisp
 sv_public 0
 sv_name "Coop Evolved Server" ; Name for your server, choose whatever you want
 ;sv_password 1234 ; Enable a password for your server, players will have to use it to join
@@ -91,12 +102,6 @@ load
 ```
 **NOTE:** Only edit the fields that have comments on them, the other properties are set that way in
 purpose.
-
-# Known Issues
-- AI/Bipeds do not hold weapons as they shoot (AI bipeds have weapons on the server side but their weapons are not syncing yet on the client side)
-- AI/Bipeds appear to be "shaking" sometimes (this seems to be an issue with the Chimera FPS interpolation feature and the position of the AI being sync from the server)
-- Vehicles in special pelicans, appear to shake in a similar way to AI (some vehicles like the pelicans are supossed to be in a state of levitation when no driver is inside the vehicle, this is common in campaign but the game netcode does not sync this levitation state in multiplayer)
-- Low FPS depending on network ping, higher ping, less FPS (in summary this is caused due to the low rate of receiving AI data from the server, we are working on a solution for this)
 
 # Can I contribute/help?
 Of course! We need a lot of help to achieve this project, we have a workflow designed for contributions with support for people being added into the project development as soon as possible.
