@@ -9,6 +9,7 @@ scenarios:
   - levels/b30/b30_coop_evolved_dev
   - levels/c10/c10_coop_evolved_dev
   - levels/c20/c20_coop_evolved_dev
+  - levels/d40/d40_coop_evolved_dev
 outputpath: package/game-maps
 packagelabel: coopevolved
 postbuild:
