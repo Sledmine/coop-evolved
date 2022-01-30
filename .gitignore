@@ -51,6 +51,7 @@ luac.out
 dist/
 temp/
 package/game-maps/*.map
+combatmaps/
 
 # Map files
 tags
