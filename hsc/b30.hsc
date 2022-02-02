@@ -1018,8 +1018,7 @@
         (cutscene_extraction_exit)
     )
     (cinematic_skip_stop)
-    (game_won)
-    (cinematic_show_letterbox false)
+    (game_won )
 )
 
 (script dormant mission_shafta
