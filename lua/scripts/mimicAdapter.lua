@@ -1,7 +1,17 @@
 -- Mimic HSC Adapter
+-- Sledmine
 -- Converts a HSC campaign/coop script into a Mimic friendly server script.
+
 local glue = require "lua.modules.glue"
 local inspect = require "lua.modules.inspect"
+
+-- Util string operations
+function string.insert(str1, str2, pos)
+    return str1:sub(1, pos) .. str2 .. str1:sub(pos + 1)
+end
+function string.override(str1, str2, from, to)
+    return str1:sub(1, from) .. str2 .. str1:sub(to + 1)
+end
 
 local maximumActionLength = 80
 
@@ -35,6 +45,7 @@ local actions = {
     "ai_conversation_stop",
     -- Probably can cause issues with Mimic
     "ai_attach_free",
+    -- We do not need this anymore, Mimic can sync this natively
     --"switch_bsp",
     "player_enable_input",
     "object_create",
@@ -43,32 +54,39 @@ local actions = {
     "object_destroy",
     "unit_set_seat",
     "unit_set_emotion",
-    --"unit_suspended",
+    "unit_suspended",
     "unit_stop_custom_animation",
     "unit_custom_animation_at_frame",
-    -- Replace with a vehicle enter function from SAPP
+    -- Replace with a vehicle enter function from SAPP, desyncs otherwise
     -- "unit_enter_vehicle",
     "object_teleport",
     "object_pvs_activate",
     -- "device_set_position",
     "device_set_position_immediate",
-    "device_set_power",
+    --"device_set_power",
     "device_one_sided_set",
-    "breakable_surfaces_enable",
-    "breakable_surfaces_reset",
-    "activate_nav_point_flag",
-    "deactivate_nav_point_flag",
-    "effect_new",
+    --"breakable_surfaces_enable",
+    --"breakable_surfaces_reset",
+    --"activate_nav_point_flag",
+    --"deactivate_nav_point_flag",
+    --"effect_new",
     "custom_animation",
-    -- FIXME May fail due to more than 80 chars
     "scenery_animation_start",
     "recording_play",
     "objects_attach"
 }
 
+local header = [[; Used to communicate with Mimic Server
+(global "string" sync_hsc_command "")
+
+; Used to trigger events instead of game_is_cooperative
+(global boolean is_multiplayer false)]]
+
 local replacements = {
     ["startup mission_"] = "dormant main_",
-    game_won = "sv_map_next",
+    -- Allow server game to end
+    ["(game_won )"] = "(begin (cinematic_show_letterbox false)(sv_map_next))",
+    -- Force variable comparision for cooperative mode
     game_is_cooperative = "= is_multiplayer true",
     -- C20 hardcoded replacements
     ["monitor_dialogue_scale )"] = " 1)",
@@ -76,24 +94,15 @@ local replacements = {
     ["\" (list_get (ai_actors bsp1_monitor )0 )"] = "\" none ",
     ["\" (list_get (ai_actors bsp2_monitor )0 )"] = "\" none ",
     ["\" (list_get (ai_actors bsp3_monitor )0 )"] = "\" none ",
-    ["activate_team_nav_point_flag default_red player"] = "activate_nav_point_flag default_red (player0)",
-    ["deactivate_team_nav_point_flag player"] = "deactivate_nav_point_flag (player0)"
-    -- print = "sv_say"
+    --["activate_team_nav_point_flag default_red player"] = "activate_nav_point_flag default_red (player0)",
+    --["deactivate_team_nav_point_flag player"] = "deactivate_nav_point_flag (player0)"
 }
 
+-- Absolute or relative path to the HSC script to convert
 local hscPath = arg[1]
 
 ---@type string
 local hsc = glue.readfile(arg[1], "t")
-local syncActions = {}
-
-function string.insert(str1, str2, pos)
-    return str1:sub(1, pos) .. str2 .. str1:sub(pos + 1)
-end
-
-function string.override(str1, str2, from, to)
-    return str1:sub(1, from) .. str2 .. str1:sub(to + 1)
-end
 
 if (hsc) then
     for k, v in pairs(replacements) do
