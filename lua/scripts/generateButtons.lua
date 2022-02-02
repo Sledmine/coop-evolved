@@ -53,7 +53,7 @@ local widgetButton = {
     text_label_unicode_strings_list = [[[shm]\halo_1\ui\shell\menus\coop_menu\strings\buttons.unicode_string_list]],
     text_font = [[ui\large_ui.font]],
     text_color = "1 1 1 1",
-    justification = "center justify",
+    justification = "center_justify",
     string_list_index = "{realButtonIndex}",
     horiz_offset = 10,
     vert_offset = 6,
@@ -70,7 +70,7 @@ local widgetButton = {
 }
 
 -- Widget list fields definition
-local vertical_offset = 49
+local vertical_offset = 22
 local horizontal_offset = 433
 local widgetList = {
     widget_type = "column_list",
@@ -165,7 +165,7 @@ if (args.list) then
         createList = createList .. mapFields(property, value)
     end)
 
-    --print(createList)
+    print(createList)
     os.execute(createList)
 end
 print("Done!")
