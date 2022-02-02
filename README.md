@@ -2,11 +2,12 @@
     <p align="center">
         <img width="450px" src="images/coop-evolved-logo.png"/>
     </p>
-    <h1 align="center">Coop Evolved</h1>
     <p align="center">
         Cooperative Multiplayer adaptation of Singleplayer maps for Halo Custom Edition
     </p>
 </html>
+
+---
 
 An adaptation and recreation of the campaign maps for Halo Combat Evolved, modified to work with
 Halo Custom Edition adding support for an online multiplayer gameplay experience.
