@@ -98,12 +98,6 @@
 
 (global "boolean" cinematic_ran false )
 
-;Used to communicate with Mimic Server
-(global "string" sync_hsc_command "")
-
-; Used to trigger events instead of game_is_cooperative
-(global boolean is_host false)
-
 (script static "unit" player0
 (unit (list_get (players )0 )))
 
