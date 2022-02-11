@@ -1358,7 +1358,7 @@
 (sleep 30 )
 (cinematic_screen_effect_stop )
 (player_effect_stop 4 )
-(object_destroy poa_explosion )(set sync_hsc_command "sync_object_destroy poa_explosion ")(game_lost ))
+(object_destroy poa_explosion )(set sync_hsc_command "sync_object_destroy poa_explosion ")(begin (cinematic_stop)(sv_map_next)))
 
 (script static "void" cinematic_time_up
 (cutscene_lose ))
