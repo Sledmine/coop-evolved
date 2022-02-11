@@ -80,14 +80,62 @@ local header = [[; Used to communicate with Mimic Server
 (global "string" sync_hsc_command "")
 
 ; Used to trigger events instead of game_is_cooperative
-(global boolean is_multiplayer false)]]
+(global boolean is_multiplayer false)
+
+; Used to perform events only on host side
+(global boolean is_host false)
+
+(script static "unit" player2
+(unit (list_get (players )2 )))
+
+(script static "unit" player3
+(unit (list_get (players )3 )))
+
+(script static "unit" player4
+(unit (list_get (players )4 )))
+
+(script static "unit" player5
+(unit (list_get (players )5 )))
+
+(script static "unit" player6
+(unit (list_get (players )6 )))
+
+(script static "unit" player7
+(unit (list_get (players )7 )))
+
+(script static "unit" player8
+(unit (list_get (players )8 )))
+
+(script static "unit" player9
+(unit (list_get (players )9 )))
+
+(script static "unit" player10
+(unit (list_get (players )10 )))
+
+(script static "unit" player11
+(unit (list_get (players )11 )))
+
+(script static "unit" player12
+(unit (list_get (players )12 )))
+
+(script static "unit" player13
+(unit (list_get (players )13 )))
+
+(script static "unit" player14
+(unit (list_get (players )14 )))
+
+(script static "unit" player15
+(unit (list_get (players )15 )))
+
+]]
 
 local replacements = {
     ["startup mission_"] = "dormant main_",
     -- Allow server game to end
     ["(game_won )"] = "(begin (cinematic_show_letterbox false)(sv_map_next))",
+    ["(game_lost )"] = "(begin (cinematic_show_letterbox false)(sv_map_next))",
     -- Force variable comparision for cooperative mode
-    game_is_cooperative = "= is_multiplayer true",
+    game_is_cooperative = "> (player_count) 1",
     -- C20 hardcoded replacements
     ["monitor_dialogue_scale )"] = " 1)",
     ["\" (list_get (ai_actors bsp0_monitor )0 )"] = "\" none ",
@@ -105,6 +153,7 @@ local hscPath = arg[1]
 local hsc = glue.readfile(arg[1], "t")
 
 if (hsc) then
+    hsc = hsc:insert(header, 0)
     for k, v in pairs(replacements) do
         hsc = hsc:gsub(k:gsub('[%^%$%(%)%%%.%[%]%*%+%-%?]','%%%1'), v)
     end
