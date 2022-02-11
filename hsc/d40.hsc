@@ -127,11 +127,6 @@
 (global "boolean" cinematic_ran false )
 
 (global "boolean" trench_scene_allow_continue true )
-; Used to communicate with Mimic Server
-(global "string" sync_hsc_command "")
-
-; Used to trigger events instead of game_is_cooperative
-(global boolean is_host false)
 
 (script static "unit" player0
 (unit (list_get (players )0 )))
@@ -1339,6 +1334,24 @@
 (unit_suspended (player15 )true )
 
 (switch_bsp 8 )
+(volume_teleport_players_not_inside null x80_johnson_base )
+(unit_suspended (player0 )false )
+(unit_suspended (player1 )false )
+(unit_suspended (player2 )false )
+(unit_suspended (player3 )false )
+(unit_suspended (player4 )false )
+(unit_suspended (player5 )false )
+(unit_suspended (player6 )false )
+(unit_suspended (player7 )false )
+(unit_suspended (player8 )false )
+(unit_suspended (player9 )false )
+(unit_suspended (player10 )false )
+(unit_suspended (player11 )false )
+(unit_suspended (player12 )false )
+(unit_suspended (player13 )false )
+(unit_suspended (player14 )false )
+(unit_suspended (player15 )false )
+
 (camera_set game_lose_1a 0 )
 (camera_set game_lose_1c 300 )
 (fade_in 1 1 1 15 )
