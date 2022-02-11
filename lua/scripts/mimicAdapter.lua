@@ -201,7 +201,7 @@ if (hsc) then
                     print("Sync:\t", newAction)
                     print("Fixd:\t", fixedAction)
                     
-                    if (name == "ai_conversation") then
+                    if (name == "ai_conversation" or "device_set_position_immediate") then
                         hsc = hsc:override(fixedAction, actionStart - 1, actionCloseStart)
                     else
                         hsc = hsc:insert(newAction, actionCloseStart)

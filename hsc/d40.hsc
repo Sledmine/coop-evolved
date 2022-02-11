@@ -134,48 +134,6 @@
 (script static "unit" player1
 (unit (list_get (players )1 )))
 
-(script static "unit" player2
-(unit (list_get (players )2 )))
-
-(script static "unit" player3
-(unit (list_get (players )3 )))
-
-(script static "unit" player4
-(unit (list_get (players )4 )))
-
-(script static "unit" player5
-(unit (list_get (players )5 )))
-
-(script static "unit" player6
-(unit (list_get (players )6 )))
-
-(script static "unit" player7
-(unit (list_get (players )7 )))
-
-(script static "unit" player8
-(unit (list_get (players )8 )))
-
-(script static "unit" player9
-(unit (list_get (players )9 )))
-
-(script static "unit" player10
-(unit (list_get (players )10 )))
-
-(script static "unit" player11
-(unit (list_get (players )11 )))
-
-(script static "unit" player12
-(unit (list_get (players )12 )))
-
-(script static "unit" player13
-(unit (list_get (players )13 )))
-
-(script static "unit" player14
-(unit (list_get (players )14 )))
-
-(script static "unit" player15
-(unit (list_get (players )15 )))
-
 (script static "short" player_count
 (list_count (players )))
 
