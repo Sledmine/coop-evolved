@@ -32,6 +32,11 @@ local actions = {
     "camera_control",
     "camera_set",
     "camera_set_first_person",
+    "camera_set_relative",
+    "cinematic_screen_effect_start",
+    "cinematic_screen_effect_set_convolution",
+    "cinematic_screen_effect_set_filter_desaturation_tint",
+    "cinematic_screen_effect_set_filter",
     "cinematic_start",
     "cinematic_set_title",
     "cinematic_show_letterbox",
@@ -201,6 +206,8 @@ if (hsc) then
                     print("Sync:\t", newAction)
                     print("Fixd:\t", fixedAction)
                     
+                    --if (name == "ai_conversation") then
+                    -- Remove on d40
                     if (name == "ai_conversation" or "device_set_position_immediate") then
                         hsc = hsc:override(fixedAction, actionStart - 1, actionCloseStart)
                     else
