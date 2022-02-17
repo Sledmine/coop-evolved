@@ -1,49 +1,49 @@
-local glue = require "glue"
+local tag = require "lua.scripts.modules.tag"
 
-local projectPath = [[H:\coop-evolved]]
-local dataPath = projectPath .. [[\data]]
-local tagsPath = projectPath .. [[\tags]]
-
-local fixedTagPath = arg[1]:gsub([[..\tags\]], "")
+local scenarioTagPath = arg[1]
+local defaultAITeam = arg[2]
 
 print("Converting scenario type to multiplayer...")
-local invaderSet = [[invader-edit -t tags\ %s -S type multiplayer]]
-os.execute(invaderSet:format(fixedTagPath))
+tag.edit(scenarioTagPath, {type = "multiplayer"})
 
-local invaderCount = [[invader-edit -t tags\ %s -C encounters]]
-local invaderGet = [[invader-edit -t tags\ %s -G encounters[%s].name]]
-local invaderSet = [[invader-edit -t tags\ %s -S encounters[%s].team_index %s]]
+local encounters = {}
+local encounterCount = tag.count(scenarioTagPath, "encounters")
+for encounterIndex = 0, encounterCount - 1 do
+    local encounterName = tag.get(scenarioTagPath, "encounters[" .. encounterIndex .. "].name")
+    
+    encounters[encounterIndex + 1] = {}
+    local encounter = encounters[encounterIndex + 1]
 
-local fieldsCount = tonumber(glue.readpipe(invaderCount:format(fixedTagPath), "r"))
-
-for i = 0, fieldsCount - 1 do
-    local name = glue.readpipe(invaderGet:format(fixedTagPath, i), "r"):gsub("\n", "")
-    if (name:find("cov") or name:find("ghost") or name:find("banshee") or name:find("wraith") or name:find("hunters")) then
-        print("Setting to Covenant team: " .. name)
-        os.execute(invaderSet:format(fixedTagPath, i, "covenant"))
-    elseif (name:find("flood")) then
-        print("Setting to Flood team: " .. name)
-        os.execute(invaderSet:format(fixedTagPath, i, "flood"))
-    elseif (name:find("sents") or name:find("monitor")) then
-        print("Setting to Sentinel team: " .. name)
-        os.execute(invaderSet:format(fixedTagPath, i, "sentinel"))
-    elseif (name:find("marine") or name:find("tank") or name:find("jeep") or name:find("hangar_captain") or name:find("prison")) then
-        print("Setting to Human team: " .. name)
+    if (encounterName:find("cov") or encounterName:find("ghost") or encounterName:find("banshee") or
+        encounterName:find("wraith") or encounterName:find("hunters") or
+        encounterName:find("enc_swamp") or encounterName:find("bottom") or encounterName:find("top") or
+        encounterName:find("flee")) then
+        encounter.team_index = "covenant"
+    elseif (encounterName:find("marine") or encounterName:find("tank") or encounterName:find("jeep") or
+        encounterName:find("hangar_captain") or encounterName:find("prison")) then
         -- Default by unit means "red team" in multiplayer games
-        os.execute(invaderSet:format(fixedTagPath, i, "default_by_unit"))
-    else
-        print("UNKNOWN AI team type for: " .. name)
-        --os.execute(invaderSet:format(fixedTagPath, i, "flood"))
+        encounter.team_index = "default_by_unit"
+    elseif (encounterName:find("sents") or encounterName:find("sentinels") or
+        encounterName:find("monitor")) then
+        encounter.team_index = "sentinel"
+    elseif (encounterName:find("flood") or encounterName:find("infection") or
+        encounterName:find("inf") or encounterName:find("inc_swamp")) then
+        encounter.team_index = "flood"
+    elseif (defaultAITeam) then
+        encounter.team_index = defaultAITeam
     end
+    print(encounterName, "->", encounter.team_index or "UNKNOWN")
 end
+tag.edit(scenarioTagPath, {encounters = encounters})
 
-local invaderCount = [[invader-edit -t tags\ %s -C vehicles]]
-local invaderSet = "invader-edit -t tags\\ %s -S vehicles[%s].multiplayer_spawn_flags.slayer_default %s"
-
-local fieldsCount = tonumber(glue.readpipe(invaderCount:format(fixedTagPath), "r"))
-
-for i = 0, fieldsCount - 1 do
-    local name = glue.readpipe(invaderGet:format(fixedTagPath, i), "r"):gsub("\n", "")
-    print("Allowing vehicle multiplyer spawn for: " .. name)
-    os.execute(invaderSet:format(fixedTagPath, i, "1"))
-end
+-- local invaderCount = [[invader-edit %s -C vehicles]]
+-- local invaderSet = "invader-edit %s -S vehicles[%s].multiplayer_spawn_flags.slayer_default %s"
+--
+-- local fieldsCount = tonumber(glue.readpipe(invaderCount:format(scenarioTagPath), "r"))
+--
+-- for i = 0, fieldsCount - 1 do
+--    local name = glue.readpipe(invaderGet:format(scenarioTagPath, i), "r"):gsub("\n", "")
+--    print("Allowing vehicle multiplyer spawn for: " .. name)
+--    os.execute(invaderSet:format(scenarioTagPath, i, "1"))
+-- end
+-- 
