@@ -26,6 +26,7 @@ for encounterIndex = 0, encounterCount - 1 do
     elseif (encounterName:find("sents") or encounterName:find("sentinels") or
         encounterName:find("monitor")) then
         encounter.team_index = "sentinel"
+        --encounter.team_index = "default_by_unit"
     elseif (encounterName:find("flood") or encounterName:find("infection") or
         encounterName:find("inf") or encounterName:find("inc_swamp")) then
         encounter.team_index = "flood"

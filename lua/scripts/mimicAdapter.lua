@@ -49,7 +49,7 @@ local actions = {
     "ai_conversation",
     "ai_conversation_stop",
     -- Probably can cause issues with Mimic
-    "ai_attach_free",
+    --"ai_attach_free",
     -- We do not need this anymore, Mimic can sync this natively
     --"switch_bsp",
     "player_enable_input",
@@ -66,9 +66,11 @@ local actions = {
     -- "unit_enter_vehicle",
     "object_teleport",
     "object_pvs_activate",
-    -- "device_set_position",
+    -- We need a more native implementation of this on Mimic, probably using Harmony
+    -- This can consume a lot of bandwidth when Mimic attempts to sync them
+    "device_set_position",
     "device_set_position_immediate",
-    --"device_set_power",
+    "device_set_power",
     "device_one_sided_set",
     --"breakable_surfaces_enable",
     --"breakable_surfaces_reset",
@@ -206,9 +208,9 @@ if (hsc) then
                     print("Sync:\t", newAction)
                     print("Fixd:\t", fixedAction)
                     
-                    --if (name == "ai_conversation") then
+                    if (name == "ai_conversation") then
                     -- Remove on d40
-                    if (name == "ai_conversation" or "device_set_position_immediate") then
+                    --if (name == "ai_conversation" or "device_set_position_immediate") then
                         hsc = hsc:override(fixedAction, actionStart - 1, actionCloseStart)
                     else
                         hsc = hsc:insert(newAction, actionCloseStart)
