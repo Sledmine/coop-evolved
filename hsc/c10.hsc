@@ -279,7 +279,7 @@
 (print "marine: find your own hiding place!" ))
 
 (script dormant dialog_marine_f
-(print "marine: i'm smart!  i hid, not like the others… dead, worse than dead." )(print "marine: those things hauled them off, still breathing… still screaming." ))
+(print "marine: i'm smart!  i hid, not like the othersï¿½ dead, worse than dead." )(print "marine: those things hauled them off, still breathingï¿½ still screaming." ))
 
 (script dormant dialog_marine_g
 (print "marine: (hysterical) aaah!!! aaah!!! aaaaaah!!!" ))
@@ -288,7 +288,7 @@
 (print "marine: just leave me alone!" ))
 
 (script dormant dialog_marine_i
-(print "marine: sarge, jenkins, bisenti… all of them!  those…things killed them all!" ))
+(print "marine: sarge, jenkins, bisentiï¿½ all of them!  thoseï¿½things killed them all!" ))
 
 (script dormant dialog_marine_j
 (print "marine: i don't want to go!" ))
@@ -1377,8 +1377,18 @@
 (object_create insertion_pelican )
 (object_teleport insertion_pelican insertion_flag )
 (sleep 1 )
-(unit_enter_vehicle (player0 )insertion_pelican "p-riderlf" )
-(unit_enter_vehicle (player1 )insertion_pelican "p-riderrf" )
+;(unit_enter_vehicle (player0 )insertion_pelican "p-riderlf" )
+;(unit_enter_vehicle (player1 )insertion_pelican "p-riderrf" )
+(set sync_hsc_command "sync_unit_enter_vehicle player0 insertion_pelican_1 1")
+(set sync_hsc_command "sync_unit_enter_vehicle player1 insertion_pelican_1 1")
+(set sync_hsc_command "sync_unit_enter_vehicle player2 insertion_pelican_1 2")
+(set sync_hsc_command "sync_unit_enter_vehicle player3 insertion_pelican_1 2")
+(set sync_hsc_command "sync_unit_enter_vehicle player4 insertion_pelican_1 3")
+(set sync_hsc_command "sync_unit_enter_vehicle player5 insertion_pelican_1 3")
+(set sync_hsc_command "sync_unit_enter_vehicle player6 insertion_pelican_1 4")
+(set sync_hsc_command "sync_unit_enter_vehicle player7 insertion_pelican_1 4")
+(set sync_hsc_command "sync_unit_enter_vehicle player8 insertion_pelican_1 5")
+(set sync_hsc_command "sync_unit_enter_vehicle player9 insertion_pelican_1 5")
 (unit_set_enterable_by_player insertion_pelican false )
 (objects_predict insertion_pelican )
 (ai_place swamp_a_covenant/grunts_insertion )
@@ -1410,7 +1420,21 @@
 (show_hud true )
 (sleep (recording_time insertion_pelican ))
 (unit_exit_vehicle (player0 ))
-(unit_exit_vehicle (player1 ))
+(unit_exit_vehicle (player1))
+(unit_exit_vehicle (player2))
+(unit_exit_vehicle (player3))
+(unit_exit_vehicle (player4))
+(unit_exit_vehicle (player5))
+(unit_exit_vehicle (player6))
+(unit_exit_vehicle (player7))
+(unit_exit_vehicle (player8))
+(unit_exit_vehicle (player9))
+(unit_exit_vehicle (player10))
+(unit_exit_vehicle (player11))
+(unit_exit_vehicle (player12))
+(unit_exit_vehicle (player13))
+(unit_exit_vehicle (player14))
+(unit_exit_vehicle (player15))
 (ai_disregard (players )false )
 (game_save_totally_unsafe )
 (sleep_until (> (ai_conversation_status insertion )4 )12 (* 30 12 ))
