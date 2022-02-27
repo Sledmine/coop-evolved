@@ -65,7 +65,7 @@ local actions = {
     -- Replace with a vehicle enter function from SAPP, desyncs otherwise
     -- "unit_enter_vehicle",
     "object_teleport",
-    "object_pvs_activate",
+    --"object_pvs_activate",
     -- We need a more native implementation of this on Mimic, probably using Harmony
     -- This can consume a lot of bandwidth when Mimic attempts to sync them
     "device_set_position",
@@ -80,7 +80,11 @@ local actions = {
     "custom_animation",
     "scenery_animation_start",
     "recording_play",
-    "objects_attach"
+    "objects_attach",
+    "objects_detach",
+    -- Only used in d40
+    "numeric_countdown_timer_set",
+    "numeric_countdown_timer_stop"
 }
 
 local header = [[; Used to communicate with Mimic Server
@@ -208,9 +212,7 @@ if (hsc) then
                     print("Sync:\t", newAction)
                     print("Fixd:\t", fixedAction)
                     
-                    if (name == "ai_conversation") then
-                    -- Remove on d40
-                    --if (name == "ai_conversation" or "device_set_position_immediate") then
+                    if (name == "ai_conversation" or (arg[1]:find("c10") or arg[1]:find("c20") and (name == "device_set_position_immediate" or name == "device_set_position"))) then
                         hsc = hsc:override(fixedAction, actionStart - 1, actionCloseStart)
                     else
                         hsc = hsc:insert(newAction, actionCloseStart)
