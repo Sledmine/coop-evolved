@@ -75,6 +75,10 @@ you will have to change these in game settings located on Settings/Network Setti
 the same way as in the image from below:
 ![network-settings](images/network-settings.png)
 
+With this configuration you can join to your server directly from the LAN servers menu, but careful,
+you will lose the ability to host or load maps in LAN mode using the in game option, close your
+local server `haloceded.exe` before doing that if that is the case.
+
 **WARNING:** SAPP package hosted in the Mercury repository contains a modified version of
 the **Halo CE Dedicated Server** that is capable of loading huge maps built with a custom [Invader](https://github.com/SnowyMouse/invader) build, also it uses different initialization files to allow installing it among
 a Halo Custom Edition folder.

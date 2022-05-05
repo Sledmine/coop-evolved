@@ -1,9 +1,23 @@
 # 1.7.0
-- Fixes for a lot cinematics and prevent crashing on very specific game events
-- Added new coop map d40 (The Maw, by far one of the hardest maps to port)
-- Removed Pillar Of Autumn explosion BSP and camera change to avoid crashing until new workaround
-- Added experimental workaround for weapons spawning on multiplayer
-
+- Add new shaders and remastered textures for Flood Juggernaut
+- Add remastered cubemaps and textures for 343 Guilty Spark
+- Fix grenade plasma shaders alpha
+- Fix Juggernaut health and remove feign chance
+- Fix c10 cinematic doors
+- Fix c10 jenkins cinematic (not perfect due to sync limitations)
+- Fix c10, a50 marines AI team, some sentinels AI team as well
+- Add new coop map d40 "The Maw" (by far one of the hardest maps to port, expect some crashes)
+- Fix issue with object_create, object_create_containing to prevent cinematic objects being
+duplicated
+- Fix crash with object_teleport sync from Mimic adapter when attempts to teleport players
+- Fix multiple cinematics to prevent crashing on very specific game events
+- Remove Pillar Of Autumn explosion BSP and camera change to avoid crashing until new workaround
+- Add experimental workaround for weapons spawning on multiplayer, weapons with conditional spawning
+will not appear
+- Fix bad command parsing on Mimic server
+- Add feature to sync device machines at the same rate as the AI update rate, preventing getting out
+of bandwidth just for syncing devices
+- Improve debug tools on Mimic Client
 # 1.0.0
 
 ## b30 - The Silent Cartographer
