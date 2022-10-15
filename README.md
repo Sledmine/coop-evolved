@@ -86,7 +86,7 @@ a Halo Custom Edition folder.
 ## Can I configure the server?
 Yes! but there are a lot of parameters to set up, so I'll try to explain you the basic fields
 you would like to play with, if you want to take a deeper look into how to configure your server,
-check [this documentation](https://github.com/Sledmine/lua-blam/blob/master/SAPP_DOCS_2.5.pdf).
+check [this documentation](https://github.com/Sledmine/lua-blam/blob/master/archive/SAPP_DOCS_2.5.pdf).
 
 Edit the `load.txt` file in the root folder of your game, change the properties in there as needed, 
 here is a short description of properties you should edit:
