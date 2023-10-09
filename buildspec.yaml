@@ -7,6 +7,9 @@ scenarios:
   - levels/c10/c10_coop_evolved_dev
   - levels/c20/c20_coop_evolved_dev
 commands:
+  symlinks:
+    - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/b30_coop_evolved_dev.lua"
+    - ln -f -s "$PWD/dist/coop_evolved_server.lua" "$HALO_CE_DATA_PATH/sapp/lua/coop_evolved_server.lua"
   release:
     - mercury build --release
     - mercury build package
