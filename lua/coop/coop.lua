@@ -3,9 +3,10 @@ local tagClasses = blam.tagClasses
 local isNull = blam.isNull
 local getIndexById = blam.getIndexById
 
-local difficulties = {"Easy", "Normal", "Heroic", "Legendary"}
 
 local coop = {}
+
+coop.difficulties = {"Easy", "Normal", "Heroic", "Legendary"}
 
 function coop.enableSpawn(enableAll)
     local scenario = blam.scenario(0)
