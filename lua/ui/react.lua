@@ -1,42 +1,61 @@
-local react = {}
+local ether = {}
 
+---@type table<number, function>
 local mounted = {}
+local prefix = "@reactive_"
 
-function react.mount(component, tagId)
-    console_debug("Mounting component: " .. component)
+---Mount a UI component to the given tagId
+---@param component string
+---@param tagId number
+function ether.mount(component, tagId)
     if not mounted[tagId] then
+        console_debug("Mounting component: " .. component)
         mounted[tagId] = require("coop.ui.components." .. component)()
     end
     return mounted[tagId]
 end
 
-function react.render(tagId)
+---Render a UI component from the given tagId
+---@param tagId number
+function ether.render(tagId)
     local render = mounted[tagId]
     if render then
-        return render()
+        render()
+        return true
     end
-    return nil
+    return false
 end
 
-function react.unmountAll()
+---Unmount all UI components
+function ether.unmountAll()
     for k, v in pairs(mounted) do
         console_debug("Unmounting component " .. k)
         mounted[k] = nil
     end
 end
 
---- Create a React watcher metatable that observes changes in the given table.
----@table table
----@return table
-function react.watch(table)
-    local mt = {
-        __index = table,
+---Create a Ether reactive table that keeps new properties internally but also triggers a console_debug message when a property is changed
+---
+---This table will return the value of the property if it exists internally with a prefix of "_reactive" and will trigger a console_debug message when a property is changed
+---@generic T
+---@param table T
+---@param callback function
+---@return T
+function ether.reactive(table, callback)
+    local reactive = {}
+    for k, v in pairs(table) do
+        reactive[prefix .. k] = v
+    end
+    return setmetatable(reactive, {
+        __index = function(t, k)
+            return t[prefix .. k]
+        end,
         __newindex = function(t, k, v)
-            console_debug("React watcher: " .. k .. " changed to " .. v)
-            rawset(t, k, v)
+            t[prefix .. k] = v
+            console_debug("Setting reactive property " .. k .. " to " .. tostring(v))
+            callback()
         end
-    }
-    return setmetatable({}, mt)
+    })
 end
 
-return react
+return ether
