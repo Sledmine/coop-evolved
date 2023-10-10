@@ -369,4 +369,9 @@ function component.setWidgetValues(self, values)
     core.setWidgetValues(self.tagId, values)
 end
 
+---@param self uiComponent
+function component.setBitmapIndex(self, index)
+    core.setWidgetValues(self.tagId, {background_bitmap_index = index - 1})
+end
+
 return component

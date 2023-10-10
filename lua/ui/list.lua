@@ -144,7 +144,7 @@ function list.setItems(self, items)
     -- if self.currentItemIndex > #items then
     --    self.currentItemIndex = 1
     -- end
-    for widgetIndex = 1, widgetDefinition.childWidgetsCount do
+    for widgetIndex = self.firstWidgetIndex, self.lastWidgetIndex do
         local widgetTagId = widgetDefinition.childWidgets[widgetIndex].widgetTag
         button.new(widgetTagId)
     end

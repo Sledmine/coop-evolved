@@ -3,6 +3,8 @@ local harmony = require "mods.harmony"
 
 local core = {}
 
+local timeToWaitForDOM = 66
+
 ---Executes a function after a delay
 ---@param milliseconds number
 ---@param callback function
@@ -108,9 +110,9 @@ function core.setWidgetValues(widgetTagId, values)
         end
     end
     if not setValuesDOMSafe() then
-        -- If there is no widget loaded in the DOM, wait 33ms and try again
+        -- If there is no widget loaded in the DOM, wait and try again
         -- (this is a workaround for the DOM not being loaded yet)
-        delay(33, function()
+        delay(timeToWaitForDOM, function()
             setValuesDOMSafe()
         end)
     end
