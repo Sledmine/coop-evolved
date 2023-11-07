@@ -14,7 +14,11 @@ blam.rcon.event("ChangeBiped", function(message, playerIndex)
             coop.changeBiped(desiredBipedIndex)
         end
     else
-        console_out("Client triggered ChangeBiped event")
+        CustomPlayerBipeds[playerIndex] = AvailableBipeds[tonumber(message)].id
+        local player = blam.player(get_player(playerIndex))
+        if player then
+            delete_object(player.objectId)
+        end
     end
 end)
 
@@ -43,7 +47,7 @@ blam.rcon.event("Ready", function(message, playerIndex)
             local splitName = currentMapName:split "_"
             local baseNoCoopName = splitName[1]
             coop.enableSpawn(true)
-            execute_script("wake main_" .. baseNoCoopName)
+            set_timer(2000, "StartCoop")
 
         else
             console_out(

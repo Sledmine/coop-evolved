@@ -4,8 +4,10 @@ extend_limits: true
 scenarios:
   - levels/a50/a50_coop_evolved_dev
   - levels/b30/b30_coop_evolved_dev
+  - levels/b40/b40_coop_evolved_dev
   - levels/c10/c10_coop_evolved_dev
   - levels/c20/c20_coop_evolved_dev
+  - levels/d40/d40_coop_evolved_dev
 commands:
   symlinks:
     - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/b30_coop_evolved_dev.lua"

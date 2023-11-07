@@ -35,7 +35,7 @@ function coop.getRequiredVotes(playersCount)
 end
 
 function coop.getAvailableBipeds()
-    local bipedTags = blam.findTagsList("_mp", tagClasses.biped)
+    local bipedTags = blam.findTagsList("_mp", tagClasses.biped) or {}
     local bipedsList = {}
     for index, tag in pairs(bipedTags) do
         local tagPath = tag.path

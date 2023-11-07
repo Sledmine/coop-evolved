@@ -8,7 +8,7 @@ local coop = require "coop.coop"
 local constants = require "coop.constants"
 local events = require "coop.network.events"
 
-local customPlayerBipeds = {}
+CustomPlayerBipeds = {}
 CoopServerState = {remainingVotes = 0, difficulty = coop.difficulties[1], playersReady = {}}
 
 function GetReadyForCoop(playerIndex)
@@ -36,17 +36,31 @@ function GetReadyForCoop(playerIndex)
     end
 end
 
+function OnObjectSpawn(playerIndex, tagId, parentId, objectId)
+    if playerIndex ~= 0 then
+        local customBipedTagId = CustomPlayerBipeds[playerIndex]
+        if customBipedTagId then
+            return true, customBipedTagId
+        end
+    end
+    return true
+end
+
 function OnPlayerJoin(playerIndex)
-    CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
-    GetReadyForCoop(playerIndex)
+    if not CoopStarted then
+        CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
+        GetReadyForCoop(playerIndex)
+    end
 end
 
 function OnPlayerLeave(playerIndex)
-    if CoopServerState.playersReady[playerIndex] then
-        CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
+    if not CoopStarted then
+        if CoopServerState.playersReady[playerIndex] then
+            CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
+        end
+        CoopServerState.remainingVotes = CoopServerState.remainingVotes - 1
+        CoopServerState.playersReady[playerIndex] = nil
     end
-    CoopServerState.remainingVotes = CoopServerState.remainingVotes - 1
-    CoopServerState.playersReady[playerIndex] = nil
     coop.findNewSpawn(playerIndex)
 end
 
@@ -55,10 +69,7 @@ function OnPlayerDead(deadPlayerIndex)
 end
 
 function OnMapLoad()
-    -- Start syncing AI every amount of seconds
-    FindNewSpawn = coop.findNewSpawn
-    -- set_timer(constants.syncEveryMillisecs, "SyncUpdate")
-    set_timer(constants.findNewSpawnEveryMillisecs, "FindNewSpawn")
+    AvailableBipeds = coop.getAvailableBipeds()
 end
 
 function OnCommand()
@@ -68,13 +79,27 @@ function OnRconMessage(playerIndex, message, password)
     return blam.rcon.handle(message, password, playerIndex)
 end
 
+function OnGameEnd()
+    CoopStarted = false
+    CoopServerState = {remainingVotes = 0, difficulty = coop.difficulties[1], playersReady = {}}
+end
+
 function OnScriptLoad()
+    AvailableBipeds = coop.getAvailableBipeds()
+
+    -- Start syncing AI every amount of seconds
+    FindNewSpawn = coop.findNewSpawn    
+    -- set_timer(constants.syncEveryMillisecs, "SyncUpdate")
+    set_timer(constants.findNewSpawnEveryMillisecs, "FindNewSpawn")
+
     set_callback("map load", "OnMapLoad")
     set_callback("rcon message", "OnRconMessage")
 
     register_callback(cb["EVENT_JOIN"], "OnPlayerJoin")
     register_callback(cb["EVENT_LEAVE"], "OnPlayerLeave")
     register_callback(cb["EVENT_DIE"], "OnPlayerDead")
+    register_callback(cb["EVENT_OBJECT_SPAWN"], "OnObjectSpawn")
+    register_callback(cb["EVENT_GAME_END"], "OnGameEnd")
 
     blam.rcon.patch()
 end

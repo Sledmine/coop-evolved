@@ -6,7 +6,7 @@
         "lua/",
         "lua/modules/"
     ],
-    "name": "Coop Evolved",
+    "name": "Coop Evolved Server",
     "modules": [
         "blam",
         "luna",

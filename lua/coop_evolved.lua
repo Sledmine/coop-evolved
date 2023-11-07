@@ -20,12 +20,14 @@ local animationBackup = {animation = nil, frame = nil}
 function OnMapLoad()
     AvailableBipeds = coop.getAvailableBipeds()
     constants.get()
-    assert(constants.widgets.coopMenu, "Failed to load coop menu widget")
-    ether.mount("coopMenu", constants.widgets.coopMenu.id)
+    -- assert(constants.widgets.coopMenu, "Failed to load coop menu widget")
+    if constants.widgets.coopMenu then
+        ether.mount("coopMenu", constants.widgets.coopMenu.id)
 
-    CoopState = ether.reactive(CoopState, function()
-        ether.render(constants.widgets.coopMenu.id)
-    end)
+        CoopState = ether.reactive(CoopState, function()
+            ether.render(constants.widgets.coopMenu.id)
+        end)
+    end
 end
 
 function OnRconMessage(message)
