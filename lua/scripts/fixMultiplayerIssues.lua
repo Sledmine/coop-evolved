@@ -1,50 +1,72 @@
-local tag = require "lua.scripts.modules.tag"
+local tag = require "lua.modules.tag"
 
-local scenarioTagPath = arg[1]
+local scenarioTagPath = arg[1]:replace("\\", "/"):replace("tags/", "")
 local defaultAITeam = arg[2]
 
 print("Converting scenario type to multiplayer...")
 tag.edit(scenarioTagPath, {type = "multiplayer"})
 
+local convenantEncounterLike = {
+    "cov",
+    "ghost",
+    "banshee",
+    "wraith",
+    "hunters",
+    "enc_swamp",
+    "bottom",
+    "top",
+    "flee",
+    -- B40
+    "a_bridge",
+    "b3_bridge",
+    "b4_bridge",
+    "c_bridge",
+    "b4_hall"
+}
+
+local marineEncounterLike = {
+    "marine",
+    "tank",
+    "jeep",
+    "hangar_captain",
+    "prison",
+    -- B40
+    "test_hum"
+}
+
+local sentinelEncounterLike = {"sents", "sentinels", "monitor"}
+
+local floodEncounterLike = {"flood", "infection", "inf", "inc_swamp"}
+
+local findName = function(name)
+    return function(v, k)
+        return name:includes(v)
+    end
+end
+
 local encounters = {}
 local encounterCount = tag.count(scenarioTagPath, "encounters")
 for encounterIndex = 0, encounterCount - 1 do
     local encounterName = tag.get(scenarioTagPath, "encounters[" .. encounterIndex .. "].name")
-    
+    assert(encounterName, "Encounter name is nil!")
+    encounterName = tostring(encounterName)
+
     encounters[encounterIndex + 1] = {}
     local encounter = encounters[encounterIndex + 1]
-
-    if (encounterName:find("cov") or encounterName:find("ghost") or encounterName:find("banshee") or
-        encounterName:find("wraith") or encounterName:find("hunters") or
-        encounterName:find("enc_swamp") or encounterName:find("bottom") or encounterName:find("top") or
-        encounterName:find("flee")) then
+    if table.find(convenantEncounterLike, findName(encounterName)) then
         encounter.team_index = "covenant"
-    elseif (encounterName:find("marine") or encounterName:find("tank") or encounterName:find("jeep") or
-        encounterName:find("hangar_captain") or encounterName:find("prison")) then
-        -- Default by unit means "red team" in multiplayer games
+    elseif table.find(marineEncounterLike, findName(encounterName)) then
+        -- Default by unit means index 0 or "red team" in multiplayer games
+        -- That equals to player team for coop purposes
         encounter.team_index = "default_by_unit"
-    elseif (encounterName:find("sents") or encounterName:find("sentinels") or
-        encounterName:find("monitor")) then
+    elseif table.find(sentinelEncounterLike, findName(encounterName)) then
         encounter.team_index = "sentinel"
-        --encounter.team_index = "default_by_unit"
-    elseif (encounterName:find("flood") or encounterName:find("infection") or
-        encounterName:find("inf") or encounterName:find("inc_swamp")) then
+        -- encounter.team_index = "default_by_unit"
+    elseif table.find(floodEncounterLike, findName(encounterName)) then
         encounter.team_index = "flood"
-    elseif (defaultAITeam) then
+    elseif defaultAITeam then
         encounter.team_index = defaultAITeam
     end
     print(encounterName, "->", encounter.team_index or "UNKNOWN")
 end
 tag.edit(scenarioTagPath, {encounters = encounters})
-
--- local invaderCount = [[invader-edit %s -C vehicles]]
--- local invaderSet = "invader-edit %s -S vehicles[%s].multiplayer_spawn_flags.slayer_default %s"
---
--- local fieldsCount = tonumber(glue.readpipe(invaderCount:format(scenarioTagPath), "r"))
---
--- for i = 0, fieldsCount - 1 do
---    local name = glue.readpipe(invaderGet:format(scenarioTagPath, i), "r"):gsub("\n", "")
---    print("Allowing vehicle multiplyer spawn for: " .. name)
---    os.execute(invaderSet:format(scenarioTagPath, i, "1"))
--- end
--- 

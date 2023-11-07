@@ -1,8 +1,5 @@
-local tag = require "lua.scripts.modules.tag"
-local glue = require "lua.modules.glue"
-local split = glue.string.split
-local escape = glue.string.esc
-local startswith = glue.string.starts
+require "lua.modules.luna"
+local tag = require "lua.modules.tag"
 local inspect = require "lua.modules.inspect"
 local fs = require "fs"
 
@@ -14,7 +11,7 @@ local campaignPowerupsPath = [[item collections/campaign powerups/%s.item_collec
 local weaponPalette = {}
 local weaponsCount = tag.count(scenarioTagPath, "weapon_palette")
 print("Cache weapon palette...")
-if (weaponsCount > 0) then
+if weaponsCount > 0 then
     for weaponIndex = 0, weaponsCount - 1 do
         local weaponTag = tag.get(scenarioTagPath, "weapon_palette", weaponIndex, "name")
         weaponPalette[weaponIndex] = weaponTag
@@ -47,15 +44,15 @@ local function blockToNetgameEquipment(block, palette)
                 -- Example: weapons/assault rifle/assault rifle.weapon
                 local tagPath = palette[type]
                 -- "weapons", "assault rifle", "assault rifle.weapon"
-                local pathElements = split(tagPath, "/")
+                local pathElements = tagPath:split "/"
                 -- "assault rifle.weapon"
                 local itemTagFile = pathElements[#pathElements]
                 -- assault rifle", "weapon"
-                local fileElements = split(itemTagFile, ".")
+                local fileElements = itemTagFile:split "."
                 -- "assault rifle"
                 local itemTagName = fileElements[1]
                 local itemCollectionPath = campaignItemsPath:format(itemTagName)
-                if startswith(tagPath, "powerups") then
+                if tagPath:startswith "powerups" then
                     itemCollectionPath = campaignPowerupsPath:format(itemTagName)
                 end
                 if not fs.is(fs.cd() .. "/tags/" .. itemCollectionPath) then
@@ -66,7 +63,7 @@ local function blockToNetgameEquipment(block, palette)
                 end
                 local position = tag.get(scenarioTagPath, block, itemIndex, "position")
                 local rotation = tag.get(scenarioTagPath, block, itemIndex, "rotation")
-                local yaw = tonumber(glue.string.split(rotation, " ")[1])
+                local yaw = tonumber(rotation:split(" ")[1])
                 coopNetgameEquipment[#coopNetgameEquipment + 1] = {
                     type_0 = "all_games",
                     spawn_time = 0,

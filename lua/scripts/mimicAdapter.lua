@@ -2,7 +2,7 @@
 -- Sledmine
 -- Converts a HSC campaign/coop script into a Mimic friendly server script.
 
-local glue = require "lua.modules.glue"
+local luna = require "lua.modules.luna"
 local inspect = require "lua.modules.inspect"
 
 -- Util string operations
@@ -160,10 +160,9 @@ local replacements = {
 -- Absolute or relative path to the HSC script to convert
 local hscPath = arg[1]
 
----@type string
-local hsc = glue.readfile(arg[1], "t")
+local hsc = luna.file.read(arg[1]) --[[@as string]]
 
-if (hsc) then
+if hsc then
     hsc = hsc:insert(header, 0)
     for k, v in pairs(replacements) do
         hsc = hsc:gsub(k:gsub('[%^%$%(%)%%%.%[%]%*%+%-%?]','%%%1'), v)
@@ -226,9 +225,9 @@ if (hsc) then
     end
 end
 
-if (not hsc:find("sv_map_next")) then
+if not hsc:find("sv_map_next") then
     print("WARNING, There is no sv_map_next present on this script, game will never end on multiplayer!")
 end
 local outputPath = hscPath:gsub("%.hsc", "_sync.hsc")
 print(outputPath)
-glue.writefile(outputPath, hsc, "t")
+luna.file.write(outputPath, hsc)

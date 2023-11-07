@@ -1,21 +1,14 @@
---- Tag automated modifier using Invader
---- Sledmine
-local glue = require "lua.modules.glue"
+-- Tag creator/editor module
+-- This module is a wrapper for invader-edit to create and edit tags
+local luna = require "lua.modules.luna"
 local tag = {}
 
-local gamePath = os.getenv("HALO_CE_PATH")
-local invaderRunner =
-    ([[sudo docker run -it -v /storage/developing/halo-ce/coop-evolved/data:/invader/data -v /storage/developing/halo-ce/coop-evolved/tags:/invader/tags -v "%s/maps":/invader/maps invader-docker ]]):format(
-        gamePath)
-if (jit.os == "Windows") then
-    invaderRunner = ""
-end
-local editCmd = invaderRunner .. [[invader-edit "%s"]]
-local countCmd = invaderRunner .. [[invader-edit "%s" -C %s]]
-local getCmd = invaderRunner .. [[invader-edit "%s" -G %s]]
-local insertCmd = invaderRunner .. [[invader-edit "%s" -I %s %s %s]]
-local createCmd = invaderRunner .. [[invader-edit "%s" -N]]
-local eraseCmd = invaderRunner .. [[invader-edit "%s" -E %s]]
+local editCmd = [[invader-edit "%s"]]
+local countCmd = [[invader-edit "%s" -C %s]]
+local getCmd = [[invader-edit "%s" -G %s]]
+local insertCmd = [[invader-edit "%s" -I %s %s %s]]
+local createCmd = [[invader-edit "%s" -N]]
+local eraseCmd = [[invader-edit "%s" -E %s]]
 
 function nulled(value)
     if (tonumber(value)) then
@@ -108,8 +101,9 @@ end
 function tag.edit(tagPath, keys)
     print("Editing: " .. tagPath)
     local updateTagCmd = editCmd:format(tagPath)
-    glue.map(keys, function(property, value)
+    local t = table.map(keys, function(value, property)
         updateTagCmd = updateTagCmd .. writeMapFields(property, value)
+        return updateTagCmd
     end)
     if os.execute(updateTagCmd) then
         return true
@@ -122,7 +116,7 @@ end
 ---@param key string
 ---@param index? number
 ---@param subkey? string
----@return string | number
+---@return string | number | nil
 function tag.get(tagPath, key, index, subkey)
     local cmd = getCmd:format(tagPath, key)
     if (index) then
@@ -132,13 +126,14 @@ function tag.get(tagPath, key, index, subkey)
         end
     end
     local pipe = io.popen(cmd)
-    local value = pipe:read("*a")
+    assert(pipe, "Error at attempting to read: " .. tagPath .. " " .. key)
+    local value = pipe:read("*a") --[[@as string]]
     if not pipe:close() then
         print("Attempting to read:")
         print(tagPath, key, index, subkey)
         error(value)
     end
-    return nulled(glue.string.trim(value))
+    return nulled(value:trim())
 end
 
 ---Count entries from a tag given key
@@ -147,19 +142,20 @@ end
 ---@return number
 function tag.count(tagPath, key)
     local pipe = io.popen(countCmd:format(tagPath, key))
+    assert(pipe, "Error at attempting to count: " .. tagPath .. " " .. key)
     local value = pipe:read("*a")
     if not pipe:close() then
         print("Attempting to count:")
         print(tagPath, key)
         error(value)
     end
-    return tonumber(value)
+    return tonumber(value) --[[@as number]]
 end
 
 ---Erase structure from a tag given key
 ---@param tagPath any
 ---@param key any
----@return number
+---@return boolean
 function tag.erase(tagPath, key)
     if os.execute(eraseCmd:format(tagPath, key)) then
         return true
@@ -171,9 +167,12 @@ end
 ---@param tagPath string
 ---@param key string
 ---@param count number
----@param position number | '"end"'
+---@param position? number | '"end"'
 function tag.insert(tagPath, key, count, position)
-    os.execute(insertCmd:format(tagPath, key, count, position or 0))
+    if os.execute(insertCmd:format(tagPath, key, count, position or 0)) then
+        return true
+    end
+    error("Error at attempting to insert: " .. tagPath .. " " .. key)
 end
 
 ---Create a new tag with specified keys
@@ -183,8 +182,9 @@ function tag.create(tagPath, keys)
     print("Creating: " .. tagPath)
     -- Create widget from scratch
     local createTagCmd = createCmd:format(tagPath)
-    glue.map(keys, function(property, value)
+    local t = table.map(keys, function(value, property)
         createTagCmd = createTagCmd .. createKeys(property, value)
+        return createTagCmd
     end)
     if os.execute(createTagCmd) then
         return true
