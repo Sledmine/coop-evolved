@@ -4,8 +4,11 @@ local inspect = require "lua.modules.inspect"
 local fs = require "fs"
 
 local scenarioTagPath = arg[1]
+assert(scenarioTagPath, "No scenario tag path provided")
+scenarioTagPath = scenarioTagPath:replace("\\", "/"):replace("tags/", "")
 local campaignItemsPath = [[item collections/campaign items/%s.item_collection]]
 local campaignPowerupsPath = [[item collections/campaign powerups/%s.item_collection]]
+local spawnTime = 32767
 
 -- Cache all the weapons from the palette
 local weaponPalette = {}
@@ -40,29 +43,37 @@ local function blockToNetgameEquipment(block, palette)
             print("Reading " .. block .. " item " .. itemIndex .. " data...")
             local name = tag.get(scenarioTagPath, block, itemIndex, "name")
             if not name then
-                local type = tag.get(scenarioTagPath, block, itemIndex, "type")
+                local itemType = tag.get(scenarioTagPath, block, itemIndex, "type")
                 -- Example: weapons/assault rifle/assault rifle.weapon
-                local tagPath = palette[type]
+                local itemTagPath = palette[itemType]
+
                 -- "weapons", "assault rifle", "assault rifle.weapon"
-                local pathElements = tagPath:split "/"
+                local pathElements = itemTagPath:split "/"
+
                 -- "assault rifle.weapon"
                 local itemTagFile = pathElements[#pathElements]
+
                 -- assault rifle", "weapon"
                 local fileElements = itemTagFile:split "."
+
                 -- "assault rifle"
                 local itemTagName = fileElements[1]
+
                 local itemCollectionPath = campaignItemsPath:format(itemTagName)
-                if tagPath:startswith "powerups" then
+                if itemTagPath:startswith "powerups" then
                     itemCollectionPath = campaignPowerupsPath:format(itemTagName)
                 end
-                if not fs.is(fs.cd() .. "/tags/" .. itemCollectionPath) then
+                local itemCollectionExists = fs.is(fs.cd() .. "/tags/" .. itemCollectionPath)
+                if not itemCollectionExists then
                     tag.create(itemCollectionPath, {
-                        permutations = {{weight = 1, item = tagPath}},
-                        default_spawn_time = 32767
+                        permutations = {{weight = 1, item = itemTagPath}},
+                        default_spawn_time = spawnTime
                     })
                 end
                 local position = tag.get(scenarioTagPath, block, itemIndex, "position")
+                assert(position)
                 local rotation = tag.get(scenarioTagPath, block, itemIndex, "rotation")
+                assert(type(rotation) == "string")
                 local yaw = tonumber(rotation:split(" ")[1])
                 coopNetgameEquipment[#coopNetgameEquipment + 1] = {
                     type_0 = "all_games",
