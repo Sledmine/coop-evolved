@@ -2,8 +2,8 @@ version: 1
 tag_space: 64M
 extend_limits: true
 scenarios:
-  - levels/a50/a50_coop_evolved_dev
   - levels/a30/a30_coop_evolved_dev
+  - levels/a50/a50_coop_evolved_dev
   - levels/b30/b30_coop_evolved_dev
   - levels/b40/b40_coop_evolved_dev
   - levels/c10/c10_coop_evolved_dev
