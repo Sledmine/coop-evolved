@@ -2382,39 +2382,6 @@
     (sleep -1 general_save )
 )
 
-(script continuous multiplayer_lift_a_control
-    (sleep_until (= (device_get_position lift_a_control_a) 1) 1)
-    (device_set_position_immediate lift_a_control_b 0)
-    (device_set_position lift_a 1)
-    (sleep_until (= (device_get_position lift_a_control_b) 1) 1)
-    (device_set_position_immediate lift_a_control_a 0)
-    (device_set_position lift_a 0)
-)
-(script continuous multiplayer_lift_b_control
-    (sleep_until (= (device_get_position lift_b_control_a) 1) 1)
-    (device_set_position_immediate lift_b_control_b 0)
-    (device_set_position lift_b 1)
-    (sleep_until (= (device_get_position lift_b_control_b) 1) 1)
-    (device_set_position_immediate lift_b_control_a 0)
-    (device_set_position lift_b 0)
-)
-(script continuous multiplayer_lift_c_control
-    (sleep_until (= (device_get_position lift_c_control_a) 1) 1)
-    (device_set_position_immediate lift_c_control_b 0)
-    (device_set_position lift_c 1)
-    (sleep_until (= (device_get_position lift_c_control_b) 1) 1)
-    (device_set_position_immediate lift_c_control_a 0)
-    (device_set_position lift_c 0)
-)
-(script continuous multiplayer_lift_d_control
-    (sleep_until (= (device_get_position lift_d_control_a) 1) 1)
-    (device_set_position_immediate lift_d_control_b 0)
-    (device_set_position lift_d 1)
-    (sleep_until (= (device_get_position lift_d_control_b) 1) 1)
-    (device_set_position_immediate lift_d_control_a 0)
-    (device_set_position lift_d 0)
-)
-
 (script dormant main_b40
 (fade_out 0 0 0 0 )
 (kill_all_continuous )
