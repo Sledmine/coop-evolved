@@ -33,22 +33,20 @@ end)
 
 blam.rcon.event("Ready", function(message, playerIndex)
     if blam.isGameSAPP() then
+        -- Player is already ready
         if CoopServerState.playersReady[playerIndex] then
             return
         end
+
+        -- Player is not ready, update remaining votes
         CoopServerState.remainingVotes = CoopServerState.remainingVotes - 1
         CoopServerState.playersReady[playerIndex] = true
 
+        -- All players are ready, start the game
         if CoopServerState.remainingVotes <= 0 then
             console_out("All players are ready, starting game...")
-
-            CoopStarted = true
-            local currentMapName = get_var(0, "$map")
-            local splitName = currentMapName:split "_"
-            local baseNoCoopName = splitName[1]
             coop.enableSpawn(true)
             set_timer(2000, "StartCoop")
-
         else
             console_out(
                 "Player " .. playerIndex .. " is ready, " .. CoopServerState.remainingVotes ..

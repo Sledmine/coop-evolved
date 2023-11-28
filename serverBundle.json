@@ -14,6 +14,7 @@
         "coop.constants",
         "coop.coop",
         "coop.commands",
-        "coop.network.events"
+        "coop.network.events",
+        "coop.gameplay.abilities"
     ]
 }

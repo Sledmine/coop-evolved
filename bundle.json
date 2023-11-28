@@ -15,6 +15,7 @@
         "coop.commands",
         "coop.network.events",
         "coop.ui.components.coopMenu",
+        "coop.gameplay.abilities",
         "ui.core",
         "ui.react",
         "ui.component",

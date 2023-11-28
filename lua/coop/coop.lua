@@ -3,7 +3,6 @@ local tagClasses = blam.tagClasses
 local isNull = blam.isNull
 local getIndexById = blam.getIndexById
 
-
 local coop = {}
 
 coop.difficulties = {"Easy", "Normal", "Heroic", "Legendary"}
@@ -140,14 +139,6 @@ function coop.disableSpawn()
     end
 end
 
-function StartCoop()
-    CoopStarted = true
-    local currentMapName = get_var(0, "$map")
-    local splitName = currentMapName:split "_"
-    local baseNoCoopName = splitName[1]
-    execute_script("wake main_" .. baseNoCoopName)
-end
-
 --- Enter a new player vote entry
 ---@param playerIndex number
 ---@return number remainingVotes
@@ -156,10 +147,10 @@ function coop.registerVote(playerIndex)
         local playerName = get_var(playerIndex, "$name")
         local requiredVotes = coop.getRequiredVotes()
         VotesList[playerIndex] = true
-        local votesCount = #glue.keys(VotesList)
+        local votesCount = #table.keys(VotesList)
         local remainingVotes = requiredVotes - votesCount
         say_all(playerName .. " is ready for coop! (" .. votesCount .. " / " .. requiredVotes .. ")")
-        if (votesCount >= requiredVotes) then
+        if votesCount >= requiredVotess then
             CoopStarted = true
             coop.enableSpawn(true)
             timer(3000, "StartCoop")
