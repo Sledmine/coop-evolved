@@ -10,9 +10,31 @@ scenarios:
   - levels/c20/c20_coop_evolved_dev
   - levels/d40/d40_coop_evolved_dev
 commands:
+  package:
+    - rm -rf dist
+    - mkdir -p dist
+    - mercury luabundle && mercury luabundle server
+    - cp dist/coop_evolved.lua package/lua-map/a30_coop_evolved.lua
+    - cp dist/coop_evolved.lua package/lua-map/a50_coop_evolved.lua
+    - cp dist/coop_evolved.lua package/lua-map/b30_coop_evolved.lua
+    - cp dist/coop_evolved.lua package/lua-map/b40_coop_evolved.lua
+    - cp dist/coop_evolved.lua package/lua-map/c10_coop_evolved.lua
+    - cp dist/coop_evolved.lua package/lua-map/c20_coop_evolved.lua
+    - cp dist/coop_evolved.lua package/lua-map/d40_coop_evolved.lua
+    - cp dist/coop_evolved_server.lua package/lua-sapp/coop_evolved_server.lua
+    - mercury pack package/ dist/
+    - rm package/lua-map/*.lua
+    - rm package/lua-sapp/*.lua
+    - rm package/game-maps/*.map
   symlinks:
+    - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/a30_coop_evolved_dev.lua"
+    - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/a50_coop_evolved_dev.lua"
     - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/b30_coop_evolved_dev.lua"
+    - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/b40_coop_evolved_dev.lua"
+    - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/c10_coop_evolved_dev.lua"
+    - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/c20_coop_evolved_dev.lua"
+    - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/d40_coop_evolved_dev.lua"
     - ln -f -s "$PWD/dist/coop_evolved_server.lua" "$HALO_CE_DATA_PATH/sapp/lua/coop_evolved_server.lua"
   release:
-    - mercury build --release
+    - mercury build --release --output package/game-maps/
     - mercury build package
