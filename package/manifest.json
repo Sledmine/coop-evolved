@@ -1,8 +1,8 @@
 {
     "manifestVersion": "1.1.0",
-    "files": {},
+    "files": [],
     "label": "coopevolved",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "category": "map",
     "author": "Shadowmods",
     "name": "Coop Evolved",
@@ -10,7 +10,7 @@
     "dependencies": [
         {
             "label": "mimic",
-            "version": "2.1.2"
+            "version": "3.0.0"
         }
     ]
 }
