@@ -35,15 +35,17 @@ function OnRconMessage(message)
 end
 
 function OnTick()
-    local player = blam.player(get_player())
-    if player then
-        if player.objectId ~= lastBipedTagId then
-            lastBipedTagId = player.objectId
+    local biped = blam.biped(get_dynamic_player())
+    if biped then
+        if biped.tagId ~= lastBipedTagId then
+            lastBipedTagId = biped.tagId
             coop.swapFirstPerson()
             console_out("Swapping first person...")
         end
     end
 
+    -- Elite ability proof of concept
+    -- 
     -- local playerBiped = blam.biped(get_dynamic_player())
     -- if (playerBiped and playerBiped.flashlightKey and playerBiped.isOnGround) then
     --    animationBackup = {animation = playerBiped.animation, frame = playerBiped.animationFrame}

@@ -96,7 +96,9 @@ function OnPlayerJoin(playerIndex)
     -- a specifc team index assigned based on the unit so by forcing the player to team "blue"
     -- is the value of 1 and equals to team "player" in campaign, allowing scripts and maps to
     -- work as expected. Yei!
+    --
     -- execute_script("st " .. playerIndex .. " blue")
+    --
     -- This is future me, it turns out ai_alleigance does not work in multiplayer, so back to
     -- force encounters to use team "red"... :(
     if not CoopStarted then
