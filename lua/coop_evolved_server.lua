@@ -1,5 +1,5 @@
 api_version = "1.12.0.0"
-DebugMode = true
+DebugMode = false
 
 local blam = require "blam"
 local tagClasses = blam.tagClasses
@@ -151,7 +151,7 @@ function OnTick()
         if object and object.class == blam.objectClasses.biped then
             local forcedTeam = forcedBipedTeams[object.tagId]
             if forcedTeam and object.team ~= forcedTeam then
-                say_all("Forcing biped team to " .. table.flip(blam.unitTeamClasses)[forcedTeam])
+                console_debug("Forcing biped team to " .. table.flip(blam.unitTeamClasses)[forcedTeam])
                 object.team = forcedTeam
             end
         end

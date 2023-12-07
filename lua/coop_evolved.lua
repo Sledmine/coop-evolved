@@ -1,7 +1,7 @@
 local blam = require "blam"
 require "luna"
 clua_version = 2.056
-DebugMode = true
+DebugMode = false
 
 -- Project modules
 local coop = require "coop.coop"
@@ -40,7 +40,7 @@ function OnTick()
         if biped.tagId ~= lastBipedTagId then
             lastBipedTagId = biped.tagId
             coop.swapFirstPerson()
-            console_out("Swapping first person...")
+            console_debug("Swapping first person...")
         end
     end
 

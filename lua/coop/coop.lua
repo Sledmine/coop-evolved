@@ -210,7 +210,7 @@ function coop.changeBiped(desiredBipedIndex)
     if desiredBiped and player then
         local mpInfo = globals.multiplayerInformation
         mpInfo[1].unit = desiredBiped.id
-        console_out("Replacing biped with " .. desiredBiped.name)
+        console_debug("Replacing biped with " .. desiredBiped.name)
         globals.multiplayerInformation = mpInfo
         delete_object(player.objectId)
     end
