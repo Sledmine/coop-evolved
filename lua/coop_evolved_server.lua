@@ -18,27 +18,28 @@ CoopStarted = false
 local starterWeapons = {a50 = {[[weapons\sniper rifle\sniper rifle]], [[weapons\pistol\pistol]]}}
 local isStarterWeaponsEnabled = true
 local forcedBipedTeams = {}
+local introCameras = {
+    a10 = "a10_start",
+    a30 = "a30_start",
+    a50 = "insertion_3",
+    b30 = "insertion_1a",
+    b40 = "b40_start",
+    c10 = "index_drop_1a",
+    c20 = "insertion_1",
+    d40 = "chief_climb_2c"
+}
 
 ---Setup coop state prior to starting the game
 ---@param playerIndex number
 function GetReadyForCoop(playerIndex)
     if not CoopStarted then
         rprint(playerIndex, "sync_camera_control 1")
-        -- a30
-        rprint(playerIndex, "sync_camera_set a30_start 0")
-        -- a50
-        rprint(playerIndex, "sync_camera_set insertion_3 0")
-        -- b30
-        rprint(playerIndex, "sync_camera_set insertion_1a 0")
-        -- b40
-        rprint(playerIndex, "sync_camera_set b40_start 0")
-        -- c10
-        rprint(playerIndex, "sync_camera_set index_drop_1a 0")
-        -- c20
-        rprint(playerIndex, "sync_camera_set insertion_1 0")
-        -- d40
-        rprint(playerIndex, "sync_camera_set chief_climb_2c 0")
-
+        for mapPattern, camera in pairs(introCameras) do
+            if map:includes(mapPattern) then
+                rprint(playerIndex, "sync_camera_set " .. camera .. " 0")
+                break
+            end
+        end
         -- Dispatch coop menu event
         blam.rcon.dispatch("CoopMenu", playerIndex)
 
@@ -52,6 +53,7 @@ function StartCoop()
     local splitName = map:split "_"
     local baseNoCoopName = splitName[1]
     execute_script("wake main_" .. baseNoCoopName)
+    isStarterWeaponsEnabled = true
     DisableStarterWeapons = function()
         isStarterWeaponsEnabled = false
     end
@@ -151,7 +153,8 @@ function OnTick()
         if object and object.class == blam.objectClasses.biped then
             local forcedTeam = forcedBipedTeams[object.tagId]
             if forcedTeam and object.team ~= forcedTeam then
-                console_debug("Forcing biped team to " .. table.flip(blam.unitTeamClasses)[forcedTeam])
+                console_debug("Forcing biped team to " ..
+                                  table.flip(blam.unitTeamClasses)[forcedTeam])
                 object.team = forcedTeam
             end
         end
