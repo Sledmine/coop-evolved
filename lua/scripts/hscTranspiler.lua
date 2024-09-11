@@ -90,7 +90,7 @@ local function convertToLua(ast)
             if type(varValue) == "table" then
                 varValue = convertToLua(varValue)
             end
-            variables[varName] = varValue
+            variables[varName] = true
             lua = lua .. "local " .. varName .. " = " .. tostring(varValue) .. "\n"
         elseif v["function"] == "*" then
             local var1 = astArgs[1]
