@@ -1,0 +1,92 @@
+---@class EngineTagDataShaderModelDetailMaskEnum : Enum 
+
+---@class EngineTagDataShaderModelDetailMaskNone : EngineTagDataShaderModelDetailMaskEnum 
+---@class EngineTagDataShaderModelDetailMaskReflectionMaskInverse : EngineTagDataShaderModelDetailMaskEnum 
+---@class EngineTagDataShaderModelDetailMaskReflectionMask : EngineTagDataShaderModelDetailMaskEnum 
+---@class EngineTagDataShaderModelDetailMaskSelfIlluminationMaskInverse : EngineTagDataShaderModelDetailMaskEnum 
+---@class EngineTagDataShaderModelDetailMaskSelfIlluminationMask : EngineTagDataShaderModelDetailMaskEnum 
+---@class EngineTagDataShaderModelDetailMaskChangeColorMaskInverse : EngineTagDataShaderModelDetailMaskEnum 
+---@class EngineTagDataShaderModelDetailMaskChangeColorMask : EngineTagDataShaderModelDetailMaskEnum 
+---@class EngineTagDataShaderModelDetailMaskAuxiliaryMaskInverse : EngineTagDataShaderModelDetailMaskEnum 
+---@class EngineTagDataShaderModelDetailMaskAuxiliaryMask : EngineTagDataShaderModelDetailMaskEnum 
+
+---@alias EngineTagDataShaderModelDetailMask 
+---| EngineTagDataShaderModelDetailMaskNone
+---| EngineTagDataShaderModelDetailMaskReflectionMaskInverse
+---| EngineTagDataShaderModelDetailMaskReflectionMask
+---| EngineTagDataShaderModelDetailMaskSelfIlluminationMaskInverse
+---| EngineTagDataShaderModelDetailMaskSelfIlluminationMask
+---| EngineTagDataShaderModelDetailMaskChangeColorMaskInverse
+---| EngineTagDataShaderModelDetailMaskChangeColorMask
+---| EngineTagDataShaderModelDetailMaskAuxiliaryMaskInverse
+---| EngineTagDataShaderModelDetailMaskAuxiliaryMask
+
+---@class EngineTagDataShaderModelDetailMaskTable 
+---@field skNone EngineTagDataShaderModelDetailMaskNone
+---@field skReflectionMaskInverse EngineTagDataShaderModelDetailMaskReflectionMaskInverse
+---@field skReflectionMask EngineTagDataShaderModelDetailMaskReflectionMask
+---@field skSelfIlluminationMaskInverse EngineTagDataShaderModelDetailMaskSelfIlluminationMaskInverse
+---@field skSelfIlluminationMask EngineTagDataShaderModelDetailMaskSelfIlluminationMask
+---@field skChangeColorMaskInverse EngineTagDataShaderModelDetailMaskChangeColorMaskInverse
+---@field skChangeColorMask EngineTagDataShaderModelDetailMaskChangeColorMask
+---@field skAuxiliaryMaskInverse EngineTagDataShaderModelDetailMaskAuxiliaryMaskInverse
+---@field skAuxiliaryMask EngineTagDataShaderModelDetailMaskAuxiliaryMask
+Engine.tag.shaderModelDetailMask = {} 
+
+---@class MetaEngineTagDataShaderModelFlags 
+---@field detailAfterReflection boolean 
+---@field twoSided boolean 
+---@field notAlphaTested boolean 
+---@field alphaBlendedDecal boolean 
+---@field trueAtmosphericFog boolean 
+---@field disableTwoSidedCulling boolean 
+---@field useXboxMultipurposeChannelOrder boolean 
+
+---@class MetaEngineTagDataShaderModelMoreFlags 
+---@field noRandomPhase boolean 
+
+---@class MetaEngineTagDataShaderModel: MetaEngineTagDataShader  
+---@field shaderModelFlags MetaEngineTagDataShaderModelFlags 
+---@field translucency MetaEngineFraction 
+---@field changeColorSource EngineTagDataFunctionNameNullable 
+---@field shaderModelMoreFlags MetaEngineTagDataShaderModelMoreFlags 
+---@field colorSource EngineTagDataFunctionNameNullable 
+---@field animationFunction EngineTagDataWaveFunction 
+---@field animationPeriod number 
+---@field animationColorLowerBound MetaEngineColorRGB 
+---@field animationColorUpperBound MetaEngineColorRGB 
+---@field mapUScale number 
+---@field mapVScale number 
+---@field baseMap MetaEngineTagDependency 
+---@field multipurposeMap MetaEngineTagDependency 
+---@field detailFunction EngineTagDataShaderDetailFunction 
+---@field detailMask EngineTagDataShaderModelDetailMask 
+---@field detailMapScale number 
+---@field detailMap MetaEngineTagDependency 
+---@field detailMapVScale number 
+---@field uAnimationSource EngineTagDataFunctionOut 
+---@field uAnimationFunction EngineTagDataWaveFunction 
+---@field uAnimationPeriod number 
+---@field uAnimationPhase number 
+---@field uAnimationScale number 
+---@field vAnimationSource EngineTagDataFunctionOut 
+---@field vAnimationFunction EngineTagDataWaveFunction 
+---@field vAnimationPeriod number 
+---@field vAnimationPhase number 
+---@field vAnimationScale number 
+---@field rotationAnimationSource EngineTagDataFunctionOut 
+---@field rotationAnimationFunction EngineTagDataWaveFunction 
+---@field rotationAnimationPeriod number 
+---@field rotationAnimationPhase number 
+---@field rotationAnimationScale number 
+---@field rotationAnimationCenter MetaEnginePoint2D 
+---@field reflectionFalloffDistance number 
+---@field reflectionCutoffDistance number 
+---@field perpendicularBrightness MetaEngineFraction 
+---@field perpendicularTintColor MetaEngineColorRGB 
+---@field parallelBrightness MetaEngineFraction 
+---@field parallelTintColor MetaEngineColorRGB 
+---@field reflectionCubeMap MetaEngineTagDependency 
+---@field unknown number 
+
+

@@ -1,0 +1,39 @@
+---@class MetaEngineTagDataLightFlags 
+---@field dynamic boolean 
+---@field noSpecular boolean 
+---@field dontLightOwnObject boolean 
+---@field supersizeInFirstPerson boolean 
+---@field firstPersonFlashlight boolean 
+---@field dontFadeActiveCamouflage boolean 
+
+---@class MetaEngineTagDataLight 
+---@field flags MetaEngineTagDataLightFlags 
+---@field radius number 
+---@field radiusModifer number 
+---@field falloffAngle MetaEngineAngle 
+---@field cutoffAngle MetaEngineAngle 
+---@field lensFlareOnlyRadius number 
+---@field cosFalloffAngle number 
+---@field cosCutoffAngle number 
+---@field unknownTwo number 
+---@field sinCutoffAngle number 
+---@field interpolationFlags MetaEngineTagDataColorInterpolationFlags 
+---@field colorLowerBound MetaEngineColorARGB 
+---@field colorUpperBound MetaEngineColorARGB 
+---@field primaryCubeMap MetaEngineTagDependency 
+---@field textureAnimationFunction EngineTagDataWaveFunction 
+---@field textureAnimationPeriod number 
+---@field secondaryCubeMap MetaEngineTagDependency 
+---@field yawFunction EngineTagDataWaveFunction 
+---@field yawPeriod number 
+---@field rollFunction EngineTagDataWaveFunction 
+---@field rollPeriod number 
+---@field pitchFunction EngineTagDataWaveFunction 
+---@field pitchPeriod number 
+---@field lensFlare MetaEngineTagDependency 
+---@field intensity number 
+---@field color MetaEngineColorRGB 
+---@field duration number 
+---@field falloffFunction EngineTagDataFunctionType 
+
+

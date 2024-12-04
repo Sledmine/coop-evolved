@@ -1,0 +1,268 @@
+---@class EngineTagDataSoundFormatEnum : Enum 
+
+---@class EngineTagDataSoundFormat16BitPcm : EngineTagDataSoundFormatEnum 
+---@class EngineTagDataSoundFormatXboxAdpcm : EngineTagDataSoundFormatEnum 
+---@class EngineTagDataSoundFormatImaAdpcm : EngineTagDataSoundFormatEnum 
+---@class EngineTagDataSoundFormatOggVorbis : EngineTagDataSoundFormatEnum 
+
+---@alias EngineTagDataSoundFormat 
+---| EngineTagDataSoundFormat16BitPcm
+---| EngineTagDataSoundFormatXboxAdpcm
+---| EngineTagDataSoundFormatImaAdpcm
+---| EngineTagDataSoundFormatOggVorbis
+
+---@class EngineTagDataSoundFormatTable 
+---@field 16BitPcm EngineTagDataSoundFormat16BitPcm
+---@field xboxAdpcm EngineTagDataSoundFormatXboxAdpcm
+---@field imaAdpcm EngineTagDataSoundFormatImaAdpcm
+---@field oggVorbis EngineTagDataSoundFormatOggVorbis
+Engine.tag.soundFormat = {} 
+
+---@class EngineTagDataSoundClassEnum : Enum 
+
+---@class EngineTagDataSoundClassProjectileImpact : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassProjectileDetonation : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused1 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassWeaponFire : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassWeaponReady : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassWeaponReload : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassWeaponEmpty : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassWeaponCharge : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassWeaponOverheat : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassWeaponIdle : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused2 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused3 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassObjectImpacts : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassParticleImpacts : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassSlowParticleImpacts : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused4 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused5 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnitFootsteps : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnitDialog : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused6 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused7 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassVehicleCollision : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassVehicleEngine : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused8 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused9 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassDeviceDoor : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassDeviceForceField : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassDeviceMachinery : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassDeviceNature : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassDeviceComputers : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused10 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassMusic : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassAmbientNature : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassAmbientMachinery : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassAmbientComputers : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused11 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused12 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused13 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassFirstPersonDamage : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused14 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused15 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused16 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused17 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassScriptedDialogPlayer : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassScriptedEffect : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassScriptedDialogOther : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassScriptedDialogForceUnspatialized : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused18 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassUnused19 : EngineTagDataSoundClassEnum 
+---@class EngineTagDataSoundClassGameEvent : EngineTagDataSoundClassEnum 
+
+---@alias EngineTagDataSoundClass 
+---| EngineTagDataSoundClassProjectileImpact
+---| EngineTagDataSoundClassProjectileDetonation
+---| EngineTagDataSoundClassUnused
+---| EngineTagDataSoundClassUnused1
+---| EngineTagDataSoundClassWeaponFire
+---| EngineTagDataSoundClassWeaponReady
+---| EngineTagDataSoundClassWeaponReload
+---| EngineTagDataSoundClassWeaponEmpty
+---| EngineTagDataSoundClassWeaponCharge
+---| EngineTagDataSoundClassWeaponOverheat
+---| EngineTagDataSoundClassWeaponIdle
+---| EngineTagDataSoundClassUnused2
+---| EngineTagDataSoundClassUnused3
+---| EngineTagDataSoundClassObjectImpacts
+---| EngineTagDataSoundClassParticleImpacts
+---| EngineTagDataSoundClassSlowParticleImpacts
+---| EngineTagDataSoundClassUnused4
+---| EngineTagDataSoundClassUnused5
+---| EngineTagDataSoundClassUnitFootsteps
+---| EngineTagDataSoundClassUnitDialog
+---| EngineTagDataSoundClassUnused6
+---| EngineTagDataSoundClassUnused7
+---| EngineTagDataSoundClassVehicleCollision
+---| EngineTagDataSoundClassVehicleEngine
+---| EngineTagDataSoundClassUnused8
+---| EngineTagDataSoundClassUnused9
+---| EngineTagDataSoundClassDeviceDoor
+---| EngineTagDataSoundClassDeviceForceField
+---| EngineTagDataSoundClassDeviceMachinery
+---| EngineTagDataSoundClassDeviceNature
+---| EngineTagDataSoundClassDeviceComputers
+---| EngineTagDataSoundClassUnused10
+---| EngineTagDataSoundClassMusic
+---| EngineTagDataSoundClassAmbientNature
+---| EngineTagDataSoundClassAmbientMachinery
+---| EngineTagDataSoundClassAmbientComputers
+---| EngineTagDataSoundClassUnused11
+---| EngineTagDataSoundClassUnused12
+---| EngineTagDataSoundClassUnused13
+---| EngineTagDataSoundClassFirstPersonDamage
+---| EngineTagDataSoundClassUnused14
+---| EngineTagDataSoundClassUnused15
+---| EngineTagDataSoundClassUnused16
+---| EngineTagDataSoundClassUnused17
+---| EngineTagDataSoundClassScriptedDialogPlayer
+---| EngineTagDataSoundClassScriptedEffect
+---| EngineTagDataSoundClassScriptedDialogOther
+---| EngineTagDataSoundClassScriptedDialogForceUnspatialized
+---| EngineTagDataSoundClassUnused18
+---| EngineTagDataSoundClassUnused19
+---| EngineTagDataSoundClassGameEvent
+
+---@class EngineTagDataSoundClassTable 
+---@field projectileImpact EngineTagDataSoundClassProjectileImpact
+---@field projectileDetonation EngineTagDataSoundClassProjectileDetonation
+---@field unused EngineTagDataSoundClassUnused
+---@field unused1 EngineTagDataSoundClassUnused1
+---@field weaponFire EngineTagDataSoundClassWeaponFire
+---@field weaponReady EngineTagDataSoundClassWeaponReady
+---@field weaponReload EngineTagDataSoundClassWeaponReload
+---@field weaponEmpty EngineTagDataSoundClassWeaponEmpty
+---@field weaponCharge EngineTagDataSoundClassWeaponCharge
+---@field weaponOverheat EngineTagDataSoundClassWeaponOverheat
+---@field weaponIdle EngineTagDataSoundClassWeaponIdle
+---@field unused2 EngineTagDataSoundClassUnused2
+---@field unused3 EngineTagDataSoundClassUnused3
+---@field objectImpacts EngineTagDataSoundClassObjectImpacts
+---@field particleImpacts EngineTagDataSoundClassParticleImpacts
+---@field slowParticleImpacts EngineTagDataSoundClassSlowParticleImpacts
+---@field unused4 EngineTagDataSoundClassUnused4
+---@field unused5 EngineTagDataSoundClassUnused5
+---@field unitFootsteps EngineTagDataSoundClassUnitFootsteps
+---@field unitDialog EngineTagDataSoundClassUnitDialog
+---@field unused6 EngineTagDataSoundClassUnused6
+---@field unused7 EngineTagDataSoundClassUnused7
+---@field vehicleCollision EngineTagDataSoundClassVehicleCollision
+---@field vehicleEngine EngineTagDataSoundClassVehicleEngine
+---@field unused8 EngineTagDataSoundClassUnused8
+---@field unused9 EngineTagDataSoundClassUnused9
+---@field deviceDoor EngineTagDataSoundClassDeviceDoor
+---@field deviceForceField EngineTagDataSoundClassDeviceForceField
+---@field deviceMachinery EngineTagDataSoundClassDeviceMachinery
+---@field deviceNature EngineTagDataSoundClassDeviceNature
+---@field deviceComputers EngineTagDataSoundClassDeviceComputers
+---@field unused10 EngineTagDataSoundClassUnused10
+---@field music EngineTagDataSoundClassMusic
+---@field ambientNature EngineTagDataSoundClassAmbientNature
+---@field ambientMachinery EngineTagDataSoundClassAmbientMachinery
+---@field ambientComputers EngineTagDataSoundClassAmbientComputers
+---@field unused11 EngineTagDataSoundClassUnused11
+---@field unused12 EngineTagDataSoundClassUnused12
+---@field unused13 EngineTagDataSoundClassUnused13
+---@field firstPersonDamage EngineTagDataSoundClassFirstPersonDamage
+---@field unused14 EngineTagDataSoundClassUnused14
+---@field unused15 EngineTagDataSoundClassUnused15
+---@field unused16 EngineTagDataSoundClassUnused16
+---@field unused17 EngineTagDataSoundClassUnused17
+---@field scriptedDialogPlayer EngineTagDataSoundClassScriptedDialogPlayer
+---@field scriptedEffect EngineTagDataSoundClassScriptedEffect
+---@field scriptedDialogOther EngineTagDataSoundClassScriptedDialogOther
+---@field scriptedDialogForceUnspatialized EngineTagDataSoundClassScriptedDialogForceUnspatialized
+---@field unused18 EngineTagDataSoundClassUnused18
+---@field unused19 EngineTagDataSoundClassUnused19
+---@field gameEvent EngineTagDataSoundClassGameEvent
+Engine.tag.soundClass = {} 
+
+---@class EngineTagDataSoundSampleRateEnum : Enum 
+
+---@class EngineTagDataSoundSampleRate22050_Hz : EngineTagDataSoundSampleRateEnum 
+---@class EngineTagDataSoundSampleRate44100_Hz : EngineTagDataSoundSampleRateEnum 
+
+---@alias EngineTagDataSoundSampleRate 
+---| EngineTagDataSoundSampleRate22050_Hz
+---| EngineTagDataSoundSampleRate44100_Hz
+
+---@class EngineTagDataSoundSampleRateTable 
+---@field e22050_Hz EngineTagDataSoundSampleRate22050_Hz
+---@field e44100_Hz EngineTagDataSoundSampleRate44100_Hz
+Engine.tag.soundSampleRate = {} 
+
+---@class EngineTagDataSoundChannelCountEnum : Enum 
+
+---@class EngineTagDataSoundChannelCountMono : EngineTagDataSoundChannelCountEnum 
+---@class EngineTagDataSoundChannelCountStereo : EngineTagDataSoundChannelCountEnum 
+
+---@alias EngineTagDataSoundChannelCount 
+---| EngineTagDataSoundChannelCountMono
+---| EngineTagDataSoundChannelCountStereo
+
+---@class EngineTagDataSoundChannelCountTable 
+---@field tMono EngineTagDataSoundChannelCountMono
+---@field tStereo EngineTagDataSoundChannelCountStereo
+Engine.tag.soundChannelCount = {} 
+
+---@class MetaEngineTagDataSoundFlags 
+---@field fitToAdpcmBlocksize boolean 
+---@field splitLongSoundIntoPermutations boolean 
+---@field thirstyGrunt boolean 
+
+---@class MetaEngineTagDataSoundPermutation 
+---@field name MetaEngineTagString 
+---@field skipFraction MetaEngineFraction 
+---@field gain MetaEngineFraction 
+---@field format EngineTagDataSoundFormat 
+---@field nextPermutationIndex MetaEngineIndex 
+---@field unknownTagHandle EngineTagHandle 
+---@field samplesPointer integer 
+---@field soundTagHandle0 EngineTagHandle 
+---@field bufferSize integer 
+---@field soundTagHandle1 EngineTagHandle 
+---@field samples MetaEngineTagDataOffset 
+---@field mouthData MetaEngineTagDataOffset 
+---@field subtitleData MetaEngineTagDataOffset 
+
+---@class MetaEngineTagDataSoundPitchRange 
+---@field name MetaEngineTagString 
+---@field naturalPitch number 
+---@field bendBounds number 
+---@field actualPermutationCount integer 
+---@field playbackRate number 
+---@field unknownFfffffff0 integer 
+---@field unknownFfffffff1 integer 
+---@field permutations TagBlock<MetaEngineTagDataSoundPermutation> 
+
+---@class MetaEngineTagDataSound 
+---@field flags MetaEngineTagDataSoundFlags 
+---@field soundClass EngineTagDataSoundClass 
+---@field sampleRate EngineTagDataSoundSampleRate 
+---@field minimumDistance number 
+---@field maximumDistance number 
+---@field skipFraction MetaEngineFraction 
+---@field randomPitchBounds number 
+---@field innerConeAngle MetaEngineAngle 
+---@field outerConeAngle MetaEngineAngle 
+---@field outerConeGain MetaEngineFraction 
+---@field randomGainModifier number 
+---@field maximumBendPerSecond number 
+---@field zeroSkipFractionModifier number 
+---@field zeroGainModifier number 
+---@field zeroPitchModifier number 
+---@field oneSkipFractionModifier number 
+---@field oneGainModifier number 
+---@field onePitchModifier number 
+---@field channelCount EngineTagDataSoundChannelCount 
+---@field format EngineTagDataSoundFormat 
+---@field promotionSound MetaEngineTagDependency 
+---@field promotionCount integer 
+---@field longestPermutationLength integer 
+---@field unknownFfffffff0 integer 
+---@field unknownFfffffff1 integer 
+---@field pitchRanges TagBlock<MetaEngineTagDataSoundPitchRange> 
+
+

@@ -1,0 +1,53 @@
+---@class MetaEngineTagDataShaderTransparentChicagoMapFlags 
+---@field unfiltered boolean 
+---@field alphaReplicate boolean 
+---@field uClamped boolean 
+---@field vClamped boolean 
+
+---@class MetaEngineTagDataShaderTransparentChicagoExtraFlags 
+---@field dontFadeActiveCamouflage boolean 
+---@field numericCountdownTimer boolean 
+---@field customEditionBlending boolean 
+
+---@class MetaEngineTagDataShaderTransparentChicagoMap 
+---@field flags MetaEngineTagDataShaderTransparentChicagoMapFlags 
+---@field colorFunction EngineTagDataShaderColorFunctionType 
+---@field alphaFunction EngineTagDataShaderColorFunctionType 
+---@field mapUScale number 
+---@field mapVScale number 
+---@field mapUOffset number 
+---@field mapVOffset number 
+---@field mapRotation number 
+---@field mipmapBias MetaEngineFraction 
+---@field map MetaEngineTagDependency 
+---@field uAnimationSource EngineTagDataFunctionOut 
+---@field uAnimationFunction EngineTagDataWaveFunction 
+---@field uAnimationPeriod number 
+---@field uAnimationPhase number 
+---@field uAnimationScale number 
+---@field vAnimationSource EngineTagDataFunctionOut 
+---@field vAnimationFunction EngineTagDataWaveFunction 
+---@field vAnimationPeriod number 
+---@field vAnimationPhase number 
+---@field vAnimationScale number 
+---@field rotationAnimationSource EngineTagDataFunctionOut 
+---@field rotationAnimationFunction EngineTagDataWaveFunction 
+---@field rotationAnimationPeriod number 
+---@field rotationAnimationPhase number 
+---@field rotationAnimationScale number 
+---@field rotationAnimationCenter MetaEnginePoint2D 
+
+---@class MetaEngineTagDataShaderTransparentChicago: MetaEngineTagDataShader  
+---@field numericCounterLimit integer 
+---@field shaderTransparentChicagoFlags MetaEngineTagDataShaderTransparentGenericFlags 
+---@field firstMapType EngineTagDataShaderFirstMapType 
+---@field framebufferBlendFunction EngineTagDataFramebufferBlendFunction 
+---@field framebufferFadeMode EngineTagDataFramebufferFadeMode 
+---@field framebufferFadeSource EngineTagDataFunctionOut 
+---@field lensFlareSpacing number 
+---@field lensFlare MetaEngineTagDependency 
+---@field extraLayers TagBlock<MetaEngineTagDataShaderTransparentExtraLayer> 
+---@field maps TagBlock<MetaEngineTagDataShaderTransparentChicagoMap> 
+---@field extraFlags MetaEngineTagDataShaderTransparentChicagoExtraFlags 
+
+

@@ -1,0 +1,94 @@
+---@class MetaEngineTagDataGrenadeHUDInterfaceOverlayType 
+---@field showOnFlashing boolean 
+---@field showOnEmpty boolean 
+---@field showOnDefault boolean 
+---@field showAlways boolean 
+
+---@class MetaEngineTagDataGrenadeHUDInterfaceSoundLatchedTo 
+---@field lowGrenadeCount boolean 
+---@field noGrenadesLeft boolean 
+---@field throwOnNoGrenades boolean 
+
+---@class MetaEngineTagDataGrenadeHUDInterfaceOverlay 
+---@field anchorOffset MetaEnginePoint2DInt 
+---@field widthScale number 
+---@field heightScale number 
+---@field scalingFlags MetaEngineTagDataHUDInterfaceScalingFlags 
+---@field defaultColor MetaEngineColorARGBInt 
+---@field flashingColor MetaEngineColorARGBInt 
+---@field flashPeriod number 
+---@field flashDelay number 
+---@field numberOfFlashes integer 
+---@field flashFlags MetaEngineTagDataHUDInterfaceFlashFlags 
+---@field flashLength number 
+---@field disabledColor MetaEngineColorARGBInt 
+---@field frameRate number 
+---@field sequenceIndex MetaEngineIndex 
+---@field type MetaEngineTagDataGrenadeHUDInterfaceOverlayType 
+---@field flags MetaEngineTagDataHUDInterfaceOverlayFlashFlags 
+
+---@class MetaEngineTagDataGrenadeHUDInterfaceSound 
+---@field sound MetaEngineTagDependency 
+---@field latchedTo MetaEngineTagDataGrenadeHUDInterfaceSoundLatchedTo 
+---@field scale number 
+
+---@class MetaEngineTagDataGrenadeHudInterface 
+---@field anchor EngineTagDataHUDInterfaceAnchor 
+---@field backgroundAnchorOffset MetaEnginePoint2DInt 
+---@field backgroundWidthScale number 
+---@field backgroundHeightScale number 
+---@field backgroundScalingFlags MetaEngineTagDataHUDInterfaceScalingFlags 
+---@field backgroundInterfaceBitmap MetaEngineTagDependency 
+---@field backgroundDefaultColor MetaEngineColorARGBInt 
+---@field backgroundFlashingColor MetaEngineColorARGBInt 
+---@field backgroundFlashPeriod number 
+---@field backgroundFlashDelay number 
+---@field backgroundNumberOfFlashes integer 
+---@field backgroundFlashFlags MetaEngineTagDataHUDInterfaceFlashFlags 
+---@field backgroundFlashLength number 
+---@field backgroundDisabledColor MetaEngineColorARGBInt 
+---@field backgroundSequenceIndex MetaEngineIndex 
+---@field backgroundMultitextureOverlays TagBlock<MetaEngineTagDataHUDInterfaceMultitextureOverlay> 
+---@field totalGrenadesBackgroundAnchorOffset MetaEnginePoint2DInt 
+---@field totalGrenadesBackgroundWidthScale number 
+---@field totalGrenadesBackgroundHeightScale number 
+---@field totalGrenadesBackgroundScalingFlags MetaEngineTagDataHUDInterfaceScalingFlags 
+---@field totalGrenadesBackgroundInterfaceBitmap MetaEngineTagDependency 
+---@field totalGrenadesBackgroundDefaultColor MetaEngineColorARGBInt 
+---@field totalGrenadesBackgroundFlashingColor MetaEngineColorARGBInt 
+---@field totalGrenadesBackgroundFlashPeriod number 
+---@field totalGrenadesBackgroundFlashDelay number 
+---@field totalGrenadesBackgroundNumberOfFlashes integer 
+---@field totalGrenadesBackgroundFlashFlags MetaEngineTagDataHUDInterfaceFlashFlags 
+---@field totalGrenadesBackgroundFlashLength number 
+---@field totalGrenadesBackgroundDisabledColor MetaEngineColorARGBInt 
+---@field totalGrenadesBackgroundSequenceIndex MetaEngineIndex 
+---@field totalGrenadesBackgroundMultitextureOverlays TagBlock<MetaEngineTagDataHUDInterfaceMultitextureOverlay> 
+---@field totalGrenadesNumbersAnchorOffset MetaEnginePoint2DInt 
+---@field totalGrenadesNumbersWidthScale number 
+---@field totalGrenadesNumbersHeightScale number 
+---@field totalGrenadesNumbersScalingFlags MetaEngineTagDataHUDInterfaceScalingFlags 
+---@field totalGrenadesNumbersDefaultColor MetaEngineColorARGBInt 
+---@field totalGrenadesNumbersFlashingColor MetaEngineColorARGBInt 
+---@field totalGrenadesNumbersFlashPeriod number 
+---@field totalGrenadesNumbersFlashDelay number 
+---@field totalGrenadesNumbersNumberOfFlashes integer 
+---@field totalGrenadesNumbersFlashFlags MetaEngineTagDataHUDInterfaceFlashFlags 
+---@field totalGrenadesNumbersFlashLength number 
+---@field totalGrenadesNumbersDisabledColor MetaEngineColorARGBInt 
+---@field totalGrenadesNumbersMaximumNumberOfDigits integer 
+---@field totalGrenadesNumbersFlags MetaEngineTagDataHUDInterfaceNumberFlags 
+---@field totalGrenadesNumbersNumberOfFractionalDigits integer 
+---@field flashCutoff integer 
+---@field totalGrenadesOverlayBitmap MetaEngineTagDependency 
+---@field totalGrenadesOverlays TagBlock<MetaEngineTagDataGrenadeHUDInterfaceOverlay> 
+---@field totalGrenadesWarningSounds TagBlock<MetaEngineTagDataGrenadeHUDInterfaceSound> 
+---@field messagingInformationSequenceIndex MetaEngineIndex 
+---@field messagingInformationWidthOffset integer 
+---@field messagingInformationOffsetFromReferenceCorner MetaEnginePoint2DInt 
+---@field messagingInformationOverrideIconColor MetaEngineColorARGBInt 
+---@field messagingInformationFrameRate integer 
+---@field messagingInformationFlags MetaEngineTagDataHUDInterfaceMessagingFlags 
+---@field messagingInformationTextIndex MetaEngineIndex 
+
+

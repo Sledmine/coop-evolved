@@ -1,0 +1,21 @@
+---@class MetaEngineTagDataShaderTransparentPlasma: MetaEngineTagDataShader  
+---@field intensitySource EngineTagDataFunctionOut 
+---@field intensityExponent number 
+---@field offsetSource EngineTagDataFunctionOut 
+---@field offsetAmount number 
+---@field offsetExponent number 
+---@field perpendicularBrightness MetaEngineFraction 
+---@field perpendicularTintColor MetaEngineColorRGB 
+---@field parallelBrightness MetaEngineFraction 
+---@field parallelTintColor MetaEngineColorRGB 
+---@field tintColorSource EngineTagDataFunctionNameNullable 
+---@field primaryAnimationPeriod number 
+---@field primaryAnimationDirection MetaEngineVector3D 
+---@field primaryNoiseMapScale number 
+---@field primaryNoiseMap MetaEngineTagDependency 
+---@field secondaryAnimationPeriod number 
+---@field secondaryAnimationDirection MetaEngineVector3D 
+---@field secondaryNoiseMapScale number 
+---@field secondaryNoiseMap MetaEngineTagDependency 
+
+

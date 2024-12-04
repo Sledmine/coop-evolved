@@ -1,0 +1,3 @@
+---@class MetaEngineTagDataPlaceholder: MetaEngineTagDataBasicObject  
+
+
