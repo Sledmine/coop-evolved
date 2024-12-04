@@ -35,7 +35,6 @@ end
 function PluginInit()
     logger = balltze.logger.createLogger("Coop Evolved")
     logger:muteIngame(false)
-    logger:muteDebug(false)
 
     -- Replace Chimera functions with Balltze functions
     execute_script = engine.hsc.executeScript

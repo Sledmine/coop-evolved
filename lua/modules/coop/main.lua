@@ -10,6 +10,8 @@ function log(...)
     end
 end
 
+logger:muteDebug(not DebugMode)
+
 -- Project modules
 local coop = require "coop.coop"
 local commands = require "coop.commands"
