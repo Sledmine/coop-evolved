@@ -1,81 +1,111 @@
-local blam = require "blam"
+local balltze = Balltze
+local engine = Engine
 require "luna"
-clua_version = 2.056
-DebugMode = false
 
--- Project modules
-local coop = require "coop.coop"
-local commands = require "coop.commands"
-local events = require "coop.network.events"
-local component = require "ui.component"
-local ether = require "ui.react"
-local constants = require "coop.constants"
+local main
+local loadWhenIn = {
+    "a30_coop_evolved",
+    "a50_coop_evolved",
+    "b30_coop_evolved",
+    "b40_coop_evolved",
+    "c10_coop_evolved",
+    "c20_coop_evolved",
+    "d40_coop_evolved"
+}
 
--- Global state
-local lastBipedTagId
-AvailableBipeds = {}
-CoopState = {remainingVotes = 0, difficulty = coop.difficulties[4]}
-local animationBackup = {animation = nil, frame = nil}
-
-function OnMapLoad()
-    AvailableBipeds = coop.getAvailableBipeds()
-    constants.get()
-    -- assert(constants.widgets.coopMenu, "Failed to load coop menu widget")
-    if constants.widgets.coopMenu then
-        ether.mount("coopMenu", constants.widgets.coopMenu.id)
-
-        CoopState = ether.reactive(CoopState, function()
-            ether.render(constants.widgets.coopMenu.id)
-        end)
+local function isMultiplayerMap(mapName)
+    for _, map in pairs(loadWhenIn) do
+        if mapName == map or mapName == map .. "_dev" then
+            return true
+        end
     end
+    return false
 end
 
-function OnRconMessage(message)
-    return blam.rcon.handle(message)
+function PluginMetadata()
+    return {
+        name = "Coop Evolved",
+        author = "Shadowmods",
+        version = "1.0.0",
+        targetApi = "1.0.0-rc.1",
+        reloadable = true
+    }
 end
 
-function OnTick()
-    local biped = blam.biped(get_dynamic_player())
-    if biped then
-        if biped.tagId ~= lastBipedTagId then
-            lastBipedTagId = biped.tagId
-            coop.swapFirstPerson()
-            console_debug("Swapping first person...")
+function PluginInit()
+    logger = balltze.logger.createLogger("Coop Evolved")
+    logger:muteIngame(false)
+    logger:muteDebug(false)
+
+    -- Replace Chimera functions with Balltze functions
+    execute_script = engine.hsc.executeScript
+    write_bit = function(address, bit, value)
+        local byte = read_byte(address)
+        if value then
+            byte = byte | (1 << bit)
+        else
+            byte = byte & ~(1 << bit)
+        end
+        write_byte(address, byte)
+    end
+    write_byte = balltze.memory.writeInt8
+    write_word = balltze.memory.writeInt16
+    write_dword = balltze.memory.writeInt32
+    write_int = balltze.memory.writeInt32
+    write_float = balltze.memory.writeFloat
+    write_string = function(address, value)
+        for i = 1, #value do
+            write_byte(address + i - 1, string.byte(value, i))
+        end
+        if #value == 0 then
+            write_byte(address, 0)
         end
     end
 
-    -- Elite ability proof of concept
-    -- 
-    -- local playerBiped = blam.biped(get_dynamic_player())
-    -- if (playerBiped and playerBiped.flashlightKey and playerBiped.isOnGround) then
-    --    animationBackup = {animation = playerBiped.animation, frame = playerBiped.animationFrame}
-    --    playerBiped.animation = 113
-    --    playerBiped.animationFrame = 5
-    --    playerBiped.xVel = playerBiped.xVel + (playerBiped.cameraX * 0.15)
-    --    playerBiped.yVel = playerBiped.yVel + (playerBiped.cameraY * 0.15)
-    --    -- playerBiped.zVel = (playerBiped.cameraZ * 0.1)
-    -- end
-    -- if (animationBackup) then
-    --    playerBiped.animation = 113
-    -- end
-    -- if (playerBiped.animation == 113 and playerBiped.animationFrame == 33 and animationBackup) then
-    --    playerBiped.animation = animationBackup.animation
-    --    -- playerBiped.animationFrame = animationBackup.frame
-    --    playerBiped.animationFrame = 0
-    --    animationBackup = nil
-    -- end
+    -- Imitate map lifecycle for scripts as in Chimera
+    -- TODO Replace this when Balltze allows per map plugin load
+    balltze.event.mapLoad.subscribe(function(event)
+        if event.time == "after" then
+            server_type = engine.netgame.getServerType()
+            local currentMap = event.context:mapName()
+            logger:debug("Map loaded: {}", currentMap)
+            if isMultiplayerMap(currentMap) then
+                if not main then
+                    main = require "coop.main"
+                end
+            else
+                if main then
+                    logger:debug("Unloading main")
+                    main.unload()
+                    package.loaded["coop.main"] = nil
+                    for k, v in pairs(package.loaded) do
+                        if k:includes "alpha_halo" then
+                            package.loaded[k] = nil
+                        end
+                    end
+                    main = nil
+                end
+            end
+        end
+    end)
 end
 
-function OnCommand(command)
-    if commands[command] then
-        return commands[command]()
+function PluginLoad()
+    -- Load Chimera compatibility
+    for k, v in pairs(balltze.chimera) do
+        if not k:includes "timer" and not k:includes "execute_script"  and not k:includes "set_callback" then
+            _G[k] = v
+        end
+    end
+
+    server_type = engine.netgame.getServerType()
+
+    if isMultiplayerMap(engine.map.getCurrentMapHeader().name) then
+        if not main then
+            main = require "coop.main"
+        end
     end
 end
 
-set_callback("map load", "OnMapLoad")
-set_callback("tick", "OnTick")
-set_callback("command", "OnCommand")
-set_callback("rcon message", "OnRconMessage")
-component.callbacks()
-
-OnMapLoad()
+function PluginUnload()
+end

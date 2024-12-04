@@ -18,7 +18,7 @@ local function coopMenu()
 
     bipedsList:scrollable(false)
     bipedsList:onSelect(function(item)
-        console_debug("Changing biped to " .. item.value)
+        log("Changing biped to " .. item.value)
         blam.rcon.dispatch("ChangeBiped", item.value)
     end)
     local bipeds = table.map(AvailableBipeds, function(biped, index)
@@ -26,12 +26,13 @@ local function coopMenu()
     end)
 
     readyButton:onClick(function()
-        console_debug("Ready button clicked")
+        log("Ready button clicked")
         blam.rcon.dispatch("Ready")
     end)
 
     -- Render
     return function()
+        log("Rendering coop menu")
         bipedsList:setItems(bipeds)
         votesCount:setText(tostring(CoopState.remainingVotes))
 

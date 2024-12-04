@@ -1,5 +1,8 @@
 local ether = {}
 
+local scriptBlock = require"script".block
+local core = require "ui.core"
+
 ---@type table<number, function>
 local mounted = {}
 local prefix = "@reactive_"
@@ -9,34 +12,41 @@ local prefix = "@reactive_"
 ---@param tagId number
 function ether.mount(component, tagId)
     if not mounted[tagId] then
-        console_debug("Mounting component: " .. component)
+        log("Mounting component: " .. component)
         mounted[tagId] = require("coop.ui.components." .. component)()
     end
     return mounted[tagId]
 end
 
----Render a UI component from the given tagId
----@param tagId number
-function ether.render(tagId)
-    local render = mounted[tagId]
+---Render a UI component from the given tagHandle
+---@param tagHandle number
+function ether.render(tagHandle)
+    local render = mounted[tagHandle]
     if render then
-        render()
+        scriptBlock(function(sleep, sleepUntil)
+            sleepUntil(function()
+                local widgetTag = core.getCurrentUIWidgetTag()
+                return widgetTag and widgetTag.id == tagHandle or false
+            end)
+            render()
+        end)()
         return true
     end
+    log("Failed to render component with tag handle: " .. tagHandle)
     return false
 end
 
 ---Unmount all UI components
 function ether.unmountAll()
     for k, v in pairs(mounted) do
-        console_debug("Unmounting component " .. k)
+        log("Unmounting component " .. k)
         mounted[k] = nil
     end
 end
 
----Create a Ether reactive table that keeps new properties internally but also triggers a console_debug message when a property is changed
+---Create a Ether reactive table that keeps new properties internally but also triggers a log message when a property is changed
 ---
----This table will return the value of the property if it exists internally with a prefix of "_reactive" and will trigger a console_debug message when a property is changed
+---This table will return the value of the property if it exists internally with a prefix of "_reactive" and will trigger a log message when a property is changed
 ---@generic T
 ---@param table T
 ---@param callback function
@@ -52,7 +62,7 @@ function ether.reactive(table, callback)
         end,
         __newindex = function(t, k, v)
             t[prefix .. k] = v
-            console_debug("Setting reactive property " .. k .. " to " .. tostring(v))
+            log("Setting reactive property " .. k .. " to " .. tostring(v))
             callback()
         end
     })

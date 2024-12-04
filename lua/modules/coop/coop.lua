@@ -2,6 +2,9 @@ local blam = require "blam"
 local tagClasses = blam.tagClasses
 local isNull = blam.isNull
 local getIndexById = blam.getIndexById
+local balltze = Balltze
+local engine = Engine
+local findTags = engine.tag.findTags
 
 local coop = {}
 
@@ -34,13 +37,14 @@ function coop.getRequiredVotes(playersCount)
 end
 
 function coop.getAvailableBipeds()
-    local bipedTags = blam.findTagsList("_mp", tagClasses.biped) or {}
+    local bipedTags = findTags("_mp", engine.tag.classes.biped)
+    assert(bipedTags, "Failed to load multiplayer biped tags")
     local bipedsList = {}
     for index, tag in pairs(bipedTags) do
         local tagPath = tag.path
         local tagSplit = tagPath:split "\\"
         local bipedName = tagSplit[#tagSplit]:gsub("_mp", ""):gsub("_", " "):upper()
-        bipedsList[index] = {name = bipedName, id = tag.id}
+        bipedsList[index] = {name = bipedName, id = tag.handle.value}
         table.sort(bipedsList, function(a, b)
             return a.name < b.name
         end)
@@ -211,7 +215,7 @@ function coop.changeBiped(desiredBipedIndex)
     if desiredBiped and player then
         local mpInfo = globals.multiplayerInformation
         mpInfo[1].unit = desiredBiped.id
-        console_debug("Replacing biped with " .. desiredBiped.name)
+        log("Replacing biped with " .. desiredBiped.name)
         globals.multiplayerInformation = mpInfo
         delete_object(player.objectId)
     end

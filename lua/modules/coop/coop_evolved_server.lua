@@ -53,7 +53,6 @@ function StartCoop()
     local splitName = map:split "_"
     local baseNoCoopName = splitName[1]
     execute_script("wake main_" .. baseNoCoopName)
-    isStarterWeaponsEnabled = true
     DisableStarterWeapons = function()
         isStarterWeaponsEnabled = false
     end
@@ -90,7 +89,7 @@ end
 function OnPlayerJoin(playerIndex)
     -- Change player team to "blue" due to how multiplayer teams are assigned to AI in Halo CE
     --
-    -- Basically team "red" equals total team index 0 and team "blue" means team index 1.
+    -- Basically team "red" equals to team index 0 and team "blue" means team index 1.
     -- AI in classic campaign at least is always defined as "default_by_unit" which is team index 0
     -- or in other words team "red" to the eyes of a multiplayer game.
     --
@@ -103,6 +102,10 @@ function OnPlayerJoin(playerIndex)
     --
     -- This is future me, it turns out ai_alleigance does not work in multiplayer, so back to
     -- force encounters to use team "red"... :(
+
+    -- Set players on the same team for coop purposes
+    execute_script("st " .. playerIndex .. " red")
+
     if not CoopStarted then
         CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
         GetReadyForCoop(playerIndex)
@@ -124,8 +127,9 @@ function OnPlayerDead(deadPlayerIndex)
     coop.findNewSpawn(deadPlayerIndex)
 end
 
-function OnMapLoad()
+function OnLoad()
     map = get_var(0, "$map")
+    isStarterWeaponsEnabled = true
     -- Fix biped that do not belong to a an AI encounter like the gun from the spirit dropship
     -- EXPERIMENTAL might not work or break stuff
     local tag = blam.findTag("cd_gun", tagClasses.biped)
@@ -159,6 +163,21 @@ function OnTick()
             end
         end
     end
+    for playerIndex = 1,16 do
+        local playerBiped = blam.biped(get_dynamic_player(playerIndex))
+        if playerBiped then
+            if not isNull(playerBiped.mostRecentDamagerPlayer) then
+                local player = blam.player(get_player(playerIndex))
+                -- Just force AI damager if the player did not damaged himself
+                if player then
+                    if playerBiped.mostRecentDamagerPlayer ~= player.id then
+                        -- Force server to tell this player was damaged by AI (guardians)
+                        playerBiped.mostRecentDamagerPlayer = blam.null
+                    end
+                end
+            end
+        end
+    end
 end
 
 function OnScriptLoad()
@@ -173,6 +192,9 @@ function OnScriptLoad()
 
     set_callback("map load", "OnMapLoad")
     set_callback("rcon message", "OnRconMessage")
+
+    -- Block Team Changing
+    execute_script("block_tc 1")
 
     register_callback(cb["EVENT_JOIN"], "OnPlayerJoin")
     register_callback(cb["EVENT_LEAVE"], "OnPlayerLeave")
