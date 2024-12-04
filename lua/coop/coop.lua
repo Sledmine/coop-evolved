@@ -109,7 +109,8 @@ end
 ---@return boolean
 function coop.findNewSpawn(exceptionPlayerIndex)
     local playerUsedForSpawn
-    if not IsGameOnCinematic then
+    local cinematic = blam.cinematicGlobals()
+    if not cinematic.isInProgress then
         for playerIndex = 1, 16 do
             local playerBiped = blam.biped(get_dynamic_player(playerIndex))
             if playerBiped and player_present(playerIndex) then
