@@ -80,8 +80,9 @@ local onTickEvent = balltze.event.tick.subscribe(function(event)
 end)
 local onRconMessageEvent = balltze.event.rconMessage.subscribe(function(event)
     if event.time == "before" then
-        OnRconMessage(event.context:message())
-        event:cancel()
+        if OnRconMessage(event.context:message()) then
+            event:cancel()
+        end
     end
 end)
 

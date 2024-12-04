@@ -79,7 +79,7 @@ function PluginInit()
                     main.unload()
                     package.loaded["coop.main"] = nil
                     for k, v in pairs(package.loaded) do
-                        if k:includes "alpha_halo" then
+                        if k:includes "coop" or k:includes "ui" then
                             package.loaded[k] = nil
                         end
                     end
