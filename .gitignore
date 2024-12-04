@@ -54,8 +54,8 @@ package/game-maps/*.map
 combatmaps/
 
 # Map files
-tags
-data
+tags/
+data/
 six-shooter.ini
 hek/
 *_sync.hsc
