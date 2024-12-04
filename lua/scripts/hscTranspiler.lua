@@ -75,6 +75,7 @@ print(inspect(hsc))
 print("-------------------- AST -> LUA ------------------------------")
 
 local variables = {}
+local coroutines = {}
 
 local function convertToLua(ast)
     local lua = ""
@@ -128,13 +129,22 @@ local function convertToLua(ast)
         elseif v["function"] == "if" then
             local condition = astArgs[1]
             local body = astArgs[2]
+            local elseBody = astArgs[3]
+            print("IF", inspect(astArgs))
             if type(condition) == "table" then
                 condition = convertToLua(condition)
             end
             if type(body) == "table" then
                 body = convertToLua(body)
             end
-            lua = lua .. "if " .. condition .. " then\n" .. body .. "end\n"
+            condition = tostring(condition)
+            if type(elseBody) == "table" then
+                elseBody = convertToLua(elseBody)
+                lua = lua .. "if " .. condition .. " then\n" .. body .. "else\n" .. elseBody ..
+                          "end\n"
+            else
+                lua = lua .. "if " .. condition .. " then\n" .. body .. "end\n"
+            end
         elseif v["function"] == "and" then
             local var1 = astArgs[1]
             local var2 = astArgs[2]
@@ -153,16 +163,7 @@ local function convertToLua(ast)
                 end
             end
             lua = lua .. table.concat(body, "\n")
-            -- elseif v["function"] == "list_get" then
-            -- local list = astArgs[1]
-            -- local index = astArgs[2]
-            -- if type(list) == "table" then
-            --    list = convertToLua(list)
-            -- end
-            -- index = convertToLua(index)
-            -- if type(index) == "table" then
-            --    lua = lua .. list .. "[" .. index .. "]"
-            -- end
+            --lua = lua .. "function()\n" .. table.concat(body, "\n") .. "end\n"
         elseif v["function"] == "or" then
             local var1 = astArgs[1]
             local var2 = astArgs[2]
@@ -235,6 +236,20 @@ local function convertToLua(ast)
                 end
             end
             lua = lua .. "end\n"
+        elseif v["function"] == "wake" then
+            local scriptName = astArgs[1]
+            lua = lua .. "wake(" .. scriptName .. ")\n"
+        elseif v["function"] == "sleep_until" then
+            for i, v in ipairs(astArgs) do
+                if type(v) == "table" then
+                    astArgs[i] = convertToLua(v)
+                end
+            end
+            local time = astArgs[#astArgs]
+            astArgs[#astArgs] = nil
+            lua =
+                lua .. "sleep_until(function() return " .. table.concat(astArgs, ", ") .. " end, " ..
+                    time .. ")\n"
         else
             local functionName = v["function"]
             -- print("General function call", functionName)
@@ -248,7 +263,7 @@ local function convertToLua(ast)
             -- print("NewArgs", inspect(functionArgs))
             for argPos, v in ipairs(functionArgs) do
                 -- if type(v) == "string" and (v:startswith("str_") or hscdoc[functionName]) then
-                print("ARG", functionName, argPos, v)
+                -- print("ARG", functionName, argPos, v)
                 local hscFunction = table.find(hscdoc, function(doc)
                     return doc.funcName == functionName
                 end)
@@ -277,6 +292,31 @@ end
 
 -- print(inspect(test))
 local lua = convertToLua(hsc)
+local header = [[---------- Transpiled from HSC to Lua ----------
+function sleep(time)
+    -- coroutine.yield("sleep", time)
+    os.execute("sleep 2")
+end
+function sleep_until(condition, time)
+    while not condition() do
+        -- coroutine.yield("sleep", time)
+        sleep(time)
+    end
+end
+function wake(func)
+    -- coroutine.yield("wake", func)
+    func()
+end
+setmetatable(_G, {
+    __index = function(_, key)
+        return function(...)
+            print(key, ...)
+            sleep(1)
+        end
+    end
+})
+]]
+lua = header .. lua
 luna.file.write("test.lua", lua)
 print("-------------------- LUA ------------------------------")
 print(lua)
