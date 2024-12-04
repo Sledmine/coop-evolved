@@ -67,18 +67,17 @@ function PluginInit()
         if event.time == "after" then
             server_type = engine.netgame.getServerType()
             local currentMap = event.context:mapName()
-            logger:debug("Map loaded: {}", currentMap)
             if isMultiplayerMap(currentMap) then
+                logger:debug("Map loaded: {}", currentMap)
                 if not main then
                     main = require "coop.main"
                 end
             else
                 if main then
-                    logger:debug("Unloading main")
                     main.unload()
                     package.loaded["coop.main"] = nil
                     for k, v in pairs(package.loaded) do
-                        if k:includes "coop" or k:includes "ui" then
+                        if k:startswith "coop" or k:startswith "ui" then
                             package.loaded[k] = nil
                         end
                     end
