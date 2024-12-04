@@ -3,23 +3,9 @@
     "output": "dist/coop_evolved.lua",
     "main": "lua/coop_evolved",
     "include": [
-        "lua/",
-        "lua/modules/"
+        "lua",
+        "lua/modules"
     ],
     "name": "Coop Evolved",
-    "modules": [
-        "blam",
-        "luna",
-        "coop.constants",
-        "coop.coop",
-        "coop.commands",
-        "coop.network.events",
-        "coop.ui.components.coopMenu",
-        "coop.gameplay.abilities",
-        "ui.core",
-        "ui.react",
-        "ui.component",
-        "ui.button",
-        "ui.list"
-    ]
+    "modules": []
 }
