@@ -25,6 +25,7 @@ CoopState = {remainingVotes = 0, difficulty = coop.difficulties[4]}
 
 function OnLoad()
     logger:info("Loading main")
+    component.callbacks()
     AvailableBipeds = coop.getAvailableBipeds()
     constants.get()
     -- assert(constants.widgets.coopMenu, "Failed to load coop menu widget")
@@ -86,8 +87,6 @@ local onRconMessageEvent = balltze.event.rconMessage.subscribe(function(event)
     end
 end)
 
-component.callbacks()
-
 OnLoad()
 
 return {
@@ -96,5 +95,6 @@ return {
         onMapLoad:remove()
         onTickEvent:remove()
         onRconMessageEvent:remove()
+        component.callbacks(true)
     end
 }

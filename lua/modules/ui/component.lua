@@ -79,7 +79,19 @@ local function setStringToWidget(text, widgetTagHandle, mask)
     end
 end
 
-function component.callbacks()
+local events = {}
+
+---Create callbacks events for components and widgets
+---@param unload? boolean
+function component.callbacks(unload)
+    if unload then
+        for _, event in pairs(events) do
+            event:remove()
+        end
+        events = {}
+        return
+    end
+
     ---@type MetaEngineTagDataUiWidgetDefinition?
     local editableWidgetTagData
     ---@type MetaEngineTag?
@@ -87,7 +99,7 @@ function component.callbacks()
     ---@type MetaEngineTag?
     local lastFocusedWidgetTagEntry
 
-    balltze.event.uiWidgetAccept.subscribe(function(event)
+    events.uiWidgetAcceptEvent = balltze.event.uiWidgetAccept.subscribe(function(event)
         if event.time == "before" then
             log("Accepting widget: {}", event.context.widget.definitionTagHandle.value)
             local isCanceled = false
@@ -128,9 +140,9 @@ function component.callbacks()
             end
         end
     end
-    balltze.event.uiWidgetFocus.subscribe(onWidgetFocus)
+    events.uiWidgetFocusEvent =  balltze.event.uiWidgetFocus.subscribe(onWidgetFocus)
 
-    balltze.event.uiWidgetMouseButtonPress.subscribe(function(event)
+    events.uiWidgetMouseButtonPressEvent = balltze.event.uiWidgetMouseButtonPress.subscribe(function(event)
         if event.time == "before" then
             local button = event.context.button:label()
             local widgetTag = engine.userInterface.findWidget(event.context.widget
@@ -168,7 +180,7 @@ function component.callbacks()
             component:scroll(mouse.scroll, true)
         end
     end
-    balltze.event.frame.subscribe(function(event)
+    events.frameEvent = balltze.event.frame.subscribe(function(event)
         if event.time == "before" then
             local widget = engine.userInterface.getRootWidget()
             if widget then
@@ -185,7 +197,7 @@ function component.callbacks()
         end
     end)
 
-    balltze.event.uiWidgetCreate.subscribe(function(event)
+    events.uiWidgetCreateEvent = balltze.event.uiWidgetCreate.subscribe(function(event)
         if event.time == "after" then
             local tagHandle = event.context.definitionTagHandle.value
             local widget = engine.userInterface.findWidget(tagHandle)
@@ -241,7 +253,7 @@ function component.callbacks()
     --    end
     -- end)
 
-    balltze.event.uiWidgetBack.subscribe(function(event)
+    events.uiWidgetBackEvent = balltze.event.uiWidgetBack.subscribe(function(event)
         if event.time == "before" then
             log("Closing tag: {}", event.context.widget.definitionTagHandle.value)
             local widgetTagHandleValue = event.context.widget.definitionTagHandle.value
@@ -255,7 +267,7 @@ function component.callbacks()
         end
     end)
 
-    balltze.event.uiWidgetListTab.subscribe(function(event)
+    events.uiWidgetListTabEvent = balltze.event.uiWidgetListTab.subscribe(function(event)
         if event.time == "before" then
             local pressedKey = event.context.tab
             log("Pressed key: {}", pressedKey)
@@ -310,7 +322,7 @@ function component.callbacks()
         end
     end)
 
-    balltze.event.keyboardInput.subscribe(function(event)
+    events.keyboardInputEvent = balltze.event.keyboardInput.subscribe(function(event)
         if event.time == "before" and not console_is_open() then
             local modifiers = event.context.key.modifier
             local char = event.context.key.character
