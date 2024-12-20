@@ -61,7 +61,7 @@ local main
 
 function PluginLoad()
     logger = balltze.logger.createLogger("Coop Evolved")
-    logger:muteIngame(false)
+    logger:muteDebug(not DebugMode)
 
     loadChimeraCompatibility()
 
