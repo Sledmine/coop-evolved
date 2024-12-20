@@ -3,6 +3,7 @@ local script = {}
 local engine = Engine
 
 local scriptQueue = {}
+local blockQueue = {}
 
 ---Sleeps for a certain amount of ticks
 ---@param sleepForTicks number
@@ -66,12 +67,20 @@ function script.block(inputFunction)
     end
     ---@return boolean success Async function has finished successfully
     return function()
-        co = coroutine.create(inputFunction)
-        local ok, message = coroutine.resume(co, sleep, sleepUntil)
-        if not ok then
-            error(debug.traceback(co, message), 0)
+        local ok, message
+        if not blockQueue[inputFunction] then
+            blockQueue[inputFunction] = coroutine.create(inputFunction)
+            co = blockQueue[inputFunction]
+            ok, message = coroutine.resume(co, sleep, sleepUntil)
+            if not ok then
+                error(debug.traceback(co, message), 0)
+            end
         end
-        return ok
+        if coroutine.status(co) == "dead" then
+            blockQueue[inputFunction] = nil
+            return true
+        end
+        return false, ok
     end
 end
 

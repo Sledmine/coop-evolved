@@ -30,7 +30,7 @@ function OnLoad()
     component.callbacks()
     AvailableBipeds = coop.getAvailableBipeds()
     constants.get()
-    -- assert(constants.widgets.coopMenu, "Failed to load coop menu widget")
+    assert(constants.widgets.coopMenu, "Failed to load coop menu widget")
     if constants.widgets.coopMenu then
         -- Tell bundler to load the coop menu module with comment below
         -- require("coop.ui.components.coopMenu")
@@ -53,11 +53,11 @@ function OnLoad()
             return true
         end)
     end
+
+    logger:info("Main loaded")
 end
 
-function OnRconMessage(message)
-    return blam.rcon.handle(message)
-end
+OnLoad()
 
 function OnTick()
     script.dispatch()
@@ -71,11 +71,6 @@ function OnTick()
     end
 end
 
-local onMapLoad = balltze.event.mapLoad.subscribe(function(event)
-    if event.time == "after" then
-        --OnMapLoad()
-    end
-end)
 local onTickEvent = balltze.event.tick.subscribe(function(event)
     if event.time == "before" then
         OnTick()
@@ -89,12 +84,9 @@ local onRconMessageEvent = balltze.event.rconMessage.subscribe(function(event)
     end
 end)
 
-OnLoad()
-
 return {
     unload = function()
         logger:warning("Unloading main")
-        onMapLoad:remove()
         onTickEvent:remove()
         onRconMessageEvent:remove()
         component.callbacks(true)
