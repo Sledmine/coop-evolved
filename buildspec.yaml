@@ -35,6 +35,14 @@ commands:
     - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/c20_coop_evolved_dev.lua"
     - ln -f -s "$PWD/dist/coop_evolved.lua" "$HALO_CE_DATA_PATH/chimera/lua/scripts/map/d40_coop_evolved_dev.lua"
     - ln -f -s "$PWD/dist/coop_evolved_server.lua" "$HALO_CE_DATA_PATH/sapp/lua/coop_evolved_server.lua"
+  hsc:
+    - invader-script -g gbx-custom levels/a30/a30_coop_evolved_dev
+    - invader-script -g gbx-custom levels/a50/a50_coop_evolved_dev
+    - invader-script -g gbx-custom levels/b30/b30_coop_evolved_dev
+    - invader-script -g gbx-custom levels/b40/b40_coop_evolved_dev
+    - invader-script -g gbx-custom levels/c10/c10_coop_evolved_dev
+    - invader-script -g gbx-custom levels/c20/c20_coop_evolved_dev
+    - invader-script -g gbx-custom levels/d40/d40_coop_evolved_dev
   release:
     - mercury build --release --output package/game-maps/
     - mercury build package
