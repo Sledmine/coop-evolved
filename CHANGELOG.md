@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.9.0] - 2024-12-2
 ### Added
 - New Elite, Mjolnir Gen 1, Marine and Grunt multiplayer bipeds with more customization options (by GDD)
+- New weapon models (by GDD)
 ### Fixed
 - Minor issues with player team changing not being blocked
 
