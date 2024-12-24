@@ -6,6 +6,8 @@ local core = require "ui.core"
 
 ---@class uiComponentListClass : uiComponent
 local list = setmetatable({
+    ---@type string
+    type = "list",
     ---@type number
     firstWidgetIndex = nil,
     ---@type number
@@ -19,11 +21,13 @@ local list = setmetatable({
     ---@type uiWidgetDefinitionChild[]
     backupChildWidgets = {},
     ---@type boolean
-    isScrollable = true
+    isScrollable = true,
+    ---@type uiComponentBar
+    scrollBar = nil
 }, {__index = component})
 
 ---@class uiComponentListItem
----@field label string
+---@field label? string
 ---@field value string | boolean | number | any
 ---@field bitmap? number | fun(uiComponent: uiComponent)
 
@@ -58,18 +62,45 @@ function list.onScroll(self, callback)
 end
 
 ---@param self uiComponentList
-function list.scroll(self, direction)
+function list.scroll(self, direction, isFromMouse)
     local itemIndex = self.currentItemIndex + direction
     if itemIndex < 1 then
+        if not isFromMouse then
+            -- TODO Play a sound when the list is scrolled to the end
+            -- interface.sound("error")
+        end
         itemIndex = 1
     elseif itemIndex > #self.items then
         itemIndex = #self.items
     end
+
+    local lastWidgetIndex = self.lastWidgetIndex
+    if self.isScrollable then
+        lastWidgetIndex = lastWidgetIndex - 2
+    end
+    local maximumDisplayableIndex = #self.items - lastWidgetIndex + 1
+    if maximumDisplayableIndex < 1 then
+        maximumDisplayableIndex = 1
+    end
+    if itemIndex > maximumDisplayableIndex then
+        if not isFromMouse then
+            -- TODO Play a sound when the list is scrolled to the end
+            -- interface.sound("error")
+        end
+        itemIndex = maximumDisplayableIndex
+    end
+
     self.currentItemIndex = itemIndex
     if self.events.onScroll then
         self.events.onScroll(self.items[itemIndex])
     end
     self:refresh()
+end
+
+local floor = math.floor
+local function round(x, p)
+    p = p or 1
+    return floor(x / p + .5) * p
 end
 
 ---@param self uiComponentList
@@ -82,12 +113,47 @@ function list.refresh(self)
     if self.isScrollable then
         firstWidgetIndex = firstWidgetIndex + 1
         lastWidgetIndex = lastWidgetIndex - 1
+
+        if self.scrollBar then
+            local scroll = self.scrollBar
+            local scrollBackground = scroll.widgetDefinition
+            local scrollBar = scroll:findChildWidgetDefinition("bar_value")
+            local elementsCount = #items
+            local visibleElementsCount = lastWidgetIndex - firstWidgetIndex + 1
+            local isHorizontal = self.widgetDefinition.dpadLeftRightTabsThruChildren
+            local size = scrollBackground.height
+            if isHorizontal then
+                size = scrollBackground.width
+            end
+            barSizePerElement = size / elementsCount
+            local isScrollBarVisible = elementsCount > visibleElementsCount
+            if isScrollBarVisible then
+                local scrollPosition = round((itemIndex - 1) * barSizePerElement)
+                if elementsCount > 0 then
+                    if isHorizontal then
+                        scrollBar.width = round(barSizePerElement * visibleElementsCount)
+                        scroll:setBarValues{position = {x = scrollPosition}}
+                    else
+                        scrollBar.height = round(barSizePerElement * visibleElementsCount)
+                        scroll:setBarValues{position = {y = scrollPosition}}
+                    end
+                end
+            else
+                if isHorizontal then
+                    scrollBar.width = scrollBackground.width
+                    scroll:setBarValues{position = {x = 0}}
+                else
+                    scrollBar.height = scrollBackground.height
+                    scroll:setBarValues{position = {y = 0}}
+                end
+            end
+        end
     end
     for widgetIndex = firstWidgetIndex, lastWidgetIndex do
         local item = items[itemIndex]
         local childWidget = widgetDefinition.childWidgets[widgetIndex]
         if item then
-            core.setWidgetValues(childWidget.widgetTag, {opacity = 1})
+            core.setWidgetValues(childWidget.widgetTag, {neverReceiveEvents = false, visible = true})
             if childWidget and not isNull(childWidget.widgetTag) then
                 local listButton = button.new(childWidget.widgetTag)
                 if item.label then
@@ -114,7 +180,7 @@ function list.refresh(self)
                 itemIndex = itemIndex + 1
             end
         else
-            core.setWidgetValues(childWidget.widgetTag, {opacity = 0})
+            core.setWidgetValues(childWidget.widgetTag, {neverReceiveEvents = true, visible = false})
         end
     end
 end
@@ -149,6 +215,7 @@ function list.setItems(self, items)
         button.new(widgetTagId)
     end
     self.currentItemIndex = 1
+    self.lastSelectedItemIndex = nil
     if self.isScrollable then
         local firstWidgetTagId = widgetDefinition.childWidgets[self.firstWidgetIndex].widgetTag
         local lastWidgetTagId = widgetDefinition.childWidgets[self.lastWidgetIndex].widgetTag
@@ -166,11 +233,13 @@ end
 
 ---@param self uiComponentList
 function list.getSelectedItem(self)
-    dprint(self.lastSelectedItemIndex)
-    return self.items[self.lastSelectedItemIndex]
+    if self:getWidgetValues() then
+        return self.items[self.lastSelectedItemIndex]
+    end
 end
 
 ---@param self uiComponentList
+---@param isScrollable boolean
 function list.scrollable(self, isScrollable)
     self.isScrollable = isScrollable
 end
@@ -178,6 +247,24 @@ end
 ---@param self uiComponentList
 function list.getCurrentItem(self)
     return self.items[self.currentItemIndex]
+end
+
+---@param self uiComponentList
+---@param itemIndex number
+function list.setCurrentItemIndex(self, itemIndex)
+    self.currentItemIndex = itemIndex
+    self:refresh()
+end
+
+---@param self uiComponentList
+---@param scrollBar uiComponentBar
+function list.setScrollBar(self, scrollBar)
+    self.scrollBar = scrollBar
+end
+
+---@param self uiComponentList
+function list.isHorizontal(self)
+    return self.widgetDefinition.dpadLeftRightTabsThruChildren
 end
 
 return list

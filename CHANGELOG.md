@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2024-12-2
+### Added
+- New Elite, Mjolnir Gen 1, Marine and Grunt multiplayer bipeds with more customization options (by GDD)
+### Fixed
+- Minor issues with player team changing not being blocked
+
 ## [1.8.2] - 2022-12-12
 ### Fixed
 - Intro cameras issue, some camera intro names were overlapping with other cameras
@@ -11,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.1] - 2022-12-06
 ### Changed
 - Introduction cameras for a30, a50 and b40
-
 ### Fixed
 - Player teleportation on a30 and b40
 - Missing coop spawn effect in some bipeds
@@ -22,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New b40 "Assault on the Control Room" map
 - Bipeds customization for Insurrection customization system
 - New multiplayer marine animations to support more vehicles and weapons
-
 ### Fixed
 - Marines animations when entering other pelican and scorpion seat
 - Fixed previous elevator workaround in b40
@@ -37,7 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 will not appear
 - Feature to sync device machines at the same rate as the AI update rate, preventing getting out
 of bandwidth just for syncing devices
-
 ### Fixed
 - Grenade plasma shaders alpha
 - Juggernaut health and remove feign chance
@@ -54,7 +57,6 @@ duplicated
 ## [1.0.0] - 2021-06-21
 ### Added
 - Multiplayer support for players arriving on pelicans 
-
 ### Changed
 - AI team for some encounters has changed to force team alliance on multiplayer
 - Removed marines due to game balance and players arriving on pelicans support
