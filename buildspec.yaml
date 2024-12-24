@@ -16,7 +16,6 @@ commands:
     - cp dist/coop_evolved.lua package/balltze-plugins/coop_evolved.lua
     - cp dist/coop_evolved_server.lua package/lua-sapp/coop_evolved_server.lua
     - mercury pack package/ dist/
-    - rm package/lua-map/*.lua
     - rm package/lua-sapp/*.lua
     - rm package/game-maps/*.map
     - rm package/balltze-plugins/*.lua
