@@ -107,12 +107,10 @@ local play_music_a10_06_alt = false
 local play_music_a10_07 = false
 local play_music_a10_07_alt = false
 player0 = function(call, sleep)
-    --return hsc.unit(hsc.list_get(hsc.players(), 0))
-    return "(unit (list_get (players) 0))"
+    return hsc.unit(hsc.list_get(hsc.players(), 0))
 end
 player1 = function(call, sleep)
-    --return hsc.unit(hsc.list_get(hsc.players(), 1))
-    return "(unit (list_get (players) 1))"
+    return hsc.unit(hsc.list_get(hsc.players(), 1))
 end
 player_count = function(call, sleep)
     return hsc.list_count(hsc.players())
@@ -2924,7 +2922,7 @@ test_looking_cycle = function(call, sleep)
     test_right_panel = true
     sleep(function()
         return not hsc.volume_test_objects("red_square", hsc.players()) or not test_center_panel or
-                   test_up_panel
+                   test_up_panel or test_down_panel or test_left_panel or test_right_panel
     end, 1)
     if hsc.volume_test_objects("red_square", hsc.players()) then
         test_looking_cycle = 0
@@ -3463,7 +3461,8 @@ tutorial_motiontracker = function(call, sleep)
     hsc.hud_blink_motion_sensor(false)
     sleep(function()
         return hsc.volume_test_objects("motiontracker_2", hsc.players()) or
-                   hsc.volume_test_objects("motiontracker_3", hsc.players())
+                   hsc.volume_test_objects("motiontracker_3", hsc.players()) or
+                   hsc.volume_test_objects("motiontracker_4", hsc.players())
     end, 1)
     if hsc.volume_test_objects("motiontracker_2", hsc.players()) then
         hsc.ai_conversation("motiontracker_2")
@@ -3737,7 +3736,9 @@ mission_cryo_explosion = function(call, sleep)
     hsc.ai_command_list_advance("cryo_tech/tech")
     sleep(function()
         return hsc.volume_test_objects("cryo_explosion_trigger_2", hsc.players()) or
-                   hsc.volume_test_objects("moving_jump_success", hsc.players())
+                   hsc.volume_test_objects("moving_jump_success", hsc.players()) or
+                   hsc.volume_test_objects("cryo_explosion_trigger_2",
+                                           hsc.ai_actors("cryo_tech/tech"))
     end, 1)
     sleep(function()
         return hsc.objects_can_see_object(hsc.players(), "cryo_explosion_door_1", 30)
@@ -4347,7 +4348,7 @@ bridge_kill_kill_kill = function(call, sleep)
     hsc.device_set_position_immediate("bridge_kill_door_1", 1)
     hsc.ai_magically_see_players("bridge_kill")
     sleep(240)
-    if global_meg_egg and not hsc.game_is_cooperative() then
+    if global_meg_egg and not hsc.game_is_cooperative() and impossible == hsc.game_difficulty_get() then
         hsc.device_set_position_immediate("bridge_kill_door_3", 1)
     end
 end
@@ -4392,7 +4393,7 @@ mission_bridge = function(call, sleep)
 
     sleep(function()
         return hsc.unit_get_health("keyesa10") < 1 or hsc.ai_living_count("bridge") <
-                   bridge_living_count
+                   bridge_living_count or hsc.structure_bsp_index() > 1
     end, 5)
     if not hsc.structure_bsp_index() > 1 then
         call(bridge_kill_kill_kill)
@@ -5037,7 +5038,9 @@ mission_final = function(call, sleep)
     hsc.ai_playfight("containment_3_anti", true)
     sleep(function()
         return hsc.volume_test_objects("final_trigger_1", hsc.players()) or
-                   hsc.volume_test_objects("final_trigger_2", hsc.players())
+                   hsc.volume_test_objects("final_trigger_2", hsc.players()) or
+                   hsc.volume_test_objects("final_trigger_3", hsc.players()) or
+                   hsc.volume_test_objects("final_trigger_4", hsc.players())
     end, 1)
     play_music_a10_07 = true
     hsc.ai_playfight("containment_3", false)
@@ -5063,7 +5066,10 @@ mission_final = function(call, sleep)
     hsc.ai_playfight("lifepod_2_anti", true)
     sleep(function()
         return hsc.volume_test_objects("final_trigger_7", hsc.players()) or
-                   hsc.volume_test_objects("final_trigger_8", hsc.players())
+                   hsc.volume_test_objects("final_trigger_8", hsc.players()) or
+                   hsc.volume_test_objects("final_trigger_9", hsc.players()) or
+                   hsc.volume_test_objects("final_trigger_10", hsc.players()) or
+                   hsc.volume_test_objects("final_trigger_12", hsc.players())
     end, 1)
     hsc.ai_playfight("lifepod_2", false)
     hsc.ai_playfight("lifepod_2_anti", false)
@@ -5115,6 +5121,7 @@ mission_final = function(call, sleep)
     hsc.game_won()
 end
 fast_setup = function(call, sleep)
+    hsc.ai_erase("cryo_tech/tech")
     hsc.ai_place("cryo_tech/tech")
     hsc.objects_predict(hsc.ai_actors("cryo_tech"))
     hsc.ai_command_list("cryo_tech/tech", "introduction_2")
@@ -5283,10 +5290,8 @@ mission_a10 = function(call, sleep)
     --wake(x10_post)
     --hsc.object_set_facing(call(player0), "facing_flag_1")
     --hsc.object_set_facing(call(player1), "facing_flag_1")
-    logger:debug("mission_a10")
-    wake(fast_setup)
     --if hsc.game_is_cooperative() then
-    --    wake(fast_setup)
+        wake(fast_setup)
     --else
     --    if not hsc.game_difficulty_get() == normal then
     --        wake(fast_setup)

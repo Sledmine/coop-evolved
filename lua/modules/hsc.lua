@@ -2,7 +2,7 @@ local hsc = {}
 
 local executeScript = Engine.hsc.executeScript
 
-require "luna"
+local luna = require "luna"
 
 local hscDoc = require "hscDoc"
 
@@ -11,83 +11,78 @@ local cacheHscGlobals = {
     short = "lua_short",
     long = "lua_long",
     real = "lua_real",
-    string = "lua_string"
+    string = "lua_string",
+    unit = "lua_unit",
+    object = "lua_object",
+    object_list = "lua_object_list"
 }
 
-local implementation = {}
+local function getScriptArgs(args)
+    -- return table.map(args, function(arg)
+    --    if type(arg) == "string" then
+    --        return "\"" .. arg .. "\""
+    --    else
+    --        return tostring(arg)
+    --    end
+    -- end)
+    return table.map(args, tostring)
+end
+
+local function getFunctionInvokation(hscFunction, args)
+    return hscFunction.funcName .. " " .. table.concat(args, " ")
+end
+
+local function setVariable(varName, varValue)
+    local varSet = "begin (set " .. varName .. " (" .. varValue .. "))"
+    executeScript(varSet)
+end
+
+local function getVariable(varName)
+    return get_global(varName)
+end
 
 setmetatable(hsc, {
     __index = function(_, key)
         local hscFunction = table.find(hscDoc, function(doc)
-            return doc.funcName:trim
-            () == key
+            return doc.funcName:trim() == key
         end)
         if hscFunction then
-            if hscFunction.returnType == "object_list" then
+            local returnType = hscFunction.returnType
+            if returnType == "boolean" or returnType == "short" or returnType == "long" or
+                returnType == "real" then
+                return function(...)
+                    local args = getScriptArgs({...})
+                    local functionInvokation = getFunctionInvokation(hscFunction, args)
+                    setVariable(cacheHscGlobals[returnType], functionInvokation)
+                    local result = getVariable(cacheHscGlobals[returnType])
+                    if returnType == "boolean" then
+                        if key == "objects_can_see_object" then
+                            logger:debug("{} -> {}", functionInvokation, result)
+                        end
+                        result = luna.bool(result)
+                    end
+                    return result
+                end
+                -- elseif returnType == "object" or returnType == "unit" or returnType == "object_list" then
+                --    return function(...)
+                --        local args = table.map({...}, tostring)
+                --        local functionInvokation = getFunctionInvokation(hscFunction, args)
+                --        executeScript(functionInvokation)
+                --        return "(" .. cacheHscGlobals[returnType] .. ")"
+                --    end
+            elseif returnType == "object" or returnType == "unit" or returnType == "object_list" then
                 return function(...)
                     local args = table.map({...}, tostring)
-                    local functionInvokation = hscFunction.funcName .. " " ..
-                    table.concat(args, " ")
-                    if not key == "players" then
-                        logger:debug("Creating object list for " .. key)
-                        logger:debug(functionInvokation)
-                    end
+                    local functionInvokation = getFunctionInvokation(hscFunction, args)
                     return "(" .. functionInvokation .. ")"
                 end
-            elseif hscFunction.returnType == "boolean" then
-                return function(...)
-                    local args = table.map({...}, tostring)
-                    local functionInvokation = hscFunction.funcName .. " " ..
-                                                   table.concat(args, " ")
-                    local varSet = "begin (set " .. cacheHscGlobals.boolean .. " (" ..
-                                       functionInvokation .. "))"
-                    executeScript(varSet)
-                    local result = get_global(cacheHscGlobals.boolean)
-                    -- logger:debug("{}: {}", varSet, result)
-                    return result
-                end
-            elseif hscFunction.returnType == "short" then
-                return function(...)
-                    local args = table.map({...}, tostring)
-                    local functionInvokation = hscFunction.funcName .. " " ..
-                                                   table.concat(args, " ")
-                    local varSet = "begin (set " .. cacheHscGlobals.short .. " (" ..
-                                       functionInvokation .. "))"
-                    executeScript(varSet)
-                    local result = get_global(cacheHscGlobals.short)
-                    -- logger:debug("{}: {}", varSet, result)
-                    return result
-
-                end
-            elseif hscFunction.returnType == "long" then
-                return function(...)
-                    local args = table.map({...}, tostring)
-                    local functionInvokation = hscFunction.funcName .. " " ..
-                                                   table.concat(args, " ")
-                    local varSet = "begin (set " .. cacheHscGlobals.long .. " (" ..
-                                       functionInvokation .. "))"
-                    executeScript(varSet)
-                    local result = get_global(cacheHscGlobals.long)
-                    -- logger:debug("{}: {}", varSet, result)
-                    return result
-                end
-            elseif hscFunction.returnType == "real" then
-                return function(...)
-                    local args = table.map({...}, tostring)
-                    local functionInvokation = hscFunction.funcName .. " " ..
-                                                   table.concat(args, " ")
-                    local varSet = "begin (set " .. cacheHscGlobals.real .. " (" ..
-                                       functionInvokation .. "))"
-                    executeScript(varSet)
-                    local result = get_global(cacheHscGlobals.real)
-                    -- logger:debug("{}: {}", varSet, result)
-                    return result
-                end
+            elseif returnType ~= "void" then
+                logger:warning("Return type {} for {} not implemented", returnType, key)
             else
                 return function(...)
                     local args = table.map({...}, tostring)
                     logger:debug("Invoking function {}", key)
-                    local functionInvokation = hscFunction.funcName .. " " .. table.concat(args, " ")
+                    local functionInvokation = getFunctionInvokation(hscFunction, args)
                     logger:debug(functionInvokation)
                     executeScript(functionInvokation)
                 end

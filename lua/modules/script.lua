@@ -33,8 +33,7 @@ local function waitFor(ticksOrCondition, everyTicksOrThread, maximumTicks)
     if sleepUntil then
         --logger:warning("Sleeping until condition is true")
         local currentTicks = engine.core.getTickCount()
-        -- while sleepUntil() ~= true or (maximumTicks and engine.core.getTickCount() - currentTicks < maximumTicks) do
-        while sleepUntil() ~= true do
+        while sleepUntil() ~= true or (maximumTicks and engine.core.getTickCount() - currentTicks > maximumTicks) do
             -- logger:debug("Sleeping...")
             coroutine.yield()
         end
@@ -53,10 +52,11 @@ end
 function script.dispatch()
     for ref, v in pairs(callTrace) do
         local callThread = v[1]
+        local run = v[2]
         local isCallAlive = coroutine.status(callThread) ~= "dead"
         local isWaitingForOtherCoroutine = callTrace[callThread]
         if isCallAlive and not isWaitingForOtherCoroutine then
-            local isCallOk, callResult = coroutine.resume(callThread)
+            local isCallOk, callResult = (run or coroutine.resume)(callThread)
             local isCallDead = coroutine.status(callThread) == "dead"
             -- logger:info("Routine: {} is {}, result: {}", tostring(co), coroutine.status(co), tostring(callResult))
             if not isCallOk then
@@ -82,12 +82,11 @@ function script.dispatch()
                     if parentIsAlive then
                         handleCoroutine(ref)
                     end
-                    -- callTrace[ref] = nil
                 end
             end
         end
         if not isCallAlive then
-            logger:warning("Call thread {} is dead, removing parent thread...", tostring(callThread))
+            logger:warning("Call {} is dead, removing parent thread...", tostring(callThread))
             callTrace[ref] = nil
         end
     end
@@ -98,19 +97,16 @@ function script.call(func, ...)
     -- local currentRefFuncName = debug.getlocal(1, 1)
     local ref = coroutine.create(func)
     local call = function(funcToCall)
-        local _, callThread = script.call(funcToCall)
-        callTrace[ref] = {callThread}
+        local run, callThread = script.call(funcToCall)
+        callTrace[ref] = {callThread, run}
         return coroutine.yield()
     end
-    local sleep = function(sleepFor)
-        -- callTrace[ref] = {script.call(function()
-        --    waitNTicks(sleepForTicks)
-        -- end)}
-        callTrace[ref] = {
-            coroutine.create(function()
-                waitFor(sleepFor)
-            end)
-        }
+    local sleep = function(...)
+        local args = {...}
+        local run, callThread = script.call(function()
+            waitFor(table.unpack(args))
+        end)
+        callTrace[ref] = {callThread, run}
         return coroutine.yield()
     end
     local run = function()
