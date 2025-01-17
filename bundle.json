@@ -7,5 +7,7 @@
         "lua/modules"
     ],
     "name": "Coop Evolved",
-    "modules": []
+    "modules": [
+        "levels/a10"
+    ]
 }

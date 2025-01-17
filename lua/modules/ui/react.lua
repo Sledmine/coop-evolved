@@ -1,6 +1,6 @@
 local ether = {}
 
-local scriptBlock = require"script".block
+local script = require"script".call
 local core = require "ui.core"
 
 ---@type table<number, function>
@@ -27,8 +27,15 @@ function ether.render(tagHandle)
         if widgetTag and widgetTag.id == tagHandle then
             render()
         else
-            scriptBlock(function(sleep, sleepUntil)
-                sleepUntil(function()
+            --scriptBlock(function(sleep, sleepUntil)
+            --    sleepUntil(function()
+            --        local widgetTag = core.getCurrentUIWidgetTag()
+            --        return (widgetTag and widgetTag.id == tagHandle) or false
+            --    end)
+            --    render()
+            --end)()
+            script(function(call, sleep)
+                sleep(function()
                     local widgetTag = core.getCurrentUIWidgetTag()
                     return (widgetTag and widgetTag.id == tagHandle) or false
                 end)

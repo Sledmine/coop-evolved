@@ -2,6 +2,7 @@ version: 1
 tag_space: 64M
 extend_limits: true
 scenarios:
+  - levels/a10/a10_coop_evolved_dev
   - levels/a30/a30_coop_evolved_dev
   - levels/a50/a50_coop_evolved_dev
   - levels/b30/b30_coop_evolved_dev
@@ -20,8 +21,10 @@ commands:
     - rm package/game-maps/*.map
     - rm package/balltze-plugins/*.lua
   symlinks:
-    - ln -f -s "$PWD/dist/coop_evolved_server.lua" "$HALO_CE_DATA_PATH/sapp/lua/coop_evolved_server.lua"
+    - ln -f -s $PWD/hsc/a10.hsc $PWD/data/levels/a10/scripts/a10.hsc
+    - ln -f -s $PWD/hsc/lua.hsc $PWD/data/levels/a10/scripts/lua.hsc
   hsc:
+    - invader-script -g gbx-custom levels/a10/a10_coop_evolved_dev
     - invader-script -g gbx-custom levels/a30/a30_coop_evolved_dev
     - invader-script -g gbx-custom levels/a50/a50_coop_evolved_dev
     - invader-script -g gbx-custom levels/b30/b30_coop_evolved_dev

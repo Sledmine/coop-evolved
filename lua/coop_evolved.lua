@@ -27,6 +27,7 @@ function log(...)
 end
 
 local loadWhenIn = {
+    "a10_coop_evolved",
     "a30_coop_evolved",
     "a50_coop_evolved",
     "b30_coop_evolved",
@@ -120,6 +121,17 @@ function PluginLoad()
                     CoopState = ether.reactive(CoopState, function()
                         ether.render(constants.widgets.coopMenu.id)
                     end)
+
+                    
+                    local mapName = engine.map.getCurrentMapHeader().name
+                    local levelName = mapName:split("_")[1]
+                    local ok, result = pcall(require, "levels." .. levelName)
+                    if not ok then
+                        logger:warning("Error loading level script: {}", result)
+                    else
+                        logger:info("Loaded level script for \"{}\"", levelName)
+                    end
+                    
                     loaded = true
                 end
             end
