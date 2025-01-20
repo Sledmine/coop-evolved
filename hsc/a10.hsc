@@ -3357,7 +3357,14 @@
 (device_set_position cafeteria_door_3 1)
 (ai_magically_see_encounter cafeteria_anti cafeteria)
 (ai_magically_see_encounter cafeteria cafeteria_anti)
-(sleep_until (not (or (volume_test_objects cafeteria_trigger_4 (players))(volume_test_objects cafeteria_trigger_4 (ai_actors cafeteria))))1)
+(sleep_until
+    (not
+        (or
+            (volume_test_objects cafeteria_trigger_4 (players))
+            (volume_test_objects cafeteria_trigger_4 (ai_actors cafeteria))
+        )
+    ) 1
+)
 (device_set_position cafeteria_door_1 0)
 (sleep_until (= 0 (device_get_position cafeteria_door_1))1)(device_set_power cafeteria_door_1 0))
 

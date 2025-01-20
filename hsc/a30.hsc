@@ -409,11 +409,18 @@
 (game_save_no_timeout ))
 
 (script static "void" music_a30_01
-(sound_looping_start "levels\a30\music\a30_01" none 1 )
-(sleep_until (or play_music_a30_01_alt (not play_music_a30_01 ))1 global_delay_music )
-(if play_music_a30_01_alt (begin (sound_looping_set_alternate "levels\a30\music\a30_01" true )
-(sleep_until (not play_music_a30_01 )1 global_delay_music )(set play_music_a30_01_alt false )))
-(set play_music_a30_01 false )(sound_looping_stop "levels\a30\music\a30_01" ))
+    (sound_looping_start "levels\a30\music\a30_01" none 1 )
+    (sleep_until (or play_music_a30_01_alt (not play_music_a30_01 ))1 global_delay_music )
+    (if play_music_a30_01_alt
+        (begin
+            (sound_looping_set_alternate "levels\a30\music\a30_01" true )
+            (sleep_until (not play_music_a30_01 )1 global_delay_music )
+            (set play_music_a30_01_alt false )
+        )
+    )
+    (set play_music_a30_01 false )
+    (sound_looping_stop "levels\a30\music\a30_01" )
+)
 
 (script static "void" music_a30_02
 (sound_looping_start "levels\a30\music\a30_02" none 1 )
