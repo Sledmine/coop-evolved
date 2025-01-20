@@ -1,10 +1,10 @@
 local script = {}
 
-local inspect = require "inspect"
-
 local engine = Engine
 
 local callTrace = {}
+
+local getTickCount = engine.core.getTickCount
 
 ---Sleeps for a certain amount of ticks or until a condition is met
 ---@overload fun(ticks: number)
@@ -23,17 +23,20 @@ local function waitFor(ticksOrCondition, everyTicksOrThread, maximumTicks)
             logger:warning("Causing another thread to sleep is not implemented yet!!!")
             return
         end
-        --logger:warning("Sleeping for " .. ticksOrCondition .. " ticks")
-        local currentTicks = engine.core.getTickCount()
-        while engine.core.getTickCount() - currentTicks < ticks do
+        -- logger:warning("Sleeping for " .. ticksOrCondition .. " ticks")
+        local currentTicks = getTickCount()
+        while getTickCount() - currentTicks < ticks do
             -- logger:debug("Sleeping...")
             coroutine.yield()
         end
     end
     if sleepUntil then
-        --logger:warning("Sleeping until condition is true")
-        local currentTicks = engine.core.getTickCount()
-        while sleepUntil() ~= true or (maximumTicks and engine.core.getTickCount() - currentTicks > maximumTicks) do
+        -- logger:warning("Sleeping until condition is true")
+        local currentTicks = getTickCount()
+        -- FIXME Maximum ticks does not seem to be working
+        -- It ignores sleepUntil and just sleeps for the maximumTicks
+        -- while sleepUntil() ~= true or (maximumTicks and getTickCount() - currentTicks < maximumTicks) do
+        while sleepUntil() ~= true do
             -- logger:debug("Sleeping...")
             coroutine.yield()
         end
@@ -53,6 +56,7 @@ function script.dispatch()
     for ref, v in pairs(callTrace) do
         local callThread = v[1]
         local run = v[2]
+        local metadata = v[3] or {}
         local isCallAlive = coroutine.status(callThread) ~= "dead"
         local isWaitingForOtherCoroutine = callTrace[callThread]
         if isCallAlive and not isWaitingForOtherCoroutine then
@@ -65,7 +69,7 @@ function script.dispatch()
             if isCallOk then
                 if callResult then
                     if callResult == "_finished" then
-                        logger:info("Call finished sleeping")
+                        -- logger:debug("Call finished sleeping")
                         handleCoroutine(ref)
                         -- callTrace[ref] = nil
                     else
@@ -93,34 +97,52 @@ function script.dispatch()
     return #callTrace
 end
 
-function script.call(func, ...)
+local function addThreadToTrace(ref, callThread, run, ...)
+    callTrace[ref] = {callThread, run, ...}
+end
+
+function script.thread(func, ...)
     -- local currentRefFuncName = debug.getlocal(1, 1)
     local ref = coroutine.create(func)
+
     local call = function(funcToCall)
-        local run, callThread = script.call(funcToCall)
-        callTrace[ref] = {callThread, run}
+        local run, callThread = script.thread(funcToCall)
+        addThreadToTrace(ref, callThread, run)
         return coroutine.yield()
     end
+
     local sleep = function(...)
         local args = {...}
-        local run, callThread = script.call(function()
+        local run, callThread = script.thread(function()
             waitFor(table.unpack(args))
         end)
-        callTrace[ref] = {callThread, run}
+        addThreadToTrace(ref, callThread, run)
         return coroutine.yield()
     end
+
     local run = function()
         return coroutine.resume(ref, call, sleep)
     end
     return run, ref
 end
 
+function script.startup(func)
+    return script.thread(func)()
+end
+
+function script.continuous(func)
+    --local run, ref = script.thread(func)
+    --local metadata = {isContinuous = true}
+    --addThreadToTrace(ref, ref, run, metadata)
+    --return run, ref
+    logger:warning("Continuous script is not implemented yet!!!")
+end
+
 function script.wake(func)
-    -- local ref, run = script.call(function (call, sleep)
-    --    sleep(1)
-    --    return call(func)
-    -- end)
-    script.call(func)()
+    script.thread(function(call, sleep)
+        sleep(1)
+        call(func)
+    end)()
 end
 
 return script
