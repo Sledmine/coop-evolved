@@ -122,16 +122,20 @@ function PluginLoad()
                         ether.render(constants.widgets.coopMenu.id)
                     end)
 
-                    
-                    local mapName = engine.map.getCurrentMapHeader().name
-                    local levelName = mapName:split("_")[1]
-                    local ok, result = pcall(require, "levels." .. levelName)
-                    if not ok then
-                        logger:warning("Error loading level script: {}", result)
-                    else
-                        logger:info("Loaded level script for \"{}\"", levelName)
+                    local serverType = engine.netgame.getServerType()
+
+                    if serverType == "local" or serverType == "none" then
+                        coop.enableSpawn(true)
+                        local mapName = engine.map.getCurrentMapHeader().name
+                        local levelName = mapName:split("_")[1]
+                        local ok, result = pcall(require, "levels." .. levelName)
+                        if not ok then
+                            logger:warning("Error loading level script: {}", result)
+                        else
+                            logger:info("Loaded level script for \"{}\"", levelName)
+                        end
                     end
-                    
+
                     loaded = true
                 end
             end
