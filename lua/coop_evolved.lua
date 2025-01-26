@@ -99,7 +99,7 @@ function PluginLoad()
 
     balltze.event.tick.subscribe(function(event)
         if event.time == "before" then
-            script.dispatch()
+            script.poll()
             local biped = blam.biped(get_dynamic_player())
             if biped then
                 if biped.tagId ~= lastBipedTagHandle then
