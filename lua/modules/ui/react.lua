@@ -1,6 +1,6 @@
 local ether = {}
 
-local script = require"script".call
+local script = require"script".thread
 local core = require "ui.core"
 
 ---@type table<number, function>
