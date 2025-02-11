@@ -1,13 +1,13 @@
 ---------- Transpiled from HSC to Lua ----------
-local script = require"script".call
+local script = require "script"
 local wake = require"script".wake
 local hsc = require "hsc"
-hsc.begin_random = function(func)
-    func()
-end
-hsc.print = function(message)
-    Engine.core.consolePrint("{}", tostring(message))
-end
+local easy = "easy"
+local normal = "normal"
+local hard = "hard"
+local impossible = "impossible"
+
+local a10 = {}
 
 local global_dialog_on = false
 local global_music_on = false
@@ -106,65 +106,74 @@ local play_music_a10_06 = false
 local play_music_a10_06_alt = false
 local play_music_a10_07 = false
 local play_music_a10_07_alt = false
-player0 = function(call, sleep)
+function a10.player0(call, sleep)
     return hsc.unit(hsc.list_get(hsc.players(), 0))
 end
-player1 = function(call, sleep)
+
+function a10.player1(call, sleep)
     return hsc.unit(hsc.list_get(hsc.players(), 1))
 end
-player_count = function(call, sleep)
+
+function a10.player_count(call, sleep)
     return hsc.list_count(hsc.players())
 end
-cinematic_skip_start = function(call, sleep)
+
+function a10.cinematic_skip_start(call, sleep)
     hsc.cinematic_skip_start_internal()
     hsc.game_save_totally_unsafe()
     sleep(function()
-        return not hsc.game_saving()
-
+        return not (hsc.game_saving())
     end, 1)
-    return not hsc.game_reverted()
-
+    return not (hsc.game_reverted())
 end
-cinematic_skip_stop = function(call, sleep)
+
+function a10.cinematic_skip_stop(call, sleep)
     hsc.cinematic_skip_stop_internal()
 end
-script_dialog_start = function(call, sleep)
+
+function a10.script_dialog_start(call, sleep)
     sleep(function()
         return not global_dialog_on
     end)
     global_dialog_on = true
     hsc.ai_dialogue_triggers(false)
 end
-script_dialog_stop = function(call, sleep)
+
+function a10.script_dialog_stop(call, sleep)
     hsc.ai_dialogue_triggers(true)
     sleep(30)
     global_dialog_on = false
 end
-player_effect_impact = function(call, sleep)
+
+function a10.player_effect_impact(call, sleep)
     hsc.player_effect_set_max_translation(0.05, 0.05, 0.075)
     hsc.player_effect_set_max_rotation(0, 0, 0)
     hsc.player_effect_set_max_rumble(0.4, 1)
     hsc.player_effect_start(hsc.real_random_range(0.7, 0.9), 0.1)
 end
-player_effect_explosion = function(call, sleep)
+
+function a10.player_effect_explosion(call, sleep)
     hsc.player_effect_set_max_translation(0.01, 0.01, 0.025)
     hsc.player_effect_set_max_rotation(0.5, 0.5, 1)
     hsc.player_effect_set_max_rumble(0.5, 0.4)
     hsc.player_effect_start(hsc.real_random_range(0.7, 0.9), 0.1)
 end
-player_effect_rumble = function(call, sleep)
+
+function a10.player_effect_rumble(call, sleep)
     hsc.player_effect_set_max_translation(0.01, 0, 0.02)
     hsc.player_effect_set_max_rotation(0.1, 0.1, 0.2)
     hsc.player_effect_set_max_rumble(0.5, 0.3)
     hsc.player_effect_start(hsc.real_random_range(0.7, 0.9), 0.5)
 end
-player_effect_vibration = function(call, sleep)
+
+function a10.player_effect_vibration(call, sleep)
     hsc.player_effect_set_max_translation(0.0075, 0.0075, 0.0125)
     hsc.player_effect_set_max_rotation(0.01, 0.01, 0.05)
     hsc.player_effect_set_max_rumble(0.2, 0.5)
     hsc.player_effect_start(hsc.real_random_range(0.7, 0.9), 1)
 end
-bomber_setup = function(call, sleep)
+
+function a10.bomber_setup(call, sleep)
     hsc.object_create_anew_containing("space_bomber")
     hsc.object_set_scale("space_bomber_1", 0.35, 0)
     hsc.object_set_scale("space_bomber_2", 0.35, 0)
@@ -173,16 +182,19 @@ bomber_setup = function(call, sleep)
     hsc.object_set_scale("space_bomber_5", 0.35, 0)
     hsc.object_set_scale("space_bomber_6", 0.35, 0)
 end
-bomber_cleanup = function(call, sleep)
+
+function a10.bomber_cleanup(call, sleep)
     hsc.object_destroy_containing("space_bomber")
 end
-bomber_flight_1 = function(call, sleep)
+
+function a10.bomber_flight_1(call, sleep)
     hsc.object_teleport("space_bomber_1", "bomber_base_6")
     hsc.object_teleport("space_bomber_2", "bomber_base_7")
     hsc.recording_play("space_bomber_1", "fly_straight")
     hsc.recording_play("space_bomber_2", "fly_straight")
 end
-bomber_flight_2 = function(call, sleep)
+
+function a10.bomber_flight_2(call, sleep)
     hsc.object_teleport("space_bomber_3", "bomber_base_1")
     hsc.object_teleport("space_bomber_4", "bomber_base_2")
     hsc.object_teleport("space_bomber_5", "bomber_base_9")
@@ -190,7 +202,8 @@ bomber_flight_2 = function(call, sleep)
     hsc.recording_play("space_bomber_4", "fly_straight")
     hsc.recording_play("space_bomber_5", "fly_straight")
 end
-bomber_flight_3 = function(call, sleep)
+
+function a10.bomber_flight_3(call, sleep)
     hsc.object_teleport("space_bomber_1", "bomber_base_5")
     hsc.object_teleport("space_bomber_2", "bomber_base_4")
     hsc.object_teleport("space_bomber_3", "bomber_base_3")
@@ -198,21 +211,25 @@ bomber_flight_3 = function(call, sleep)
     hsc.recording_play("space_bomber_2", "fly_straight")
     hsc.recording_play("space_bomber_3", "fly_straight")
 end
-bomber_flight_4 = function(call, sleep)
+
+function a10.bomber_flight_4(call, sleep)
     hsc.object_teleport("space_bomber_1", "bomber_base_3")
     hsc.object_teleport("space_bomber_2", "bomber_base_4")
     hsc.recording_play("space_bomber_1", "fly_straight")
     hsc.recording_play("space_bomber_2", "fly_straight")
 end
-bomber_flight_5 = function(call, sleep)
+
+function a10.bomber_flight_5(call, sleep)
     hsc.object_teleport("space_bomber_4", "bomber_base_8")
     hsc.recording_play("space_bomber_4", "fly_straight")
 end
-bomber_flight_6 = function(call, sleep)
+
+function a10.bomber_flight_6(call, sleep)
     hsc.object_teleport("space_bomber_4", "bomber_base_5")
     hsc.recording_play("space_bomber_4", "fly_straight")
 end
-flight_cleanup = function(call, sleep)
+
+function a10.flight_cleanup(call, sleep)
     hsc.recording_kill("space_bomber_1")
     hsc.recording_kill("space_bomber_2")
     hsc.recording_kill("space_bomber_3")
@@ -220,28 +237,30 @@ flight_cleanup = function(call, sleep)
     hsc.recording_kill("space_bomber_5")
     hsc.recording_kill("space_bomber_6")
 end
-autumn_glory_1 = function(call, sleep)
+
+function a10.autumn_glory_1(call, sleep)
     hsc.object_create_anew("glory_halo")
     hsc.object_pvs_set_camera("autumn_glory_1a")
-    call(bomber_setup)
+    call(a10.bomber_setup)
     hsc.camera_set("autumn_glory_1a2", 0)
     hsc.fade_in(0, 0, 0, 90)
     sleep(180)
     hsc.camera_set("autumn_glory_1b", 200)
     sleep(100)
-    call(bomber_flight_1)
+    call(a10.bomber_flight_1)
     hsc.camera_set("autumn_glory_1c", 200)
     sleep(100)
     hsc.object_destroy("glory_halo")
     hsc.camera_set("autumn_glory_1f", 375)
-    call(bomber_flight_2)
+    call(a10.bomber_flight_2)
     sleep(250)
     hsc.object_destroy("glory_halo")
 end
-autumn_glory_2 = function(call, sleep)
-    call(bomber_cleanup)
-    call(bomber_setup)
-    call(bomber_flight_3)
+
+function a10.autumn_glory_2(call, sleep)
+    call(a10.bomber_cleanup)
+    call(a10.bomber_setup)
+    call(a10.bomber_flight_3)
     hsc.object_create_anew("keyes_x10_space")
     hsc.object_create_anew("space_crew_1")
     hsc.object_create_anew("space_crew_2")
@@ -264,10 +283,10 @@ autumn_glory_2 = function(call, sleep)
     sleep(150)
     hsc.camera_set("autumn_glory_2c", 300)
     sleep(100)
-    call(bomber_flight_6)
+    call(a10.bomber_flight_6)
     sleep(50)
-    call(flight_cleanup)
-    call(bomber_flight_4)
+    call(a10.flight_cleanup)
+    call(a10.bomber_flight_4)
     hsc.camera_set("autumn_glory_2d", 300)
     hsc.objects_predict("keyes_x10")
     hsc.objects_predict("x10_chair_1r")
@@ -278,7 +297,7 @@ autumn_glory_2 = function(call, sleep)
     hsc.recording_play("space_crew_3", "space_walk_1")
     sleep(100)
     hsc.sound_impulse_start("sound\\dialog\\x10\\cor01", "none", 1)
-    call(bomber_flight_5)
+    call(a10.bomber_flight_5)
     sleep(150)
     hsc.fade_out(0, 0, 0, 15)
     sleep(15)
@@ -286,9 +305,10 @@ autumn_glory_2 = function(call, sleep)
     hsc.object_destroy_containing("space_crew")
     hsc.object_destroy_containing("space_chair")
     hsc.object_destroy("space_display")
-    call(flight_cleanup)
+    call(a10.flight_cleanup)
 end
-x10_crew_salute_1 = function(call, sleep)
+
+function a10.x10_crew_salute_1(call, sleep)
     hsc.object_create_anew("x10_crew_panic_1")
     hsc.object_teleport("x10_crew_panic_1", "x10_salute_base_1")
     hsc.custom_animation("x10_crew_panic_1", "cinematics\\animations\\crewman\\x10\\x10",
@@ -296,7 +316,8 @@ x10_crew_salute_1 = function(call, sleep)
     hsc.unit_get_custom_animation_time("x10_crew_panic_1")
     hsc.recording_play_and_delete("x10_crew_panic_1", "x10_salute_1_finish")
 end
-x10_crew_salute_2 = function(call, sleep)
+
+function a10.x10_crew_salute_2(call, sleep)
     hsc.object_create_anew("x10_crew_panic_2")
     hsc.object_teleport("x10_crew_panic_2", "x10_salute_base_2")
     hsc.recording_play("x10_crew_panic_2", "x10_salute_2_start")
@@ -307,7 +328,8 @@ x10_crew_salute_2 = function(call, sleep)
     hsc.recording_kill("x10_crew_panic_2")
     hsc.recording_play_and_delete("x10_crew_panic_2", "x10_salute_2_finish")
 end
-x10_crew_panic_1 = function(call, sleep)
+
+function a10.x10_crew_panic_1(call, sleep)
     hsc.object_create_anew("x10_crew_panic_1")
     hsc.object_teleport("x10_crew_panic_1", "x10_panic_1_base")
     hsc.custom_animation("x10_crew_panic_1", "cinematics\\animations\\crewman\\x10\\x10",
@@ -315,7 +337,8 @@ x10_crew_panic_1 = function(call, sleep)
     sleep(hsc.unit_get_custom_animation_time("x10_crew_panic_1"))
     hsc.object_destroy("x10_crew_panic_1")
 end
-x10_crew_panic_2 = function(call, sleep)
+
+function a10.x10_crew_panic_2(call, sleep)
     hsc.object_create_anew("x10_crew_panic_2")
     hsc.object_teleport("x10_crew_panic_2", "x10_panic_2_base")
     hsc.custom_animation("x10_crew_panic_2", "cinematics\\animations\\crewman\\x10\\x10",
@@ -323,42 +346,48 @@ x10_crew_panic_2 = function(call, sleep)
     sleep(hsc.unit_get_custom_animation_time("x10_crew_panic_2"))
     hsc.object_destroy("x10_crew_panic_2")
 end
-x10_crew_panic_3 = function(call, sleep)
+
+function a10.x10_crew_panic_3(call, sleep)
     hsc.object_create_anew("x10_crew_panic_3")
     hsc.object_teleport("x10_crew_panic_3", "x10_panic_3_base")
     hsc.recording_play("x10_crew_panic_3", "x10_panic_run_3")
     sleep(90)
     hsc.object_destroy("x10_crew_panic_3")
 end
-x10_crew_panic_4 = function(call, sleep)
+
+function a10.x10_crew_panic_4(call, sleep)
     hsc.object_create_anew("x10_crew_panic_4")
     hsc.object_teleport("x10_crew_panic_4", "x10_panic_4_base")
     hsc.recording_play("x10_crew_panic_4", "x10_panic_run_4")
     sleep(hsc.recording_time("x10_crew_panic_4"))
     hsc.object_destroy("x10_crew_panic_4")
 end
-x10_crew_panic_5 = function(call, sleep)
+
+function a10.x10_crew_panic_5(call, sleep)
     hsc.object_create_anew("x10_crew_panic_1")
     hsc.object_teleport("x10_crew_panic_1", "x10_panic_5_base")
     hsc.recording_play("x10_crew_panic_1", "x10_panic_run_5")
     sleep(hsc.recording_time("x10_crew_panic_1"))
     hsc.object_destroy("x10_crew_panic_1")
 end
-x10_crew_panic_6 = function(call, sleep)
+
+function a10.x10_crew_panic_6(call, sleep)
     hsc.object_create_anew("x10_crew_panic_2")
     hsc.object_teleport("x10_crew_panic_2", "x10_panic_6_base")
     hsc.recording_play("x10_crew_panic_2", "x10_panic_run_6")
     sleep(hsc.recording_time("x10_crew_panic_2"))
     hsc.object_destroy("x10_crew_panic_2")
 end
-x10_crew_walk_1 = function(call, sleep)
+
+function a10.x10_crew_walk_1(call, sleep)
     hsc.object_create_anew("x10_crew_panic_1")
     hsc.object_teleport("x10_crew_panic_1", "x10_walk_1_base")
     hsc.recording_play("x10_crew_panic_1", "x10_crew_walk_1")
     sleep(hsc.recording_time("x10_crew_panic_1"))
     hsc.object_destroy("x10_crew_panic_1")
 end
-x10_crew_walk_2 = function(call, sleep)
+
+function a10.x10_crew_walk_2(call, sleep)
     hsc.object_create_anew("x10_crew_panic_2")
     hsc.object_teleport("x10_crew_panic_2", "x10_walk_2_base")
     hsc.recording_play("x10_crew_panic_2", "x10_crew_walk_2_start")
@@ -370,35 +399,40 @@ x10_crew_walk_2 = function(call, sleep)
     sleep(hsc.recording_time("x10_crew_panic_2"))
     hsc.object_destroy("x10_crew_panic_2")
 end
-x10_crew_walk_3 = function(call, sleep)
+
+function a10.x10_crew_walk_3(call, sleep)
     hsc.object_create_anew("x10_crew_panic_3")
     hsc.object_teleport("x10_crew_panic_3", "x10_walk_3_base")
     hsc.recording_play("x10_crew_panic_3", "x10_crew_walk_3")
     sleep(hsc.recording_time("x10_crew_panic_3"))
     hsc.object_destroy("x10_crew_panic_3")
 end
-x10_crew_walk_4 = function(call, sleep)
+
+function a10.x10_crew_walk_4(call, sleep)
     hsc.object_create_anew("x10_crew_panic_4")
     hsc.object_teleport("x10_crew_panic_4", "x10_walk_4_base")
     hsc.recording_play("x10_crew_panic_4", "x10_crew_walk_4")
     sleep(hsc.recording_time("x10_crew_panic_4"))
     hsc.object_destroy("x10_crew_panic_4")
 end
-peer_start = function(call, sleep)
+
+function a10.peer_start(call, sleep)
     hsc.vehicle_load_magic("x10_chair_1l", "", "x10_crew_1l")
     hsc.object_teleport("keyes_x10", "keyes_peer")
     hsc.custom_animation("x10_crew_1l", "characters\\marine\\marine", "pilot_fidget02", true)
     hsc.custom_animation("keyes_x10", "cinematics\\animations\\captain\\x10\\x10",
                          "inspect_console_a", true)
 end
-peer_stop = function(call, sleep)
+
+function a10.peer_stop(call, sleep)
     hsc.unit_stop_custom_animation("keyes_x10")
     hsc.object_teleport("keyes_x10", "keyes_peer_stop")
     hsc.custom_animation("keyes_x10", "cinematics\\animations\\captain\\x10\\x10",
                          "inspect_console_b", true)
     hsc.custom_animation("x10_crew_1l", "characters\\marine\\marine", "pilot_fidget03", true)
 end
-x10_chair_load = function(call, sleep)
+
+function a10.x10_chair_load(call, sleep)
     hsc.object_create_anew_containing("x10_chair")
     hsc.object_create_anew_containing("x10_crew")
     hsc.vehicle_load_magic("x10_chair_1l", "", "x10_crew_1l")
@@ -420,20 +454,23 @@ x10_chair_load = function(call, sleep)
     hsc.custom_animation("x10_crew_pr", "characters\\marine\\marine",
                          "pchair-driver unarmed idle%0", false)
 end
-x10_chair_cleanup = function(call, sleep)
+
+function a10.x10_chair_cleanup(call, sleep)
     hsc.object_destroy_containing("x10_chair")
     hsc.object_destroy_containing("x10_crew")
     hsc.object_destroy_containing("x10_crew_panic")
 end
-light_switch = function(call, sleep)
+
+function a10.light_switch(call, sleep)
     hsc.object_create_anew_containing("x10_light")
 end
-bridge = function(call, sleep)
+
+function a10.bridge(call, sleep)
     hsc.cinematic_start()
     hsc.camera_control(true)
-    hsc.unit_suspended(call(player0), true)
+    hsc.unit_suspended(call(a10.player0), true)
     hsc.switch_bsp(1)
-    call(x10_chair_load)
+    call(a10.x10_chair_load)
     hsc.object_destroy("x10_crew_panic_1")
     hsc.object_create_anew("keyes_x10")
     hsc.object_create_anew("pipe_x10")
@@ -465,10 +502,10 @@ bridge = function(call, sleep)
     sleep(100)
     hsc.camera_set("keyes_x10_peer_walk_2", 120)
     sleep(60)
-    wake(x10_crew_salute_1)
+    wake(a10.x10_crew_salute_1)
     hsc.camera_set("keyes_x10_peer_walk_3", 200)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\cor03"))
-    wake(x10_crew_salute_2)
+    wake(a10.x10_crew_salute_2)
     hsc.sound_impulse_start("sound\\dialog\\x10\\keyes03", "keyes_x10", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\keyes03"))
     hsc.sound_impulse_start("sound\\dialog\\x10\\cor04", "none", 1)
@@ -497,10 +534,10 @@ bridge = function(call, sleep)
     hsc.camera_set("keyes_x10_display_walk_1a", 0)
     hsc.camera_set("keyes_x10_display_walk_1b", 200)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\cor04b"))
-    wake(x10_crew_walk_1)
-    wake(x10_crew_walk_2)
-    wake(x10_crew_walk_3)
-    wake(x10_crew_walk_4)
+    wake(a10.x10_crew_walk_1)
+    wake(a10.x10_crew_walk_2)
+    wake(a10.x10_crew_walk_3)
+    wake(a10.x10_crew_walk_4)
     hsc.sound_impulse_start("sound\\dialog\\x10\\keyes04", "keyes_x10", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\keyes04"))
     hsc.sound_impulse_start("sound\\dialog\\x10\\cor05", "none", 1)
@@ -527,18 +564,18 @@ bridge = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\keyes05"))
     hsc.camera_set("keyes_x10_alert_1a", 0)
     hsc.camera_set("keyes_x10_alert_1b", 180)
-    call(light_switch)
-    wake(x10_crew_panic_1)
-    wake(x10_crew_panic_3)
+    call(a10.light_switch)
+    wake(a10.x10_crew_panic_1)
+    wake(a10.x10_crew_panic_3)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\keyes05"))
     hsc.objects_predict("cortana_x10")
     hsc.sound_impulse_start("sound\\dialog\\x10\\keyes06", "keyes_x10", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\keyes06"))
-    wake(x10_crew_panic_4)
+    wake(a10.x10_crew_panic_4)
     hsc.sound_impulse_start("sound\\dialog\\x10\\cor06", "none", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\cor06"))
     hsc.sound_impulse_start("sound\\dialog\\x10\\keyes07", "keyes_x10", 1)
-    wake(x10_crew_panic_2)
+    wake(a10.x10_crew_panic_2)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\keyes07"))
     hsc.unit_stop_custom_animation("keyes_x10")
     hsc.object_teleport("keyes_x10", "keyes_face_cortana")
@@ -547,7 +584,7 @@ bridge = function(call, sleep)
     hsc.object_destroy("x10_crew_panic_1")
     hsc.object_destroy("x10_crew_panic_2")
     hsc.camera_set("keyes_to_cortana_1", 0)
-    wake(x10_crew_panic_5)
+    wake(a10.x10_crew_panic_5)
     hsc.sound_impulse_start("sound\\dialog\\x10\\keyes08", "keyes_x10", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\keyes08"))
     hsc.effect_new("cinematics\\effects\\cortana effects\\cortana on off", "x10_cortana_effect")
@@ -571,7 +608,7 @@ bridge = function(call, sleep)
     hsc.unit_set_emotion("keyes_x10", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\keyes09"))
     hsc.camera_set("keyes_to_cortana_3a", 0)
-    wake(x10_crew_panic_6)
+    wake(a10.x10_crew_panic_6)
     hsc.sound_impulse_start("sound\\dialog\\x10\\cor08", "cortana_x10", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\cor08"))
     hsc.camera_set("keyes_to_cortana_3b", 30)
@@ -584,10 +621,11 @@ bridge = function(call, sleep)
     sleep(15)
     hsc.object_destroy("cortana_x10")
     hsc.object_destroy("keyes_x10")
-    call(x10_chair_cleanup)
+    call(a10.x10_chair_cleanup)
     hsc.cinematic_screen_effect_stop()
 end
-x10_hog_1 = function(call, sleep)
+
+function a10.x10_hog_1(call, sleep)
     hsc.object_create_anew("x10_warthog_1")
     hsc.object_create_anew("hog_1_driver")
     hsc.object_create_anew("hog_1_passenger")
@@ -603,7 +641,8 @@ x10_hog_1 = function(call, sleep)
     hsc.object_destroy("hog_1_passenger")
     hsc.object_destroy("hog_1_gunner")
 end
-x10_hog_2 = function(call, sleep)
+
+function a10.x10_hog_2(call, sleep)
     hsc.object_create_anew("x10_warthog_2")
     hsc.object_create_anew("hog_2_driver")
     hsc.vehicle_load_magic("x10_warthog_2", "w-driver", "hog_2_driver")
@@ -613,7 +652,8 @@ x10_hog_2 = function(call, sleep)
     hsc.object_destroy("x10_warthog_2")
     hsc.object_destroy("hog_2_driver")
 end
-x10_hog_3 = function(call, sleep)
+
+function a10.x10_hog_3(call, sleep)
     hsc.object_create_anew("x10_warthog_3")
     hsc.object_create_anew("hog_3_driver")
     hsc.vehicle_load_magic("x10_warthog_3", "w-driver", "hog_3_driver")
@@ -623,7 +663,8 @@ x10_hog_3 = function(call, sleep)
     hsc.object_destroy("x10_warthog_3")
     hsc.object_destroy("hog_3_driver")
 end
-tank_run_1 = function(call, sleep)
+
+function a10.tank_run_1(call, sleep)
     hsc.object_create_anew("x10_run_1a")
     hsc.object_create_anew("x10_run_1b")
     hsc.object_create_anew("x10_run_1c")
@@ -638,7 +679,8 @@ tank_run_1 = function(call, sleep)
     hsc.recording_play_and_delete("x10_run_1c", "x10_run_1a")
     hsc.recording_play_and_delete("x10_run_1d", "x10_run_1b")
 end
-tank_run_2 = function(call, sleep)
+
+function a10.tank_run_2(call, sleep)
     hsc.object_create_anew("x10_run_2a")
     hsc.object_create_anew("x10_run_2b")
     hsc.object_create_anew("x10_run_2c")
@@ -653,7 +695,8 @@ tank_run_2 = function(call, sleep)
     hsc.recording_play_and_delete("x10_run_2c", "x10_run_2b")
     hsc.recording_play_and_delete("x10_run_2d", "x10_run_2a")
 end
-dressing_1 = function(call, sleep)
+
+function a10.dressing_1(call, sleep)
     hsc.object_create_anew_containing("x10_rack_1")
     hsc.object_create_anew_containing("x10_oxy_1")
     hsc.object_create_anew("x10_warthog_1a")
@@ -662,7 +705,8 @@ dressing_1 = function(call, sleep)
     hsc.object_create_anew("x10_warthog_1d")
     hsc.object_create_anew("x10_tank_1a")
 end
-dressing_1_cleanup = function(call, sleep)
+
+function a10.dressing_1_cleanup(call, sleep)
     hsc.object_destroy_containing("x10_rack_1")
     hsc.object_destroy_containing("x10_oxy_1")
     hsc.object_destroy("x10_warthog_1a")
@@ -670,27 +714,32 @@ dressing_1_cleanup = function(call, sleep)
     hsc.object_destroy("x10_warthog_1c")
     hsc.object_destroy("x10_warthog_1d")
 end
-dressing_2 = function(call, sleep)
+
+function a10.dressing_2(call, sleep)
     hsc.object_create_anew_containing("x10_oxy_2")
     hsc.object_create_anew_containing("x10_warthog_2")
     hsc.object_create_anew("x10_tank_2a")
 end
-dressing_2_cleanup = function(call, sleep)
+
+function a10.dressing_2_cleanup(call, sleep)
     hsc.object_destroy_containing("x10_oxy_2")
     hsc.object_destroy_containing("x10_warthog_2")
     hsc.object_destroy("x10_tank_2a")
 end
-dressing_3 = function(call, sleep)
+
+function a10.dressing_3(call, sleep)
     hsc.object_create_anew_containing("x10_rack_3")
     hsc.object_create_anew("x10_pel_3a")
     hsc.object_create_anew_containing("x10_tank_3")
 end
-dressing_3_cleanup = function(call, sleep)
+
+function a10.dressing_3_cleanup(call, sleep)
     hsc.object_destroy_containing("x10_rack_3")
     hsc.object_destroy("x10_pel_3a")
     hsc.object_destroy_containing("x10_tank_3")
 end
-x10_hog_4 = function(call, sleep)
+
+function a10.x10_hog_4(call, sleep)
     hsc.object_create_anew("x10_warthog_2")
     hsc.object_create_anew("hog_2_driver")
     hsc.vehicle_load_magic("x10_warthog_2", "w-driver", "hog_2_driver")
@@ -700,7 +749,8 @@ x10_hog_4 = function(call, sleep)
     hsc.object_destroy("x10_warthog_2")
     hsc.object_destroy("hog_2_driver")
 end
-x10_hog_5 = function(call, sleep)
+
+function a10.x10_hog_5(call, sleep)
     hsc.object_create_anew("x10_warthog_3")
     hsc.object_create_anew("hog_3_driver")
     hsc.vehicle_load_magic("x10_warthog_3", "w-driver", "hog_3_driver")
@@ -710,7 +760,8 @@ x10_hog_5 = function(call, sleep)
     hsc.object_destroy("x10_warthog_3")
     hsc.object_destroy("hog_3_driver")
 end
-x10_tankpel = function(call, sleep)
+
+function a10.x10_tankpel(call, sleep)
     hsc.object_create_anew("x10_pelican_3")
     hsc.object_create_anew("x10_tank_3a")
     hsc.object_teleport("x10_tank_3a", "x10_tank_1_base")
@@ -721,18 +772,21 @@ x10_tankpel = function(call, sleep)
     hsc.object_destroy("x10_pelican_3")
     hsc.object_destroy("x10_tank_3a")
 end
-hangar_1_cleanup_a = function(call, sleep)
+
+function a10.hangar_1_cleanup_a(call, sleep)
     hsc.object_destroy_containing("hangar_marine")
     hsc.object_destroy_containing("baton")
 end
-hangar_1_cleanup_b = function(call, sleep)
+
+function a10.hangar_1_cleanup_b(call, sleep)
     hsc.object_destroy_containing("scenery")
     hsc.object_destroy_containing("x10_pelican")
 end
-hangar_1 = function(call, sleep)
+
+function a10.hangar_1(call, sleep)
     hsc.sound_class_set_gain("device_machinery", 1, 0)
     hsc.render_lights(false)
-    call(dressing_3)
+    call(a10.dressing_3)
     hsc.object_create_anew("x10_pelican_1")
     hsc.object_create_anew("x10_pelican_2")
     hsc.object_create_anew("x10_scorpion_1")
@@ -775,29 +829,30 @@ hangar_1 = function(call, sleep)
     hsc.object_teleport("x10_pelican_1", "x10_pelican_1")
     hsc.recording_play_and_delete("x10_pelican_1", "x10_pelican_1_out")
     sleep(100)
-    wake(x10_tankpel)
+    wake(a10.x10_tankpel)
     sleep(125)
-    wake(x10_hog_2)
-    wake(x10_hog_3)
+    wake(a10.x10_hog_2)
+    wake(a10.x10_hog_3)
     hsc.object_teleport("x10_pelican_2", "x10_pelican_2")
     hsc.recording_play_and_delete("x10_pelican_2", "x10_pelican_2_in")
     sleep(100)
     sleep(hsc.camera_time() - 60)
-    wake(x10_hog_1)
+    wake(a10.x10_hog_1)
     sleep(hsc.camera_time())
     hsc.sound_impulse_start("sound\\dialog\\x10\\cor10", "none", 1)
     hsc.camera_set("hangar_2a", 0)
     hsc.camera_set("hangar_2b", 300)
-    call(hangar_1_cleanup_a)
-    call(dressing_3_cleanup)
-    call(dressing_2)
-    call(dressing_1)
-    wake(tank_run_1)
+    call(a10.hangar_1_cleanup_a)
+    call(a10.dressing_3_cleanup)
+    call(a10.dressing_2)
+    call(a10.dressing_1)
+    wake(a10.tank_run_1)
     sleep(100)
-    wake(tank_run_2)
+    wake(a10.tank_run_2)
     sleep(200)
 end
-pep_run = function(call, sleep)
+
+function a10.pep_run(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\x10\\cor11", "none", 1)
     hsc.recording_kill("johnson")
     hsc.unit_stop_custom_animation("johnson")
@@ -832,15 +887,17 @@ pep_run = function(call, sleep)
     hsc.recording_play("grunt_4", "pep_run")
     sleep(hsc.camera_time() - 30)
 end
-hangar_2_cleanup = function(call, sleep)
+
+function a10.hangar_2_cleanup(call, sleep)
     hsc.object_destroy("johnson")
     hsc.object_destroy_containing("grunt")
 end
-hangar_2 = function(call, sleep)
+
+function a10.hangar_2(call, sleep)
     hsc.object_destroy("x10_scorpion_1")
     hsc.object_destroy("x10_scorpion_2")
     hsc.render_lights(true)
-    call(hangar_1_cleanup_b)
+    call(a10.hangar_1_cleanup_b)
     hsc.object_pvs_activate("johnson")
     hsc.object_create_anew("johnson")
     hsc.object_create_anew("grunt_1")
@@ -891,7 +948,7 @@ hangar_2 = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt01"))
     hsc.object_destroy("grunt_2a")
     hsc.object_destroy("grunt_3a")
-    call(pep_run)
+    call(a10.pep_run)
     hsc.recording_kill("grunt_1")
     hsc.recording_kill("grunt_2")
     hsc.recording_kill("grunt_3")
@@ -930,139 +987,81 @@ hangar_2 = function(call, sleep)
     hsc.unit_set_seat("grunt_11", "alert")
     hsc.unit_set_seat("grunt_12", "alert")
     hsc.game_skip_ticks(5)
-    if hsc.game_difficulty_get_real() == easy then
+    if easy == hsc.game_difficulty_get_real() then
         hsc.camera_set("pep_run_2a", 0)
-
         hsc.camera_set("pep_run_2b", 200)
-
         hsc.object_teleport("johnson", "johnson_pep_easy_base")
-
         hsc.recording_play("johnson", "johnson_pep_easy")
-
         hsc.sound_impulse_start("sound\\dialog\\x10\\sgt05g", "johnson", 1)
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt05g"))
-
         hsc.recording_kill("johnson")
-
         hsc.object_teleport("johnson", "johnson_right_base")
-
         hsc.camera_set("johnson_right_1a", 0)
-
         hsc.camera_set("johnson_right_zoom", 30)
-
         hsc.custom_animation("johnson", "cinematics\\animations\\marines\\x10\\x10",
                              "sarge_am i right marines", true)
-
         hsc.sound_impulse_start("sound\\dialog\\x10\\sgt05h", "johnson", 1)
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt05h"))
     end
-    if hsc.game_difficulty_get_real() == normal then
+    if normal == hsc.game_difficulty_get_real() then
         hsc.camera_set("pep_run_1a", 0)
-
         hsc.camera_set("pep_run_1b", 200)
-
         hsc.object_teleport("johnson", "johnson_pep_base")
-
         hsc.recording_play("johnson", "johnson_pep_5a")
-
         hsc.sound_impulse_start("sound\\dialog\\x10\\sgt05", "johnson", 1)
-
         sleep(hsc.camera_time())
-
         hsc.camera_set("pep_run_2a", 0)
-
         hsc.camera_set("pep_run_2b", 250)
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt05"))
-
         hsc.recording_kill("johnson")
-
         hsc.object_teleport("johnson", "johnson_right_base")
-
         hsc.camera_set("johnson_right_1a", 0)
-
         hsc.camera_set("johnson_right_zoom", 30)
-
         hsc.custom_animation("johnson", "cinematics\\animations\\marines\\x10\\x10",
                              "sarge_am i right marines", true)
-
         hsc.sound_impulse_start("sound\\dialog\\x10\\sgt05b", "johnson", 1)
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt05b"))
     end
-    if hsc.game_difficulty_get_real() == hard then
+    if hard == hsc.game_difficulty_get_real() then
         hsc.camera_set("pep_run_1a", 0)
-
         hsc.camera_set("pep_run_1b", 200)
-
         hsc.object_teleport("johnson", "johnson_pep_base")
-
         hsc.recording_play("johnson", "johnson_pep_5a")
-
         hsc.sound_impulse_start("sound\\dialog\\x10\\sgt05c", "johnson", 1)
-
         sleep(hsc.camera_time())
-
         hsc.camera_set("pep_run_2a", 0)
-
         hsc.camera_set("pep_run_2b", 250)
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt05c"))
-
         hsc.recording_kill("johnson")
-
         hsc.object_teleport("johnson", "johnson_right_base")
-
         hsc.camera_set("johnson_right_1a", 0)
-
         hsc.camera_set("johnson_right_zoom", 30)
-
         hsc.custom_animation("johnson", "cinematics\\animations\\marines\\x10\\x10",
                              "sarge_am i right marines", true)
-
         hsc.sound_impulse_start("sound\\dialog\\x10\\sgt05d", "johnson", 1)
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt05d"))
     end
-    if hsc.game_difficulty_get_real() == impossible then
+    if impossible == hsc.game_difficulty_get_real() then
         hsc.camera_set("pep_run_1a", 0)
-
         hsc.camera_set("pep_run_1b", 300)
-
         hsc.object_teleport("johnson", "johnson_pep_base")
-
         hsc.recording_play("johnson", "johnson_pep_5e")
-
         hsc.sound_impulse_start("sound\\dialog\\x10\\sgt05e", "johnson", 1)
-
         sleep(hsc.camera_time())
-
         hsc.camera_set("pep_run_2a", 0)
-
         hsc.camera_set("johnson_close_impossible", 300)
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt05e"))
-
         hsc.recording_kill("johnson")
-
         hsc.object_teleport("johnson", "johnson_right_base")
-
         hsc.camera_set("johnson_right_1a", 0)
-
         hsc.camera_set("johnson_right_zoom", 30)
-
         hsc.custom_animation("johnson", "cinematics\\animations\\marines\\x10\\x10",
                              "sarge_am i right marines", true)
-
-        wake(x10_hog_4)
-
+        wake(a10.x10_hog_4)
         hsc.sound_impulse_start("sound\\dialog\\x10\\sgt05f", "johnson", 1)
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt05f"))
     end
-    wake(x10_hog_4)
+    wake(a10.x10_hog_4)
     hsc.camera_set("johnson_right_1b", 0)
     hsc.camera_set("johnson_right_1c", 60)
     hsc.sound_impulse_start("sound\\dialog\\x10\\mar01", "grunt_1", 1)
@@ -1123,7 +1122,7 @@ hangar_2 = function(call, sleep)
     sleep(hsc.recording_time("johnson"))
     hsc.custom_animation("johnson", "cinematics\\animations\\marines\\x10\\x10",
                          "sarge_todays your lucky day", true)
-    wake(x10_hog_5)
+    wake(a10.x10_hog_5)
     hsc.sound_impulse_start("sound\\dialog\\x10\\sgt07", "johnson", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x10\\sgt07"))
     hsc.object_destroy_containing("grunt")
@@ -1132,13 +1131,14 @@ hangar_2 = function(call, sleep)
     hsc.sound_looping_start("sound\\sinomatixx_foley\\x10_foley3", "none", 1)
     hsc.fade_out(0, 0, 0, 15)
     sleep(15)
-    call(dressing_1_cleanup)
-    call(dressing_2_cleanup)
-    call(hangar_1_cleanup_a)
-    call(hangar_1_cleanup_b)
-    call(hangar_2_cleanup)
+    call(a10.dressing_1_cleanup)
+    call(a10.dressing_2_cleanup)
+    call(a10.hangar_1_cleanup_a)
+    call(a10.hangar_1_cleanup_b)
+    call(a10.hangar_2_cleanup)
 end
-cryo = function(call, sleep)
+
+function a10.cryo(call, sleep)
     hsc.switch_bsp(0)
     hsc.camera_set("screen_ecu_1a", 0)
     hsc.camera_set("screen_ecu_1b", 120)
@@ -1196,20 +1196,23 @@ cryo = function(call, sleep)
     hsc.object_destroy_containing("x10_cryo_steam")
     hsc.camera_control(false)
     hsc.cinematic_stop()
-    hsc.unit_suspended(call(player0), false)
-    hsc.unit_suspended(call(player1), false)
+    hsc.unit_suspended(call(a10.player0), false)
+    hsc.unit_suspended(call(a10.player1), false)
     hsc.object_pvs_activate("none")
 end
-hangar_total = function(call, sleep)
-    call(hangar_1)
-    call(hangar_2)
+
+function a10.hangar_total(call, sleep)
+    call(a10.hangar_1)
+    call(a10.hangar_2)
 end
-hangar_cryo = function(call, sleep)
-    call(hangar_1)
-    call(hangar_2)
-    call(cryo)
+
+function a10.hangar_cryo(call, sleep)
+    call(a10.hangar_1)
+    call(a10.hangar_2)
+    call(a10.cryo)
 end
-x10_cleanup = function(call, sleep)
+
+function a10.x10_cleanup(call, sleep)
     hsc.object_destroy("hangar_marine_1")
     hsc.object_destroy("hangar_marine_2")
     hsc.object_destroy("hog_1_driver")
@@ -1236,14 +1239,16 @@ x10_cleanup = function(call, sleep)
     hsc.object_destroy("x10_pelican_3")
     hsc.object_destroy("scenery_bomber")
 end
-no_keyes_for_you = function(call, sleep)
+
+function a10.no_keyes_for_you(call, sleep)
     hsc.object_destroy("keyes")
 end
-capt_keyes = function(call, sleep)
+
+function a10.capt_keyes(call, sleep)
     hsc.sound_looping_start("sound\\music\\x20_music\\x20_music_1", "none", 1)
     hsc.switch_bsp(1)
-    hsc.object_teleport(call(player0), "player0_base")
-    hsc.object_teleport(call(player1), "player1_base")
+    hsc.object_teleport(call(a10.player0), "player0_base")
+    hsc.object_teleport(call(a10.player1), "player1_base")
     hsc.object_create_anew("chief")
     hsc.object_create_anew("keyes")
     hsc.object_create_anew("cortana_effect")
@@ -1328,7 +1333,8 @@ capt_keyes = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x20\\cor03"))
     sleep(30)
 end
-explosion = function(call, sleep)
+
+function a10.explosion(call, sleep)
     hsc.switch_bsp(1)
     hsc.object_teleport("chief", "chief_shake")
     hsc.sound_impulse_start("sound\\dialog\\x20\\bigboom", "none", 0.5)
@@ -1448,7 +1454,8 @@ explosion = function(call, sleep)
     hsc.object_destroy("cortana_x20")
     sleep(30)
 end
-final_words = function(call, sleep)
+
+function a10.final_words(call, sleep)
     hsc.switch_bsp(1)
     hsc.camera_set("you_come_1a", 0)
     hsc.camera_set("you_come_1b", 350)
@@ -1543,13 +1550,16 @@ final_words = function(call, sleep)
                                     "left hand")
     sleep(15)
 end
-cortana_test = function(call, sleep)
+
+function a10.cortana_test(call, sleep)
     hsc.effect_new("cinematics\\effects\\cortana effects\\cortana on off", "cortana_effect_base")
 end
-dave_test = function(call, sleep)
+
+function a10.dave_test(call, sleep)
     hsc.custom_animation("dave", "cinematics\\animations\\crewman\\x10\\x10", "sitting_turn02", true)
 end
-lifeboat_docked_load = function(call, sleep)
+
+function a10.lifeboat_docked_load(call, sleep)
     hsc.object_create_anew("lifeboat_x30_docked")
     hsc.object_create_anew("pilot_x30")
     hsc.object_create_anew_containing("marine_x30")
@@ -1587,7 +1597,8 @@ lifeboat_docked_load = function(call, sleep)
     hsc.custom_animation("marine_x30_8", "cinematics\\animations\\marines\\x30\\x30",
                          "idle_passed_out", true)
 end
-lifeboat_space_load = function(call, sleep)
+
+function a10.lifeboat_space_load(call, sleep)
     hsc.object_create_anew("chief_x30")
     hsc.object_create_anew("lifeboat_x30_space")
     hsc.object_create_anew("pilot_x30")
@@ -1633,7 +1644,8 @@ lifeboat_space_load = function(call, sleep)
     hsc.custom_animation("marine_x30_8", "cinematics\\animations\\marines\\x30\\x30",
                          "idle_passed_out", true)
 end
-into_the_breach = function(call, sleep)
+
+function a10.into_the_breach(call, sleep)
     hsc.sound_looping_start("sound\\sinomatixx_foley\\x30_foley1", "none", 1)
     hsc.unit_open("lifeboat_x30_docked")
     hsc.object_create_anew("chief_x30")
@@ -1700,7 +1712,8 @@ into_the_breach = function(call, sleep)
     hsc.camera_set("x30_aye_aye_1b", 30)
     sleep(hsc.unit_get_custom_animation_time("pilot_x30"))
 end
-launch = function(call, sleep)
+
+function a10.launch(call, sleep)
     hsc.object_destroy("chief_x30")
     hsc.object_destroy("pilot_x30")
     hsc.object_destroy("marine_x30_1")
@@ -1734,7 +1747,8 @@ launch = function(call, sleep)
     hsc.objects_detach("chief_x30", "x30_rifle")
     hsc.object_destroy("x30_rifle")
 end
-animation_test = function(call, sleep)
+
+function a10.animation_test(call, sleep)
     hsc.object_create_anew("lifeboat_x30_double")
     hsc.object_beautify("lifeboat_x30_double", true)
     hsc.object_teleport("lifeboat_x30_double", "flight1_base")
@@ -1742,7 +1756,8 @@ animation_test = function(call, sleep)
                          "flight2", true)
     sleep(90)
 end
-safe_pyro = function(call, sleep)
+
+function a10.safe_pyro(call, sleep)
     hsc.object_create_anew("main_cannon_fire")
     hsc.object_create_anew("engine_fire")
     hsc.object_create_anew("spot_fire_1")
@@ -1761,8 +1776,9 @@ safe_pyro = function(call, sleep)
     hsc.effect_new("effects\\explosions\\medium explosion", "safe_pyro_1g")
     hsc.effect_new("effects\\explosions\\large explosion", "safe_pyro_1h")
 end
-minimum_safe_distance = function(call, sleep)
-    wake(safe_pyro)
+
+function a10.minimum_safe_distance(call, sleep)
+    wake(a10.safe_pyro)
     hsc.object_create_anew("lifeboat_x30_double")
     hsc.object_pvs_activate("lifeboat_x30_double")
     hsc.object_beautify("lifeboat_x30_double", true)
@@ -1777,12 +1793,14 @@ minimum_safe_distance = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x30\\lif_02"))
     sleep(60)
 end
-approach_setup = function(call, sleep)
+
+function a10.approach_setup(call, sleep)
     hsc.object_create_anew("lifeboat_approach")
     hsc.object_beautify("lifeboat_approach", true)
     hsc.unit_close("lifeboat_approach")
 end
-buck_up = function(call, sleep)
+
+function a10.buck_up(call, sleep)
     hsc.sound_looping_start("sound\\sinomatixx_foley\\x30_foley2", "none", 1)
     hsc.object_pvs_activate("chief_x30")
     hsc.player_effect_set_max_translation(0, 0, 0)
@@ -1820,10 +1838,11 @@ buck_up = function(call, sleep)
     hsc.camera_set("chief_halo_look_1a", 0)
     hsc.camera_set("chief_halo_look_1b", 180)
     hsc.object_set_scale("halo_x30_1", 2, 1000)
-    wake(approach_setup)
+    wake(a10.approach_setup)
     sleep(220)
 end
-halo_look = function(call, sleep)
+
+function a10.halo_look(call, sleep)
     hsc.camera_set("chief_halo_look_1a", 0)
     hsc.object_set_scale("halo_x30_1", 2, 1000)
     hsc.object_teleport("chief_x30", "chief_halo_look_base")
@@ -1832,7 +1851,8 @@ halo_look = function(call, sleep)
     hsc.camera_set("chief_halo_look_1b", 180)
     sleep(250)
 end
-approach = function(call, sleep)
+
+function a10.approach(call, sleep)
     hsc.sound_looping_stop("sound\\sinomatixx_foley\\x30_foley2")
     hsc.object_destroy("halo_x30_1")
     hsc.object_create_anew("halo_x30_2")
@@ -1846,7 +1866,8 @@ approach = function(call, sleep)
     hsc.object_set_scale("halo_x30_2", 3, 2000)
     sleep(200)
 end
-autumn_int = function(call, sleep)
+
+function a10.autumn_int(call, sleep)
     hsc.sound_looping_start("sound\\sinomatixx_foley\\x30_foley3", "none", 1)
     hsc.object_pvs_activate("chief_x30")
     hsc.player_effect_set_max_translation(0, 0, 0)
@@ -1878,12 +1899,14 @@ autumn_int = function(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\x30\\cor_03", "none", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x30\\cor_03") - 60)
 end
-autumn_int_build = function(call, sleep)
+
+function a10.autumn_int_build(call, sleep)
     hsc.object_teleport("chief_x30", "chief_autumn_look_base")
     hsc.custom_animation("chief_x30", "cinematics\\animations\\chief\\x30\\x30", "look_out_hatch",
                          false)
 end
-pass_pyro = function(call, sleep)
+
+function a10.pass_pyro(call, sleep)
     hsc.effect_new("effects\\explosions\\large explosion", "pass_pyro_1a")
     hsc.effect_new("effects\\explosions\\medium explosion", "safe_pyro_1b")
     sleep(30)
@@ -1898,7 +1921,8 @@ pass_pyro = function(call, sleep)
     sleep(15)
     hsc.effect_new("effects\\explosions\\large explosion", "safe_pyro_1f")
 end
-heavy_fire_1 = function(call, sleep)
+
+function a10.heavy_fire_1(call, sleep)
     hsc.effect_new("effects\\bursts\\space beam large", "heavy_fire_1a")
     sleep(30)
     hsc.effect_new("effects\\bursts\\space beam large", "heavy_fire_1b")
@@ -1909,7 +1933,8 @@ heavy_fire_1 = function(call, sleep)
     sleep(30)
     hsc.effect_new("effects\\bursts\\space beam large", "heavy_fire_1c")
 end
-heavy_fire_2 = function(call, sleep)
+
+function a10.heavy_fire_2(call, sleep)
     hsc.effect_new("effects\\bursts\\space beam large", "heavy_fire_2a")
     sleep(30)
     hsc.effect_new("effects\\bursts\\space beam large", "heavy_fire_2b")
@@ -1922,7 +1947,8 @@ heavy_fire_2 = function(call, sleep)
     sleep(30)
     hsc.effect_new("effects\\bursts\\space beam large", "heavy_fire_2d")
 end
-autumn_ext = function(call, sleep)
+
+function a10.autumn_ext(call, sleep)
     hsc.object_create_anew("lifeboat_x30_double")
     hsc.object_pvs_activate("lifeboat_x30_double")
     hsc.object_create_anew_containing("poa_fire")
@@ -1934,20 +1960,22 @@ autumn_ext = function(call, sleep)
     hsc.camera_set_relative("pull_back_1a", 0, "lifeboat_x30_double")
     hsc.camera_set_relative("pull_back_1b", 120, "lifeboat_x30_double")
     sleep(60)
-    wake(heavy_fire_1)
-    wake(pass_pyro)
+    wake(a10.heavy_fire_1)
+    wake(a10.pass_pyro)
     hsc.camera_set_relative("pull_back_1c", 120, "lifeboat_x30_double")
     sleep(60)
-    wake(heavy_fire_2)
+    wake(a10.heavy_fire_2)
     hsc.camera_set_relative("pull_back_1d", 120, "lifeboat_x30_double")
     sleep(120)
 end
-flight2_test = function(call, sleep)
+
+function a10.flight2_test(call, sleep)
     hsc.object_teleport("lifeboat_x30_double", "flight2_base")
     hsc.custom_animation("lifeboat_x30_double", "cinematics\\animations\\lifeboat\\x30\\x30",
                          "flight2", true)
 end
-atmos_int_1 = function(call, sleep)
+
+function a10.atmos_int_1(call, sleep)
     hsc.object_destroy("lifeboat_approach")
     hsc.sound_looping_start("sound\\sinomatixx_foley\\x30_foley4", "none", 1)
     hsc.object_pvs_activate("chief_x30")
@@ -1960,7 +1988,8 @@ atmos_int_1 = function(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\x30\\lif_05", "pilot_x30", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\x30\\lif_05"))
 end
-atmos_ext = function(call, sleep)
+
+function a10.atmos_ext(call, sleep)
     hsc.object_teleport("chief_x30", "chief_impact_base")
     hsc.unit_stop_custom_animation("chief_x30")
     hsc.custom_animation("chief_x30", "cinematics\\animations\\chief\\x30\\x30",
@@ -1972,7 +2001,8 @@ atmos_ext = function(call, sleep)
     hsc.camera_set_relative("burn_3b", 120, "lifeboat_burn")
     sleep(90)
 end
-burn_test = function(call, sleep)
+
+function a10.burn_test(call, sleep)
     hsc.object_create_anew("halo_closeup")
     hsc.object_create_anew("lifeboat_burn")
     hsc.object_destroy("halo_x30_1")
@@ -1986,7 +2016,8 @@ burn_test = function(call, sleep)
     sleep(1)
     hsc.game_speed(0)
 end
-atmos_int_2 = function(call, sleep)
+
+function a10.atmos_int_2(call, sleep)
     hsc.camera_set("chief_impact_1a", 0)
     hsc.sound_impulse_start("sound\\dialog\\x30\\cor_04", "none", 1)
     hsc.print("cortana: you sure you wouldn't rather take a seat?")
@@ -2025,19 +2056,21 @@ atmos_int_2 = function(call, sleep)
     hsc.fade_out(1, 1, 1, 30)
     sleep(60)
 end
-atmos_build = function(call, sleep)
+
+function a10.atmos_build(call, sleep)
     hsc.object_teleport("chief_x30", "chief_impact_base")
     hsc.unit_stop_custom_animation("chief_x30")
     hsc.custom_animation("chief_x30", "cinematics\\animations\\chief\\x30\\x30",
                          "escapepod_idle2hand", true)
 end
-x10 = function(call, sleep)
+
+function a10.x10(call, sleep)
     hsc.sound_class_set_gain("device_machinery", 0, 0)
     hsc.fade_out(0, 0, 0, 0)
-    hsc.object_teleport(call(player0), "player0_x10_base")
-    hsc.object_teleport(call(player1), "player1_x10_base")
-    hsc.unit_suspended(call(player0), true)
-    hsc.unit_suspended(call(player1), true)
+    hsc.object_teleport(call(a10.player0), "player0_x10_base")
+    hsc.object_teleport(call(a10.player1), "player1_x10_base")
+    hsc.unit_suspended(call(a10.player0), true)
+    hsc.unit_suspended(call(a10.player1), true)
     hsc.switch_bsp(7)
     hsc.object_type_predict("levels\\a10\\devices\\space_battle\\space_battle")
     hsc.object_type_predict("vehicles\\fighterbomber\\fighterbomber")
@@ -2049,34 +2082,36 @@ x10 = function(call, sleep)
     hsc.cinematic_start()
     hsc.camera_control(true)
     sleep(60)
-    call(autumn_glory_1)
-    call(autumn_glory_2)
+    call(a10.autumn_glory_1)
+    call(a10.autumn_glory_2)
     hsc.fade_out(0, 0, 0, 0)
     hsc.switch_bsp(1)
-    call(bridge)
+    call(a10.bridge)
     hsc.switch_bsp(8)
     hsc.cinematic_set_near_clip_distance(0.0625)
-    if hsc.game_difficulty_get_real() == easy then
-        call(hangar_cryo)
+    if easy == hsc.game_difficulty_get_real() then
+        call(a10.hangar_cryo)
     end
-    if hsc.game_difficulty_get_real() == normal then
-        call(hangar_cryo)
+    if normal == hsc.game_difficulty_get_real() then
+        call(a10.hangar_cryo)
     end
-    if hsc.game_difficulty_get_real() == hard then
-        call(hangar_cryo)
+    if hard == hsc.game_difficulty_get_real() then
+        call(a10.hangar_cryo)
     end
-    if hsc.game_difficulty_get_real() == impossible then
-        call(hangar_cryo)
+    if impossible == hsc.game_difficulty_get_real() then
+        call(a10.hangar_cryo)
     end
-    call(x10_cleanup)
-    call(x10_chair_cleanup)
-    call(bomber_cleanup)
+    call(a10.x10_cleanup)
+    call(a10.x10_chair_cleanup)
+    call(a10.bomber_cleanup)
 end
-halo_setup = function(call, sleep)
+
+function a10.halo_setup(call, sleep)
     hsc.object_destroy("x20_halo")
     hsc.object_create("x20_halo")
 end
-x20 = function(call, sleep)
+
+function a10.x20(call, sleep)
     hsc.player_effect_set_max_translation(0, 0, 0)
     hsc.player_effect_set_max_rotation(0, 0, 0)
     hsc.player_effect_set_max_rumble(0, 0)
@@ -2086,10 +2121,10 @@ x20 = function(call, sleep)
     hsc.cinematic_start()
     hsc.camera_control(true)
     hsc.switch_bsp(1)
-    call(halo_setup)
-    call(capt_keyes)
-    call(explosion)
-    call(final_words)
+    call(a10.halo_setup)
+    call(a10.capt_keyes)
+    call(a10.explosion)
+    call(a10.final_words)
     hsc.objects_detach("chief", "cortana_chip")
     hsc.object_destroy("cortana_chip")
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_flavor_340_cortana", "none", 1)
@@ -2106,10 +2141,12 @@ x20 = function(call, sleep)
     hsc.sound_class_set_gain("music", 1, 0)
     hsc.cinematic_set_near_clip_distance(0.0625)
 end
-str_void = function(call, sleep)
+
+function a10.str_void(call, sleep)
     hsc.print("joe's cool ass cinematic")
 end
-x30 = function(call, sleep)
+
+function a10.x30(call, sleep)
     hsc.object_destroy_all()
     hsc.player_effect_set_max_translation(0, 0, 0)
     hsc.player_effect_set_max_rotation(0, 0, 0)
@@ -2117,30 +2154,31 @@ x30 = function(call, sleep)
     hsc.fade_out(1, 1, 1, 0)
     hsc.cinematic_start()
     hsc.camera_control(true)
-    hsc.object_teleport(call(player0), "player0_x30_base")
-    hsc.object_teleport(call(player1), "player1_x30_base")
-    hsc.unit_suspended(call(player0), true)
-    hsc.unit_suspended(call(player1), true)
+    hsc.object_teleport(call(a10.player0), "player0_x30_base")
+    hsc.object_teleport(call(a10.player1), "player1_x30_base")
+    hsc.unit_suspended(call(a10.player0), true)
+    hsc.unit_suspended(call(a10.player1), true)
     hsc.switch_bsp(6)
-    call(lifeboat_docked_load)
-    call(into_the_breach)
-    call(launch)
+    call(a10.lifeboat_docked_load)
+    call(a10.into_the_breach)
+    call(a10.launch)
     hsc.fade_out(0, 0, 0, 0)
     hsc.switch_bsp(7)
-    call(lifeboat_space_load)
+    call(a10.lifeboat_space_load)
     hsc.fade_in(0, 0, 0, 0)
-    call(minimum_safe_distance)
-    call(buck_up)
-    call(approach)
-    call(autumn_int)
-    call(autumn_ext)
-    call(atmos_int_1)
-    call(atmos_ext)
-    call(atmos_int_2)
+    call(a10.minimum_safe_distance)
+    call(a10.buck_up)
+    call(a10.approach)
+    call(a10.autumn_int)
+    call(a10.autumn_ext)
+    call(a10.atmos_int_1)
+    call(a10.atmos_ext)
+    call(a10.atmos_int_2)
     hsc.cinematic_screen_effect_stop()
     sleep(210)
 end
-music_a10_01 = function(call, sleep)
+
+function a10.music_a10_01(call, sleep)
     sleep(function()
         return play_music_a10_01
     end, 1)
@@ -2151,17 +2189,16 @@ music_a10_01 = function(call, sleep)
     end, 1, global_delay_music)
     if play_music_a10_01_alt then
         hsc.sound_looping_set_alternate("levels\\a10\\music\\a10_01", true)
-
         sleep(function()
             return not play_music_a10_01
         end, 1, global_delay_music)
-
         play_music_a10_01_alt = false
     end
     play_music_a10_01 = false
     hsc.sound_looping_stop("levels\\a10\\music\\a10_01")
 end
-music_a10_03 = function(call, sleep)
+
+function a10.music_a10_03(call, sleep)
     sleep(function()
         return play_music_a10_03
     end, 1)
@@ -2172,17 +2209,16 @@ music_a10_03 = function(call, sleep)
     end, 1, global_delay_music)
     if play_music_a10_03_alt then
         hsc.sound_looping_set_alternate("levels\\a10\\music\\a10_03", true)
-
         sleep(function()
             return not play_music_a10_03
         end, 1, global_delay_music)
-
         play_music_a10_03_alt = false
     end
     play_music_a10_03 = false
     hsc.sound_looping_stop("levels\\a10\\music\\a10_03")
 end
-music_a10_04 = function(call, sleep)
+
+function a10.music_a10_04(call, sleep)
     sleep(function()
         return play_music_a10_04
     end, 1)
@@ -2193,17 +2229,16 @@ music_a10_04 = function(call, sleep)
     end, 1, global_delay_music)
     if play_music_a10_04_alt then
         hsc.sound_looping_set_alternate("levels\\a10\\music\\a10_04", true)
-
         sleep(function()
             return not play_music_a10_04
         end, 1, global_delay_music)
-
         play_music_a10_04_alt = false
     end
     play_music_a10_04 = false
     hsc.sound_looping_stop("levels\\a10\\music\\a10_04")
 end
-music_a10_05 = function(call, sleep)
+
+function a10.music_a10_05(call, sleep)
     sleep(function()
         return play_music_a10_05
     end, 1)
@@ -2214,17 +2249,16 @@ music_a10_05 = function(call, sleep)
     end, 1, global_delay_music)
     if play_music_a10_05_alt then
         hsc.sound_looping_set_alternate("levels\\a10\\music\\a10_05", true)
-
         sleep(function()
             return not play_music_a10_05
         end, 1, global_delay_music)
-
         play_music_a10_05_alt = false
     end
     play_music_a10_05 = false
     hsc.sound_looping_stop("levels\\a10\\music\\a10_05")
 end
-music_a10_06 = function(call, sleep)
+
+function a10.music_a10_06(call, sleep)
     sleep(function()
         return play_music_a10_06
     end, 1)
@@ -2235,17 +2269,16 @@ music_a10_06 = function(call, sleep)
     end, 1, global_delay_music)
     if play_music_a10_06_alt then
         hsc.sound_looping_set_alternate("levels\\a10\\music\\a10_06", true)
-
         sleep(function()
             return not play_music_a10_06
         end, 1, global_delay_music)
-
         play_music_a10_06_alt = false
     end
     play_music_a10_06 = false
     hsc.sound_looping_stop("levels\\a10\\music\\a10_06")
 end
-music_a10_07 = function(call, sleep)
+
+function a10.music_a10_07(call, sleep)
     sleep(function()
         return play_music_a10_07
     end, 1)
@@ -2256,29 +2289,29 @@ music_a10_07 = function(call, sleep)
     end, 1, global_delay_music)
     if play_music_a10_07_alt then
         hsc.sound_looping_set_alternate("levels\\a10\\music\\a10_07", true)
-
         sleep(function()
             return not play_music_a10_07
         end, 1, global_delay_music)
-
         play_music_a10_07_alt = false
     end
     play_music_a10_07 = false
     hsc.sound_looping_stop("levels\\a10\\music\\a10_07")
 end
-music_a10 = function(call, sleep)
-    wake(music_a10_01)
-    wake(music_a10_03)
-    wake(music_a10_04)
-    wake(music_a10_05)
-    wake(music_a10_06)
-    wake(music_a10_07)
+
+function a10.music_a10(call, sleep)
+    wake(a10.music_a10_01)
+    wake(a10.music_a10_03)
+    wake(a10.music_a10_04)
+    wake(a10.music_a10_05)
+    wake(a10.music_a10_06)
+    wake(a10.music_a10_07)
     sleep(function()
         return play_music_a10_02
     end, 1)
     hsc.sound_looping_start("levels\\a10\\music\\a10_02", "none", 1)
 end
-dialog_flavor_cortana = function(call, sleep)
+
+function a10.dialog_flavor_cortana(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_flavor_010_cortana", "none", 0.5)
     sleep(-1)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_flavor_020_cortana", "none", 0.5)
@@ -2313,7 +2346,8 @@ dialog_flavor_cortana = function(call, sleep)
     sleep(-1)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_flavor_100_cortana", "none", 0.5)
 end
-dialog_flavor_captain = function(call, sleep)
+
+function a10.dialog_flavor_captain(call, sleep)
     sleep(-1)
     hsc.print("blah blah blah")
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_flavor_110_captkeyes", "none", 0.5)
@@ -2339,15 +2373,17 @@ dialog_flavor_captain = function(call, sleep)
     hsc.print("blah blah blah")
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_flavor_210_captkeyes", "none", 0.5)
 end
-flavor_intercom = function(call, sleep)
+script.continuous(a10.dialog_flavor_captain)
+
+function a10.flavor_intercom(call, sleep)
     sleep(function()
         return global_intercom
     end, 1)
     if global_intercom and not test_bridge_active then
         if mark_bridge_cutscene then
-            wake(dialog_flavor_captain)
+            wake(a10.dialog_flavor_captain)
         else
-            wake(dialog_flavor_cortana)
+            wake(a10.dialog_flavor_cortana)
         end
     end
     sleep(hsc.random_range(30 * 60, 30 * 120))
@@ -2355,7 +2391,9 @@ flavor_intercom = function(call, sleep)
         sleep(hsc.random_range(30 * 30, 30 * 60))
     end
 end
-flavor_rumble = function(call, sleep)
+script.continuous(a10.flavor_intercom)
+
+function a10.flavor_rumble(call, sleep)
     sleep(hsc.random_range(30 * 45, 30 * 75) * 0.25 +
               hsc.max(0, 0.125 * 6 - hsc.structure_bsp_index()))
     if test_bridge_active then
@@ -2364,84 +2402,58 @@ flavor_rumble = function(call, sleep)
         if not global_rumble then
             sleep(120)
         else
-            if 0 == hsc.structure_bsp_index() then
-                call(player_effect_rumble)
-
+            if hsc.structure_bsp_index() == 0 then
+                call(a10.player_effect_rumble)
                 hsc.player_effect_start(hsc.real_random_range(0.55, 0.75), 1)
-
                 sleep(30)
-
                 hsc.player_effect_stop(hsc.real_random_range(0.75, 1, .25))
             else
-                if 1 == hsc.structure_bsp_index() then
-                    call(player_effect_rumble)
-
+                if hsc.structure_bsp_index() == 1 then
+                    call(a10.player_effect_rumble)
                     hsc.player_effect_start(hsc.real_random_range(0.65, 0.85), 1)
-
                     sleep(30)
-
                     hsc.player_effect_stop(hsc.real_random_range(1, 1, .5))
                 else
-                    if 2 == hsc.structure_bsp_index() then
+                    if hsc.structure_bsp_index() == 2 then
                         hsc.sound_impulse_start("sound\\sfx\\ambience\\a10\\pillarhits", "none",
                                                 hsc.real_random_range(0.4, 0.7))
-
-                        call(player_effect_rumble)
-
+                        call(a10.player_effect_rumble)
                         hsc.player_effect_start(hsc.real_random_range(0.85, 1, .05), 1)
-
                         sleep(30)
-
                         hsc.player_effect_stop(hsc.real_random_range(1, .5, 2, .5))
                     else
-                        if 3 == hsc.structure_bsp_index() then
+                        if hsc.structure_bsp_index() == 3 then
                             hsc.sound_impulse_start("sound\\sfx\\ambience\\a10\\pillarhits", "none",
                                                     hsc.real_random_range(0.5, 0.8))
-
-                            call(player_effect_rumble)
-
+                            call(a10.player_effect_rumble)
                             hsc.player_effect_start(hsc.real_random_range(0.95, 1, .15), 1)
-
                             sleep(30)
-
                             hsc.player_effect_stop(hsc.real_random_range(2, 3, .5))
                         else
-                            if 4 == hsc.structure_bsp_index() then
+                            if hsc.structure_bsp_index() == 4 then
                                 hsc.sound_impulse_start("sound\\sfx\\ambience\\a10\\pillarhits",
                                                         "none", hsc.real_random_range(0.6, 0.9))
-
-                                call(player_effect_impact)
-
+                                call(a10.player_effect_impact)
                                 hsc.player_effect_start(hsc.real_random_range(0.6, 0.8), 1)
-
                                 sleep(30)
-
                                 hsc.player_effect_stop(hsc.real_random_range(0.75, 1, .25))
                             else
-                                if 5 == hsc.structure_bsp_index() then
+                                if hsc.structure_bsp_index() == 5 then
                                     hsc.sound_impulse_start("sound\\sfx\\ambience\\a10\\pillarhits",
                                                             "none", hsc.real_random_range(0.7, 1))
-
-                                    call(player_effect_impact)
-
+                                    call(a10.player_effect_impact)
                                     hsc.player_effect_start(hsc.real_random_range(0.85, 1, .05), 1)
-
                                     sleep(30)
-
                                     hsc.player_effect_stop(hsc.real_random_range(1, 1, .5))
                                 else
-                                    if 6 == hsc.structure_bsp_index() then
+                                    if hsc.structure_bsp_index() == 6 then
                                         hsc.sound_impulse_start(
                                             "sound\\sfx\\ambience\\a10\\pillarhits", "none",
                                             hsc.real_random_range(0.8, 1))
-
-                                        call(player_effect_impact)
-
+                                        call(a10.player_effect_impact)
                                         hsc.player_effect_start(hsc.real_random_range(0.95, 1, .15),
                                                                 1)
-
                                         sleep(30)
-
                                         hsc.player_effect_stop(hsc.real_random_range(2, 3))
                                     end
                                 end
@@ -2453,7 +2465,9 @@ flavor_rumble = function(call, sleep)
         end
     end
 end
-mission_bsp = function(call, sleep)
+script.continuous(a10.flavor_rumble)
+
+function a10.mission_bsp(call, sleep)
     sleep(function()
         return 0 < hsc.structure_bsp_index()
 
@@ -2461,7 +2475,8 @@ mission_bsp = function(call, sleep)
     hsc.ai_free("first_contact")
     hsc.device_set_position("bsp0_door", 0)
     sleep(function()
-        return hsc.device_get_position("bsp0_door") == 0
+        return 0 == hsc.device_get_position("bsp0_door")
+
     end, 1)
     hsc.device_set_power("bsp0_door", 0)
     mark_bsp0 = true
@@ -2503,7 +2518,8 @@ mission_bsp = function(call, sleep)
     hsc.device_set_power("bsp5_door", 0)
     mark_bsp5 = true
 end
-title_training = function(call, sleep)
+
+function a10.title_training(call, sleep)
     hsc.cinematic_show_letterbox(true)
     hsc.show_hud(false)
     sleep(30)
@@ -2512,7 +2528,8 @@ title_training = function(call, sleep)
     hsc.show_hud(true)
     hsc.cinematic_show_letterbox(false)
 end
-title_bridge = function(call, sleep)
+
+function a10.title_bridge(call, sleep)
     hsc.cinematic_show_letterbox(true)
     hsc.show_hud(false)
     sleep(30)
@@ -2521,7 +2538,8 @@ title_bridge = function(call, sleep)
     hsc.show_hud(true)
     hsc.cinematic_show_letterbox(false)
 end
-title_escape = function(call, sleep)
+
+function a10.title_escape(call, sleep)
     hsc.cinematic_show_letterbox(true)
     hsc.show_hud(false)
     sleep(30)
@@ -2530,84 +2548,86 @@ title_escape = function(call, sleep)
     hsc.show_hud(true)
     hsc.cinematic_show_letterbox(false)
 end
-cont_thing = function(call, sleep)
-    if not hsc.game_is_cooperative() and impossible == hsc.game_difficulty_get() then
+
+function a10.cont_thing(call, sleep)
+    if not (hsc.game_is_cooperative()) and hsc.game_difficulty_get() == impossible then
         sleep(function()
             return hsc.volume_test_objects("meg_egg", hsc.players())
         end, delay_dawdle)
     end
-    if not hsc.game_is_cooperative() and impossible == hsc.game_difficulty_get() then
+    if not (hsc.game_is_cooperative()) and hsc.game_difficulty_get() == impossible then
         global_meg_egg = true
     end
 end
-tutorial_ladder = function(call, sleep)
+script.startup(a10.cont_thing)
+
+function a10.tutorial_ladder(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("ladder_trigger", hsc.players())
     end, 90)
     hsc.show_hud_help_text(true)
     hsc.hud_set_help_text("ladder_1")
     sleep(function()
-        return not hsc.volume_test_objects("ladder_trigger", hsc.players())
-
+        return not (hsc.volume_test_objects("ladder_trigger", hsc.players()))
     end, 90)
     hsc.show_hud_help_text(false)
 end
-test_looking_tech = function(call, sleep)
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+script.continuous(a10.tutorial_ladder)
+
+function a10.test_looking_tech(call, sleep)
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         sleep(15)
     end
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         sleep(15)
     end
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         sleep(15)
     end
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         sleep(15)
     end
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         sleep(15)
     end
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         sleep(15)
     end
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         sleep(15)
     end
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         sleep(15)
     end
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 20)) then
         if 0.5 < hsc.real_random_range(0, 1) then
             hsc.sound_impulse_start("sound\\dialog\\a10\\a10_101_cryotech",
                                     hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 1)
-
             sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_101_cryotech"))
         else
             if true then
                 hsc.sound_impulse_start("sound\\dialog\\a10\\a10_261_cryotech",
                                         hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 1)
-
                 sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_261_cryotech"))
             end
         end
-
         sleep(function()
-            return hsc.objects_can_see_object(call(player0),
+            return hsc.objects_can_see_object(call(a10.player0),
                                               hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 15)
         end, 1)
     end
 end
-tutorial_introduction = function(call, sleep)
+
+function a10.tutorial_introduction(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_011_cryoassist", "none", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_011_cryoassist"))
     sleep(45)
@@ -2624,7 +2644,7 @@ tutorial_introduction = function(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_030_cryoassist", "none", 1)
     hsc.ai_command_list("cryo_tech/tech", "introduction_5")
     sleep(function()
-        return hsc.sound_impulse_time("sound\\dialog\\a10\\a10_030_cryoassist") == 0 or
+        return 0 == hsc.sound_impulse_time("sound\\dialog\\a10\\a10_030_cryoassist") or
                    hsc.objects_can_see_object(hsc.players(),
                                               hsc.list_get(hsc.ai_actors("cryo_tech/asst"), 0), 25)
     end, 1)
@@ -2633,7 +2653,8 @@ tutorial_introduction = function(call, sleep)
     sleep(5)
     mark_tutorial_introduction = true
 end
-tutorial_looking = function(call, sleep)
+
+function a10.tutorial_looking(call, sleep)
     hsc.ai_command_list("cryo_tech/tech", "looking_2")
     hsc.ai_command_list("cryo_tech/asst", "looking_1")
     hsc.show_hud_help_text(true)
@@ -2655,7 +2676,7 @@ tutorial_looking = function(call, sleep)
     sleep(function()
         return hsc.player_action_test_look_relative_all_directions()
     end, 1, delay_prompt)
-    if not hsc.player_action_test_look_relative_up() or hsc.player_action_test_look_relative_down() then
+    if not (hsc.player_action_test_look_relative_up() or hsc.player_action_test_look_relative_down()) then
         if hsc.player0_joystick_set_is_normal() then
             hsc.hud_set_help_text("tutorial_looking_2")
         else
@@ -2673,28 +2694,29 @@ tutorial_looking = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_050_cryotech"))
     mark_tutorial_looking = true
 end
-tutorial_hud_health = function(call, sleep)
+
+function a10.tutorial_hud_health(call, sleep)
     hsc.ai_command_list("cryo_tech/tech", "action_1")
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_051_cryoassist", "none", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_051_cryoassist"))
     hsc.hud_show_health(true)
     hsc.hud_blink_health(true)
-    hsc.unit_set_maximum_vitality(call(player0), 100, 0)
-    hsc.unit_set_current_vitality(call(player0), 12, .5, 0)
+    hsc.unit_set_maximum_vitality(call(a10.player0), 100, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 12, .5, 0)
     sleep(45)
-    hsc.unit_set_current_vitality(call(player0), 25, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 25, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(player0), 37, .5, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 37, .5, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(player0), 50, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 50, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(player0), 62, .5, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 62, .5, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(player0), 75, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 75, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(player0), 87, .5, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 87, .5, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(player0), 100, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 100, 0)
     sleep(15)
     hsc.hud_blink_health(false)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_052_cryotech",
@@ -2702,7 +2724,8 @@ tutorial_hud_health = function(call, sleep)
     sleep(hsc.max(0, hsc.sound_impulse_time("sound\\dialog\\a10\\a10_052_cryotech") - 30))
     mark_tutorial_hud_health = true
 end
-tutorial_action = function(call, sleep)
+
+function a10.tutorial_action(call, sleep)
     hsc.ai_command_list("cryo_tech/tech", "action_2")
     sleep(45)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_070_cryotech",
@@ -2724,29 +2747,30 @@ tutorial_action = function(call, sleep)
     hsc.camera_control(true)
     hsc.camera_set("tutorial_action_2", 0)
     hsc.camera_set("tutorial_action_1", 250)
-    hsc.object_beautify(call(player0), true)
+    hsc.object_beautify(call(a10.player0), true)
     hsc.fade_in(1, 1, 1, 15)
     sleep(15)
     hsc.sound_looping_start("sound\\sinomatixx_foley\\a10_cryoexit_foley", "none", 1)
-    hsc.unit_exit_vehicle(call(player0))
+    hsc.unit_exit_vehicle(call(a10.player0))
     sleep(170)
     hsc.fade_out(1, 1, 1, 15)
     sleep(35)
-    hsc.object_teleport(call(player0), "tutorial_exit_cryotube_flag")
+    hsc.object_teleport(call(a10.player0), "tutorial_exit_cryotube_flag")
     hsc.camera_control(false)
     hsc.cinematic_stop()
     sleep(30)
     hsc.fade_in(1, 1, 1, 15)
     sleep(15)
-    hsc.object_beautify(call(player0), false)
+    hsc.object_beautify(call(a10.player0), false)
     hsc.player_camera_control(true)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_070_cryotech"))
     mark_tutorial_action = true
     sleep(60)
     hsc.unit_close("cryotube_1")
 end
-tutorial_moving_1 = function(call, sleep)
-    call(test_looking_tech)
+
+function a10.tutorial_moving_1(call, sleep)
+    call(a10.test_looking_tech)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_080_cryotech",
                             hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_080_cryotech"))
@@ -2759,41 +2783,40 @@ tutorial_moving_1 = function(call, sleep)
     end
     hsc.ai_command_list("cryo_tech/tech", "moving_1_2")
     sleep(function()
-        return hsc.ai_command_list_status(hsc.ai_actors("cryo_tech/tech")) == 2
+        return 2 == hsc.ai_command_list_status(hsc.ai_actors("cryo_tech/tech"))
+
     end, 1)
     hsc.ai_command_list_advance("cryo_tech/tech")
     sleep(function()
         return hsc.volume_test_objects("moving_1_trigger_1", hsc.players()) or
-                   hsc.objects_can_see_object(call(player0),
+                   hsc.objects_can_see_object(call(a10.player0),
                                               hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 15)
     end, 1)
     hsc.ai_command_list("cryo_tech/tech", "moving_1_3")
     sleep(function()
-        return hsc.ai_command_list_status(hsc.ai_actors("cryo_tech/tech")) == 2
+        return 2 == hsc.ai_command_list_status(hsc.ai_actors("cryo_tech/tech"))
+
     end, 1)
     sleep(function()
         return hsc.volume_test_objects("moving_1_trigger_1", hsc.players())
     end, 1)
-    call(test_looking_tech)
-    if not hsc.volume_test_objects("red_square", hsc.players()) then
+    call(a10.test_looking_tech)
+    if not (hsc.volume_test_objects("red_square", hsc.players())) then
         hsc.sound_impulse_start("sound\\dialog\\a10\\a10_090_cryotech",
                                 hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 1)
-
         sleep(60)
-
         hsc.ai_command_list("cryo_tech/tech", "red_square")
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_090_cryotech"))
-
         sleep(function()
             return hsc.volume_test_objects("red_square", hsc.players())
         end, 1)
     end
     mark_tutorial_moving_1 = true
 end
-tutorial_looking_targeted = function(call, sleep)
+
+function a10.tutorial_looking_targeted(call, sleep)
     hsc.ai_command_list("cryo_tech/tech", "looking_targeted_1")
-    call(test_looking_tech)
+    call(a10.test_looking_tech)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_130_cryotech",
                             hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_130_cryotech"))
@@ -2804,7 +2827,7 @@ tutorial_looking_targeted = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_140_cryotech"))
     hsc.ai_command_list("cryo_tech/asst", "looking_targeted_2")
     sleep(function()
-        return test_looking_cycle == 0
+        return 0 == test_looking_cycle
     end, 1)
     hsc.enable_hud_help_flash(false)
     hsc.show_hud_help_text(false)
@@ -2813,7 +2836,8 @@ tutorial_looking_targeted = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_150_cryotech"))
     mark_tutorial_looking_targeted = true
 end
-test_looking_cycle_center = function(call, sleep)
+
+function a10.test_looking_cycle_center(call, sleep)
     sleep(function()
         return test_center_panel
     end, 1)
@@ -2821,16 +2845,17 @@ test_looking_cycle_center = function(call, sleep)
     hsc.object_create("looking_panel_center")
     sleep(function()
         return not test_center_panel or
-                   hsc.objects_can_see_object(call(player0), "looking_panel_center", 5)
+                   hsc.objects_can_see_object(call(a10.player0), "looking_panel_center", 5)
     end, 1)
     if test_center_panel then
         hsc.object_destroy("looking_panel_center")
-
         hsc.object_create("looking_panel_center_success")
     end
     test_center_panel = false
 end
-test_looking_cycle_left = function(call, sleep)
+script.continuous(a10.test_looking_cycle_center)
+
+function a10.test_looking_cycle_left(call, sleep)
     sleep(function()
         return test_left_panel
     end, 1)
@@ -2838,16 +2863,17 @@ test_looking_cycle_left = function(call, sleep)
     hsc.object_create("looking_panel_left")
     sleep(function()
         return not test_left_panel or
-                   hsc.objects_can_see_object(call(player0), "looking_panel_left", 5)
+                   hsc.objects_can_see_object(call(a10.player0), "looking_panel_left", 5)
     end, 1)
     if test_left_panel then
         hsc.object_destroy("looking_panel_left")
-
         hsc.object_create("looking_panel_left_success")
     end
     test_left_panel = false
 end
-test_looking_cycle_right = function(call, sleep)
+script.continuous(a10.test_looking_cycle_left)
+
+function a10.test_looking_cycle_right(call, sleep)
     sleep(function()
         return test_right_panel
     end, 1)
@@ -2855,32 +2881,35 @@ test_looking_cycle_right = function(call, sleep)
     hsc.object_create("looking_panel_right")
     sleep(function()
         return not test_right_panel or
-                   hsc.objects_can_see_object(call(player0), "looking_panel_right", 5)
+                   hsc.objects_can_see_object(call(a10.player0), "looking_panel_right", 5)
     end, 1)
     if test_right_panel then
         hsc.object_destroy("looking_panel_right")
-
         hsc.object_create("looking_panel_right_success")
     end
     test_right_panel = false
 end
-test_looking_cycle_up = function(call, sleep)
+script.continuous(a10.test_looking_cycle_right)
+
+function a10.test_looking_cycle_up(call, sleep)
     sleep(function()
         return test_up_panel
     end, 1)
     hsc.object_destroy("looking_panel_up_success")
     hsc.object_create("looking_panel_up")
     sleep(function()
-        return not test_up_panel or hsc.objects_can_see_object(call(player0), "looking_panel_up", 5)
+        return not test_up_panel or
+                   hsc.objects_can_see_object(call(a10.player0), "looking_panel_up", 5)
     end, 1)
     if test_up_panel then
         hsc.object_destroy("looking_panel_up")
-
         hsc.object_create("looking_panel_up_success")
     end
     test_up_panel = false
 end
-test_looking_cycle_down = function(call, sleep)
+script.continuous(a10.test_looking_cycle_up)
+
+function a10.test_looking_cycle_down(call, sleep)
     sleep(function()
         return test_down_panel
     end, 1)
@@ -2888,16 +2917,17 @@ test_looking_cycle_down = function(call, sleep)
     hsc.object_create("looking_panel_down")
     sleep(function()
         return not test_down_panel or
-                   hsc.objects_can_see_object(call(player0), "looking_panel_down", 5)
+                   hsc.objects_can_see_object(call(a10.player0), "looking_panel_down", 5)
     end, 1)
     if test_down_panel then
         hsc.object_destroy("looking_panel_down")
-
         hsc.object_create("looking_panel_down_success")
     end
     test_down_panel = false
 end
-test_looking_cycle = function(call, sleep)
+script.continuous(a10.test_looking_cycle_down)
+
+function a10.test_looking_cycle(call, sleep)
     if mark_tutorial_looking_choose then
         sleep(-1)
     end
@@ -2910,7 +2940,7 @@ test_looking_cycle = function(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("red_square", hsc.players())
     end, 1)
-    if test_looking_cycle == 1 then
+    if 1 == test_looking_cycle then
         hsc.hud_set_help_text("tutorial_looking_targeted_2")
     else
         hsc.hud_set_help_text("tutorial_looking_targeted_3")
@@ -2921,24 +2951,23 @@ test_looking_cycle = function(call, sleep)
     test_left_panel = true
     test_right_panel = true
     sleep(function()
-        return not hsc.volume_test_objects("red_square", hsc.players()) or not test_center_panel or
-                   test_up_panel or test_down_panel or test_left_panel or test_right_panel
+        return not (hsc.volume_test_objects("red_square", hsc.players())) or
+                   not (test_center_panel or test_up_panel or test_down_panel or test_left_panel or
+                       test_right_panel)
     end, 1)
     if hsc.volume_test_objects("red_square", hsc.players()) then
         test_looking_cycle = 0
     else
         test_center_panel = false
-
         test_up_panel = false
-
         test_down_panel = false
-
         test_left_panel = false
-
         test_right_panel = false
     end
 end
-tutorial_looking_choose = function(call, sleep)
+script.continuous(a10.test_looking_cycle)
+
+function a10.tutorial_looking_choose(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_160_cryoassist",
                             hsc.list_get(hsc.ai_actors("cryo_tech/asst"), 1), 1)
     sleep(30)
@@ -2965,7 +2994,8 @@ tutorial_looking_choose = function(call, sleep)
     hsc.display_scenario_help(2)
     mark_tutorial_looking_choose = true
 end
-test_looking_choose_cycle = function(call, sleep)
+
+function a10.test_looking_choose_cycle(call, sleep)
     if mark_tutorial_looking_choose then
         sleep(-1)
     end
@@ -2976,35 +3006,25 @@ test_looking_choose_cycle = function(call, sleep)
     hsc.ai_command_list("cryo_tech/tech", "looking_inverted_1")
     if global_first_run then
         test_looking_cycle = 2
-
         sleep(function()
-            return test_looking_cycle == 0
+            return 0 == test_looking_cycle
         end, 1)
     else
         hsc.sound_impulse_start("sound\\dialog\\a10\\a10_170_cryoassist", "none", 1)
-
         hsc.show_hud_help_text(true)
-
         hsc.enable_hud_help_flash(true)
-
         hsc.hud_set_help_text("tutorial_looking_choose_1")
-
         hsc.player_action_test_reset()
-
         sleep(function()
             return hsc.player_action_test_look_relative_up() and
                        hsc.player_action_test_look_relative_down()
         end, 1, 60)
-
         hsc.ai_command_list_advance("cryo_tech/tech")
-
         sleep(function()
             return hsc.player_action_test_look_relative_up() and
                        hsc.player_action_test_look_relative_down()
         end, 1)
-
         hsc.enable_hud_help_flash(false)
-
         hsc.show_hud_help_text(false)
     end
     sleep(5)
@@ -3024,7 +3044,6 @@ test_looking_choose_cycle = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_180_cryoassist"))
     if hsc.player_action_test_accept() then
         test_looking_choose = false
-
         sleep(-1)
     else
         hsc.player0_look_invert_pitch(false)
@@ -3067,7 +3086,6 @@ test_looking_choose_cycle = function(call, sleep)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_200_cryoassist"))
     if hsc.player_action_test_accept() then
         test_looking_choose = false
-
         sleep(-1)
     else
         hsc.player0_look_invert_pitch(true)
@@ -3075,7 +3093,9 @@ test_looking_choose_cycle = function(call, sleep)
     hsc.player_action_test_reset()
     global_first_run = false
 end
-tutorial_moving_2 = function(call, sleep)
+script.continuous(a10.test_looking_choose_cycle)
+
+function a10.tutorial_moving_2(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_230_cryoassist", "none", 1)
     hsc.ai_command_list("cryo_tech/asst", "moving_2_1")
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_230_cryoassist"))
@@ -3086,31 +3106,30 @@ tutorial_moving_2 = function(call, sleep)
     global_intercom = true
     sleep(function()
         return hsc.volume_test_objects("moving_2_trigger_1", hsc.players()) or
-                   hsc.objects_can_see_object(call(player0),
+                   hsc.objects_can_see_object(call(a10.player0),
                                               hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 15)
     end, 1)
     hsc.ai_command_list("cryo_tech/tech", "moving_2_2")
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_240_cryotech"))
     sleep(function()
-        return hsc.ai_command_list_status(hsc.ai_actors("cryo_tech/tech")) == 2
+        return 2 == hsc.ai_command_list_status(hsc.ai_actors("cryo_tech/tech"))
+
     end, 1)
     sleep(function()
         return hsc.volume_test_objects("moving_2_trigger_1", hsc.players())
     end, 1)
-    call(test_looking_tech)
-    if not hsc.volume_test_objects("yellow_square", hsc.players()) then
+    call(a10.test_looking_tech)
+    if not (hsc.volume_test_objects("yellow_square", hsc.players())) then
         hsc.sound_impulse_start("sound\\dialog\\a10\\a10_260_cryotech",
                                 hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 1)
-
         sleep(60)
-
         hsc.ai_command_list("cryo_tech/tech", "yellow_square")
-
         sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_260_cryotech"))
     end
     mark_tutorial_moving_2 = true
 end
-tutorial_hud_shield = function(call, sleep)
+
+function a10.tutorial_hud_shield(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("yellow_square", hsc.players())
     end, 1)
@@ -3125,8 +3144,8 @@ tutorial_hud_shield = function(call, sleep)
     sleep(30)
     hsc.hud_show_shield(true)
     hsc.hud_blink_shield(true)
-    hsc.unit_set_maximum_vitality(call(player0), 100, 75)
-    hsc.unit_set_current_vitality(call(player0), 100, 0)
+    hsc.unit_set_maximum_vitality(call(a10.player0), 100, 75)
+    hsc.unit_set_current_vitality(call(a10.player0), 100, 0)
     hsc.show_hud_help_text(true)
     hsc.enable_hud_help_flash(true)
     hsc.hud_set_help_text("hud_shield_1")
@@ -3153,10 +3172,10 @@ tutorial_hud_shield = function(call, sleep)
     hsc.sound_looping_stop("sound\\sfx\\weapons\\plasma rifle\\charging")
     hsc.damage_new("levels\\a10\\devices\\shield charge\\zapper", "tutorial_zapper_flag")
     hsc.device_group_set("shield_charge_power", 0.2)
-    hsc.unit_set_maximum_vitality(call(player0), 100, 0)
+    hsc.unit_set_maximum_vitality(call(a10.player0), 100, 0)
     sleep(120)
-    hsc.unit_set_maximum_vitality(call(player0), 100, 75)
-    hsc.unit_set_current_vitality(call(player0), 100, 0)
+    hsc.unit_set_maximum_vitality(call(a10.player0), 100, 75)
+    hsc.unit_set_current_vitality(call(a10.player0), 100, 0)
     hsc.hud_set_help_text("hud_shield_3")
     sleep(150)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_330_cryotech"))
@@ -3169,7 +3188,8 @@ tutorial_hud_shield = function(call, sleep)
     hsc.hud_blink_shield(false)
     mark_tutorial_hud_shield = true
 end
-tutorial_asst_kill = function(call, sleep)
+
+function a10.tutorial_asst_kill(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_350_captkeyes", "none", 1)
     sleep(10)
     hsc.ai_command_list("cryo_tech/tech", "asst_kill_1")
@@ -3192,14 +3212,14 @@ tutorial_asst_kill = function(call, sleep)
     hsc.ai_command_list_advance("cryo_tech/tech")
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_400_cryoassist", "none", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_400_cryoassist"))
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/asst"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/asst"), 0), 20)) then
         hsc.sound_impulse_start("sound\\dialog\\a10\\a10_410_cryotech",
                                 hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 1)
     end
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_410_cryotech"))
-    if not hsc.objects_can_see_object(call(player0),
-                                      hsc.list_get(hsc.ai_actors("cryo_tech/asst"), 0), 20) then
+    if not (hsc.objects_can_see_object(call(a10.player0),
+                                       hsc.list_get(hsc.ai_actors("cryo_tech/asst"), 0), 20)) then
         hsc.sound_impulse_start("sound\\dialog\\a10\\a10_420_cryoassist", "none", 1)
     end
     sleep(hsc.max(0, hsc.sound_impulse_time("sound\\dialog\\a10\\a10_420_cryoassist") - 30))
@@ -3227,7 +3247,8 @@ tutorial_asst_kill = function(call, sleep)
     hsc.object_can_take_damage(hsc.ai_actors("cryo_tech/asst"))
     hsc.units_set_current_vitality(hsc.ai_actors("cryo_tech/asst"), 1, 0)
     sleep(function()
-        return hsc.ai_living_count("cryo_tech/asst") == 0
+        return 0 == hsc.ai_living_count("cryo_tech/asst")
+
     end, 1, hsc.sound_impulse_time("sound\\dialog\\a10\\a10_440_cryoassist"))
     hsc.sound_impulse_stop("sound\\dialog\\a10\\a10_440_cryoassist")
     hsc.ai_kill("cryo_tech/asst")
@@ -3237,12 +3258,13 @@ tutorial_asst_kill = function(call, sleep)
     mark_tutorial_asst_kill = true
     hsc.ai_command_list("cryo_bane", "asst_kill_9")
     sleep(function()
-        return hsc.objects_can_see_object(call(player0),
+        return hsc.objects_can_see_object(call(a10.player0),
                                           hsc.list_get(hsc.ai_actors("cryo_bane"), 0), 40)
     end, 1, 15)
     hsc.ai_command_list_advance("cryo_bane")
     sleep(function()
-        return hsc.ai_command_list_status(hsc.ai_actors("cryo_bane")) == 2
+        return 2 == hsc.ai_command_list_status(hsc.ai_actors("cryo_bane"))
+
     end, 1)
     hsc.ai_erase("cryo_bane")
     sleep(function()
@@ -3251,7 +3273,8 @@ tutorial_asst_kill = function(call, sleep)
     hsc.ai_place("cryo_tech/asst")
     hsc.ai_kill("cryo_tech/asst")
 end
-tutorial_moving_jump = function(call, sleep)
+
+function a10.tutorial_moving_jump(call, sleep)
     sleep(function()
         return test_moving_jump
     end, 30)
@@ -3262,22 +3285,20 @@ tutorial_moving_jump = function(call, sleep)
     hsc.enable_hud_help_flash(true)
     hsc.hud_set_help_text("moving_jump_1")
     sleep(function()
-        return not hsc.volume_test_objects("moving_jump", hsc.players())
-
+        return not (hsc.volume_test_objects("moving_jump", hsc.players()))
     end, 1)
     if hsc.volume_test_objects("moving_jump_success", hsc.players()) then
         mark_tutorial_moving_jump = true
-
         test_moving_jump = false
-
         hsc.show_hud_help_text(false)
-
         sleep(-1)
     end
     hsc.enable_hud_help_flash(false)
     hsc.show_hud_help_text(false)
 end
-tutorial_moving_crouch = function(call, sleep)
+script.continuous(a10.tutorial_moving_jump)
+
+function a10.tutorial_moving_crouch(call, sleep)
     sleep(function()
         return test_moving_crouch
     end, 30)
@@ -3288,22 +3309,20 @@ tutorial_moving_crouch = function(call, sleep)
     hsc.enable_hud_help_flash(true)
     hsc.hud_set_help_text("moving_crouch_1")
     sleep(function()
-        return not hsc.volume_test_objects("moving_crouch", hsc.players())
-
+        return not (hsc.volume_test_objects("moving_crouch", hsc.players()))
     end, 1)
     if hsc.volume_test_objects("moving_crouch_success", hsc.players()) then
         mark_tutorial_moving_crouch = true
-
         test_moving_crouch = false
-
         hsc.show_hud_help_text(false)
-
         sleep(-1)
     end
     hsc.enable_hud_help_flash(false)
     hsc.show_hud_help_text(false)
 end
-tutorial_first_contact = function(call, sleep)
+script.continuous(a10.tutorial_moving_crouch)
+
+function a10.tutorial_first_contact(call, sleep)
     hsc.device_set_position_immediate("first_contact_door_1", 0)
     hsc.device_set_position_immediate("first_contact_door_4", 1)
     sleep(function()
@@ -3343,8 +3362,9 @@ tutorial_first_contact = function(call, sleep)
     end, 1)
     hsc.ai_command_list_advance("first_contact_anti")
     sleep(function()
-        return hsc.volume_test_objects("first_contact_trigger_3", hsc.players()) or
-                   hsc.ai_command_list_status(hsc.ai_actors("first_contact_anti/elite")) == 1
+        return hsc.volume_test_objects("first_contact_trigger_3", hsc.players()) or 1 ==
+                   hsc.ai_command_list_status(hsc.ai_actors("first_contact_anti/elite"))
+
     end, 1)
     hsc.ai_command_list_advance("first_contact_anti")
     hsc.device_operates_automatically_set("first_contact_door_2", true)
@@ -3371,8 +3391,7 @@ tutorial_first_contact = function(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("first_contact_trigger_4",
                                        hsc.ai_actors("first_contact_anti")) and
-                   not hsc.volume_test_objects("first_contact_trigger_6", hsc.players())
-
+                   not (hsc.volume_test_objects("first_contact_trigger_6", hsc.players()))
     end, 1)
     hsc.object_create("first_contact_doora")
     hsc.device_set_position("first_contact_door_3", 0)
@@ -3383,7 +3402,8 @@ tutorial_first_contact = function(call, sleep)
 
     end, 1)
 end
-tutorial_weapon = function(call, sleep)
+
+function a10.tutorial_weapon(call, sleep)
     sleep(function()
         return mark_weapon
     end, 1)
@@ -3412,7 +3432,7 @@ tutorial_weapon = function(call, sleep)
     hsc.enable_hud_help_flash(false)
     hsc.show_hud_help_text(false)
     sleep(function()
-        return hsc.ai_living_count("cafeteria_anti") == 0 and
+        return 0 == hsc.ai_living_count("cafeteria_anti") and
                    hsc.volume_test_objects("weapon_trigger", hsc.players()) or
                    hsc.volume_test_objects("bsp1,2", hsc.players())
     end, 1)
@@ -3421,7 +3441,8 @@ tutorial_weapon = function(call, sleep)
     end, 1, 90)
     hsc.display_scenario_help(0)
 end
-tutorial_light = function(call, sleep)
+
+function a10.tutorial_light(call, sleep)
     sleep(function()
         return test_light
     end)
@@ -3432,22 +3453,20 @@ tutorial_light = function(call, sleep)
     hsc.show_hud_help_text(true)
     hsc.hud_set_help_text("light_1")
     sleep(function()
-        return not hsc.volume_test_objects("light_1", hsc.players()) or
-                   hsc.volume_test_objects("light_2", hsc.players())
-
+        return not (hsc.volume_test_objects("light_1", hsc.players()) or
+                   hsc.volume_test_objects("light_2", hsc.players()))
     end, 1)
     if hsc.volume_test_objects("light_success", hsc.players()) then
         mark_tutorial_light = true
-
         test_light = false
-
         hsc.show_hud_help_text(false)
-
         sleep(-1)
     end
     hsc.show_hud_help_text(false)
 end
-tutorial_motiontracker = function(call, sleep)
+script.continuous(a10.tutorial_light)
+
+function a10.tutorial_motiontracker(call, sleep)
     hsc.device_set_power("motiontracker_door_2", 0)
     hsc.device_set_power("motiontracker_door_3", 0)
     sleep(function()
@@ -3466,23 +3485,19 @@ tutorial_motiontracker = function(call, sleep)
     end, 1)
     if hsc.volume_test_objects("motiontracker_2", hsc.players()) then
         hsc.ai_conversation("motiontracker_2")
-
         sleep(function()
             return hsc.volume_test_objects("motiontracker_3", hsc.players()) or
                        hsc.volume_test_objects("motiontracker_4", hsc.players())
         end, 1)
-
         if hsc.volume_test_objects("motiontracker_3", hsc.players()) then
             hsc.ai_conversation("motiontracker_3")
         end
     else
         hsc.ai_conversation("motiontracker_3")
-
         sleep(function()
             return hsc.volume_test_objects("motiontracker_2", hsc.players()) or
                        hsc.volume_test_objects("motiontracker_4", hsc.players())
         end, 1)
-
         if hsc.volume_test_objects("motiontracker_2", hsc.players()) then
             hsc.ai_conversation("motiontracker_2")
         end
@@ -3494,7 +3509,8 @@ tutorial_motiontracker = function(call, sleep)
     hsc.hud_blink_motion_sensor(false)
     hsc.device_set_power("motiontracker_door_1", 1)
 end
-test_melee = function(call, sleep)
+
+function a10.test_melee(call, sleep)
     sleep(function()
         return global_test_melee
     end, 10)
@@ -3506,13 +3522,14 @@ test_melee = function(call, sleep)
     hsc.hud_set_help_text("melee_1")
     sleep(function()
         return not global_test_melee or
-                   not hsc.volume_test_objects("melee_trigger_3", hsc.players())
-
+                   not (hsc.volume_test_objects("melee_trigger_3", hsc.players()))
     end, 1)
     hsc.enable_hud_help_flash(false)
     hsc.show_hud_help_text(false)
 end
-tutorial_melee = function(call, sleep)
+script.continuous(a10.test_melee)
+
+function a10.tutorial_melee(call, sleep)
     hsc.object_destroy("melee_door_1")
     hsc.object_create("melee_door_2")
     hsc.device_set_position_immediate("melee_door_2", 0.8325)
@@ -3524,21 +3541,24 @@ tutorial_melee = function(call, sleep)
     end, 1, delay_dawdle)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_681_cortana", "none", 1)
     sleep(function()
-        return hsc.device_get_position("melee_door_2") == 1 or
-                   hsc.sound_impulse_time("sound\\dialog\\a10\\a10_681_cortana") == 0
+        return 1 == hsc.device_get_position("melee_door_2") or 0 ==
+                   hsc.sound_impulse_time("sound\\dialog\\a10\\a10_681_cortana")
+
     end, 1)
-    if not hsc.device_get_position("melee_door_2") == 1 then
+    if not (1 == hsc.device_get_position("melee_door_2")) then
         hsc.sound_impulse_start("sound\\dialog\\a10\\a10_682_cortana", "none", 1)
     end
     sleep(function()
-        return hsc.device_get_position("melee_door_2") == 1 or
-                   hsc.sound_impulse_time("sound\\dialog\\a10\\a10_682_cortana") == 0
+        return 1 == hsc.device_get_position("melee_door_2") or 0 ==
+                   hsc.sound_impulse_time("sound\\dialog\\a10\\a10_682_cortana")
+
     end, 1)
-    if not hsc.device_get_position("melee_door_2") == 1 then
+    if not (1 == hsc.device_get_position("melee_door_2")) then
         global_test_melee = true
     end
     sleep(function()
-        return hsc.device_get_position("melee_door_2") == 1
+        return 1 == hsc.device_get_position("melee_door_2")
+
     end, 1)
     hsc.sound_impulse_start("sound\\sfx\\impulse\\impacts\\a10_door_bash", "melee_door_2", 1)
     global_test_melee = false
@@ -3548,9 +3568,10 @@ tutorial_melee = function(call, sleep)
     hsc.display_scenario_help(1)
     hsc.ai_place("tunnel_anti/sucker_grunt")
 end
-tutorial_grenade = function(call, sleep)
+
+function a10.tutorial_grenade(call, sleep)
     sleep(function()
-        return hsc.unit_get_total_grenade_count(call(player0)) > 0
+        return hsc.unit_get_total_grenade_count(call(a10.player0)) > 0
     end, 1)
     hsc.show_hud_help_text(true)
     hsc.enable_hud_help_flash(true)
@@ -3562,7 +3583,8 @@ tutorial_grenade = function(call, sleep)
     hsc.enable_hud_help_flash(false)
     hsc.show_hud_help_text(false)
 end
-tutorial_setup = function(call, sleep)
+
+function a10.tutorial_setup(call, sleep)
     hsc.ai_grenades(false)
     hsc.ai_dialogue_triggers(false)
     hsc.player_enable_input(false)
@@ -3570,7 +3592,7 @@ tutorial_setup = function(call, sleep)
     hsc.hud_show_health(false)
     hsc.hud_show_shield(false)
     hsc.hud_show_motion_sensor(false)
-    hsc.unit_set_maximum_vitality(call(player0), 1, 0)
+    hsc.unit_set_maximum_vitality(call(a10.player0), 1, 0)
     hsc.ai_place("cryo_tech/tech")
     hsc.object_cannot_take_damage(hsc.ai_actors("cryo_tech/tech"))
     hsc.units_set_current_vitality(hsc.ai_actors("cryo_tech/tech"), 1, 0)
@@ -3582,10 +3604,10 @@ tutorial_setup = function(call, sleep)
     hsc.unit_doesnt_drop_items(hsc.ai_actors("cryo_tech/asst"))
     hsc.ai_command_list("cryo_tech/asst", "introduction_1")
     hsc.object_create("cryotube_1")
-    hsc.unit_enter_vehicle(call(player0), "cryotube_1", "ct-driver")
+    hsc.unit_enter_vehicle(call(a10.player0), "cryotube_1", "ct-driver")
     hsc.object_create("cryotube_1_steam_1")
     hsc.object_create("cryotube_1_steam_2")
-    wake(title_training)
+    wake(a10.title_training)
     hsc.hud_set_objective_text("dia_training")
     hsc.cinematic_screen_effect_start(true)
     hsc.cinematic_screen_effect_set_filter_desaturation_tint(1, 1, 1)
@@ -3593,7 +3615,7 @@ tutorial_setup = function(call, sleep)
     hsc.cinematic_screen_effect_set_convolution(1, 2, 10, 0.001, 5)
     hsc.fade_in(1, 1, 1, 30)
     sleep(60)
-    wake(tutorial_introduction)
+    wake(a10.tutorial_introduction)
     sleep(function()
         return mark_tutorial_introduction
     end, 1, 60)
@@ -3608,61 +3630,61 @@ tutorial_setup = function(call, sleep)
     sleep(function()
         return mark_tutorial_introduction
     end, 1)
-    wake(tutorial_looking)
+    wake(a10.tutorial_looking)
     sleep(function()
         return mark_tutorial_looking
     end, 1)
-    wake(tutorial_hud_health)
+    wake(a10.tutorial_hud_health)
     sleep(function()
         return mark_tutorial_hud_health
     end, 1)
-    wake(tutorial_action)
+    wake(a10.tutorial_action)
     sleep(function()
         return mark_tutorial_action
     end, 1)
     hsc.hud_show_crosshair(true)
-    wake(tutorial_moving_1)
+    wake(a10.tutorial_moving_1)
     sleep(function()
         return mark_tutorial_moving_1
     end, 1)
-    wake(tutorial_looking_targeted)
+    wake(a10.tutorial_looking_targeted)
     sleep(function()
         return mark_tutorial_looking_targeted
     end, 1)
-    if not hsc.player0_look_pitch_is_inverted() then
-        wake(tutorial_looking_choose)
-
+    if not (hsc.player0_look_pitch_is_inverted()) then
+        wake(a10.tutorial_looking_choose)
         sleep(function()
             return mark_tutorial_looking_choose
         end, 1)
     end
     hsc.game_save()
-    wake(tutorial_moving_2)
+    wake(a10.tutorial_moving_2)
     sleep(function()
         return mark_tutorial_moving_2
     end, 1)
-    wake(tutorial_hud_shield)
+    wake(a10.tutorial_hud_shield)
     sleep(function()
         return mark_tutorial_hud_shield
     end, 1)
-    wake(tutorial_asst_kill)
+    wake(a10.tutorial_asst_kill)
     sleep(function()
         return mark_tutorial_asst_kill
     end, 1)
     test_moving_jump = true
     test_moving_crouch = true
     mark_tutorial_setup = true
-    wake(tutorial_first_contact)
+    wake(a10.tutorial_first_contact)
     sleep(function()
         return mark_bridge_cutscene
     end, 1)
-    wake(tutorial_weapon)
+    wake(a10.tutorial_weapon)
     test_light = true
-    wake(tutorial_motiontracker)
-    wake(tutorial_melee)
-    wake(tutorial_grenade)
+    wake(a10.tutorial_motiontracker)
+    wake(a10.tutorial_melee)
+    wake(a10.tutorial_grenade)
 end
-fade_out_in = function(call, sleep)
+
+function a10.fade_out_in(call, sleep)
     sleep(45)
     hsc.fade_out(0, 0, 0, 0)
     hsc.fade_in(0, 0, 0, 45)
@@ -3678,7 +3700,8 @@ fade_out_in = function(call, sleep)
     sleep(45)
     hsc.fade_in(0, 0, 0, 0)
 end
-flavor_boarding = function(call, sleep)
+
+function a10.flavor_boarding(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("boarding_trigger_1", hsc.players()) or
                    hsc.volume_test_objects("boarding_trigger_2", hsc.players())
@@ -3692,27 +3715,31 @@ flavor_boarding = function(call, sleep)
     end)
     hsc.ai_conversation("boarding_1")
 end
-flavor_watchit = function(call, sleep)
+
+function a10.flavor_watchit(call, sleep)
     sleep(function()
-        return hsc.unit_get_shield(call(player0)) < 0.1
+        return hsc.unit_get_shield(call(a10.player0)) < 0.1
     end, 1)
     hsc.ai_conversation("watchit_1")
 end
-containment_1_slam = function(call, sleep)
+
+function a10.containment_1_slam(call, sleep)
     sleep(function()
         return hsc.structure_bsp_index() > 0 or
                    hsc.volume_test_objects("containment_1_slam", hsc.players())
     end, 1)
     hsc.object_create("containment_1_door_1a")
 end
-mission_cryo_explosion = function(call, sleep)
+
+function a10.mission_cryo_explosion(call, sleep)
     hsc.game_save()
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_450_cryotech",
                             hsc.list_get(hsc.ai_actors("cryo_tech/tech"), 0), 1)
     sleep(hsc.max(0, hsc.sound_impulse_time("sound\\dialog\\a10\\a10_450_cryotech") - 30))
     hsc.ai_command_list("cryo_tech/tech", "cryo_explosion_1")
     sleep(function()
-        return hsc.ai_command_list_status(hsc.ai_actors("cryo_tech/tech")) == 2
+        return 2 == hsc.ai_command_list_status(hsc.ai_actors("cryo_tech/tech"))
+
     end, 1)
     hsc.ai_command_list_advance("cryo_tech/tech")
     hsc.object_create("cryo_explosion_steam_1")
@@ -3790,7 +3817,8 @@ mission_cryo_explosion = function(call, sleep)
     end, 1)
     play_music_a10_01 = false
 end
-mission_blam_burn = function(call, sleep)
+
+function a10.mission_blam_burn(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("containment_1_trigger_1", hsc.players())
     end, 1)
@@ -3810,36 +3838,28 @@ mission_blam_burn = function(call, sleep)
     hsc.effect_new("effects\\explosions\\large explosion", "blam_burn_flag_3")
     hsc.device_set_position("blam_burn_door_2", 0)
     sleep(function()
-        return hsc.device_get_position("blam_burn_door_2") == 0
+        return 0 == hsc.device_get_position("blam_burn_door_2")
+
     end, 15)
-    if hsc.volume_test_objects("blam_burn_trap", call(player0)) then
+    if hsc.volume_test_objects("blam_burn_trap", call(a10.player0)) then
         hsc.effect_new("effects\\explosions\\large explosion", "blam_burn_flag_1")
-
         sleep(15)
-
         hsc.effect_new("effects\\explosions\\large explosion", "blam_burn_flag_2")
-
         sleep(5)
-
         hsc.effect_new("effects\\explosions\\large explosion", "blam_burn_flag_3")
-
         hsc.game_revert()
     end
-    if hsc.volume_test_objects("blam_burn_trap", call(player1)) then
+    if hsc.volume_test_objects("blam_burn_trap", call(a10.player1)) then
         hsc.effect_new("effects\\explosions\\large explosion", "blam_burn_flag_1")
-
         sleep(15)
-
         hsc.effect_new("effects\\explosions\\large explosion", "blam_burn_flag_2")
-
         sleep(5)
-
         hsc.effect_new("effects\\explosions\\large explosion", "blam_burn_flag_3")
-
         hsc.game_revert()
     end
 end
-mission_blam_scare = function(call, sleep)
+
+function a10.mission_blam_scare(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("blam_scare_trigger_1", hsc.players())
     end, 1)
@@ -3865,19 +3885,21 @@ mission_blam_scare = function(call, sleep)
         return hsc.volume_test_objects("moving_crouch", hsc.players())
     end, 1)
 end
-mission_containment_1_post = function(call, sleep)
+
+function a10.mission_containment_1_post(call, sleep)
     sleep(function()
-        return 0 == hsc.device_get_position("containment_1_door_3")
+        return hsc.device_get_position("containment_1_door_3") == 0
     end, 1)
     hsc.ai_braindead("containment_1_anti/rear_elite", true)
     sleep(function()
-        return 0 == hsc.device_get_position("containment_1_door_1")
+        return hsc.device_get_position("containment_1_door_1") == 0
     end, 1)
     hsc.ai_braindead("containment_1_anti", true)
 end
-mission_containment_1 = function(call, sleep)
-    wake(mission_containment_1_post)
-    wake(containment_1_slam)
+
+function a10.mission_containment_1(call, sleep)
+    wake(a10.mission_containment_1_post)
+    wake(a10.containment_1_slam)
     sleep(function()
         return hsc.volume_test_objects("containment_1_trigger_1", hsc.players())
     end, 1)
@@ -3924,8 +3946,9 @@ mission_containment_1 = function(call, sleep)
     end, 1, delay_witness)
     hsc.ai_kill("containment_1/rear_crewman")
     sleep(function()
-        return hsc.volume_test_objects("moving_crouch_success", hsc.players()) or
-                   hsc.device_set_position("containment_1_door_3", 0) == false
+        return hsc.volume_test_objects("moving_crouch_success", hsc.players()) or false ==
+                   hsc.device_set_position("containment_1_door_3", 0)
+
     end, 1)
     hsc.ai_migrate("containment_1/rear_security", "containment_1/retreat")
     sleep(function()
@@ -3954,7 +3977,8 @@ mission_containment_1 = function(call, sleep)
     hsc.object_can_take_damage(hsc.ai_actors("containment_1/forward_security"))
     hsc.effect_new("weapons\\plasma grenade\\effects\\explosion", "containment_1_flag_2")
     sleep(function()
-        return hsc.sound_impulse_time("sound\\dialog\\a10\\a10_480_crewman") == 0
+        return 0 == hsc.sound_impulse_time("sound\\dialog\\a10\\a10_480_crewman")
+
     end, 1)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_490_crewman2",
                             hsc.list_get(hsc.ai_actors("containment_1/rear_security"), 0), 1)
@@ -3991,7 +4015,8 @@ mission_containment_1 = function(call, sleep)
     hsc.effect_new("weapons\\plasma grenade\\effects\\explosion", "containment_1_flag_4")
     hsc.device_set_position("containment_1_door_2", 0)
     sleep(function()
-        return hsc.device_get_position("containment_1_door_1") == 0
+        return 0 == hsc.device_get_position("containment_1_door_1")
+
     end)
     mark_containment_1 = true
     hsc.ai_migrate("containment_1", "containment_1/search")
@@ -3999,18 +4024,20 @@ mission_containment_1 = function(call, sleep)
     sleep(30)
     hsc.ai_conversation("containment_1_1")
 end
-mission_crossfire_post = function(call, sleep)
+
+function a10.mission_crossfire_post(call, sleep)
     sleep(function()
-        return 0 == hsc.device_get_position("crossfire_door_1")
+        return hsc.device_get_position("crossfire_door_1") == 0
     end, 1)
     hsc.ai_braindead("crossfire_anti/first", true)
     sleep(function()
-        return 0 == hsc.device_get_position("crossfire_door_2")
+        return hsc.device_get_position("crossfire_door_2") == 0
     end, 1)
     hsc.ai_braindead("crossfire_anti/last", true)
 end
-mission_crossfire = function(call, sleep)
-    wake(mission_crossfire_post)
+
+function a10.mission_crossfire(call, sleep)
+    wake(a10.mission_crossfire_post)
     sleep(function()
         return hsc.volume_test_objects("crossfire_trigger_1", hsc.players())
     end, 1)
@@ -4071,7 +4098,8 @@ mission_crossfire = function(call, sleep)
         return hsc.volume_test_objects("crossfire_trigger_4", hsc.players())
     end, 1)
     sleep(function()
-        return hsc.ai_command_list_status(hsc.ai_actors("fetch/fetch")) == 2
+        return 2 == hsc.ai_command_list_status(hsc.ai_actors("fetch/fetch"))
+
     end, 1)
     hsc.ai_defend("crossfire/last")
     hsc.ai_defend("crossfire_anti/last")
@@ -4097,7 +4125,8 @@ mission_crossfire = function(call, sleep)
     end, 1)
     hsc.ai_command_list("fetch/fetch", "fetch_3")
     sleep(function()
-        return hsc.ai_command_list_status(hsc.ai_actors("fetch/fetch")) == 2
+        return 2 == hsc.ai_command_list_status(hsc.ai_actors("fetch/fetch"))
+
     end, 1)
     if hsc.volume_test_objects("shoot_trigger_2", hsc.ai_actors("fetch/fetch")) then
         hsc.ai_command_list("fetch/fetch", "fetch_3")
@@ -4118,7 +4147,8 @@ mission_crossfire = function(call, sleep)
     hsc.ai_erase("crossfire_anti")
     hsc.ai_erase("fetch/fetch")
 end
-bridge_flavor = function(call, sleep)
+
+function a10.bridge_flavor(call, sleep)
     hsc.object_create("pod_1")
     hsc.object_create("pod_2")
     hsc.object_create("pod_3")
@@ -4151,7 +4181,8 @@ bridge_flavor = function(call, sleep)
     hsc.ai_place("bridge/wander_crewman_2")
     hsc.ai_place("bridge/wander_crewman_3")
 end
-bridge_flavor_cycle = function(call, sleep)
+
+function a10.bridge_flavor_cycle(call, sleep)
     sleep(function()
         return not mark_bsp1 and test_bridge_active
     end, 1)
@@ -4160,32 +4191,32 @@ bridge_flavor_cycle = function(call, sleep)
     end
     global_random_bridge = hsc.random_range(0, 9)
 
-    if global_random_bridge == 1 then
+    if 1 == global_random_bridge then
         hsc.ai_command_list("bridge/wander_crewman_1", "bridge_flavor_11")
     else
-        if global_random_bridge == 2 then
+        if 2 == global_random_bridge then
             hsc.ai_command_list("bridge/wander_crewman_1", "bridge_flavor_12")
         else
-            if global_random_bridge == 3 then
+            if 3 == global_random_bridge then
                 hsc.ai_command_list("bridge/wander_crewman_1", "bridge_flavor_13")
             else
-                if global_random_bridge == 4 then
+                if 4 == global_random_bridge then
                     hsc.ai_command_list("bridge/wander_crewman_1", "bridge_flavor_14")
                 else
-                    if global_random_bridge == 5 then
+                    if 5 == global_random_bridge then
                         hsc.ai_command_list("bridge/wander_crewman_1", "bridge_flavor_12")
                     else
-                        if global_random_bridge == 6 then
+                        if 6 == global_random_bridge then
                             hsc.ai_command_list("bridge/wander_crewman_1", "bridge_flavor_11")
                         else
-                            if global_random_bridge == 7 then
+                            if 7 == global_random_bridge then
                                 hsc.ai_command_list("bridge/wander_crewman_1", "bridge_flavor_17")
                             else
-                                if global_random_bridge == 8 then
+                                if 8 == global_random_bridge then
                                     hsc.ai_command_list("bridge/wander_crewman_1",
                                                         "bridge_flavor_18")
                                 else
-                                    if global_random_bridge == 9 then
+                                    if 9 == global_random_bridge then
                                         hsc.ai_command_list("bridge/wander_crewman_1",
                                                             "bridge_flavor_19")
                                     end
@@ -4198,32 +4229,32 @@ bridge_flavor_cycle = function(call, sleep)
         end
     end
     sleep(30 * hsc.random_range(5, 9))
-    if global_random_bridge == 3 then
+    if 3 == global_random_bridge then
         hsc.ai_command_list("bridge/wander_crewman_2", "bridge_flavor_11")
     else
-        if global_random_bridge == 4 then
+        if 4 == global_random_bridge then
             hsc.ai_command_list("bridge/wander_crewman_2", "bridge_flavor_12")
         else
-            if global_random_bridge == 5 then
+            if 5 == global_random_bridge then
                 hsc.ai_command_list("bridge/wander_crewman_2", "bridge_flavor_13")
             else
-                if global_random_bridge == 6 then
+                if 6 == global_random_bridge then
                     hsc.ai_command_list("bridge/wander_crewman_2", "bridge_flavor_14")
                 else
-                    if global_random_bridge == 7 then
+                    if 7 == global_random_bridge then
                         hsc.ai_command_list("bridge/wander_crewman_2", "bridge_flavor_12")
                     else
-                        if global_random_bridge == 8 then
+                        if 8 == global_random_bridge then
                             hsc.ai_command_list("bridge/wander_crewman_2", "bridge_flavor_13")
                         else
-                            if global_random_bridge == 9 then
+                            if 9 == global_random_bridge then
                                 hsc.ai_command_list("bridge/wander_crewman_2", "bridge_flavor_17")
                             else
-                                if global_random_bridge == 1 then
+                                if 1 == global_random_bridge then
                                     hsc.ai_command_list("bridge/wander_crewman_2",
                                                         "bridge_flavor_18")
                                 else
-                                    if global_random_bridge == 2 then
+                                    if 2 == global_random_bridge then
                                         hsc.ai_command_list("bridge/wander_crewman_2",
                                                             "bridge_flavor_19")
                                     end
@@ -4236,32 +4267,32 @@ bridge_flavor_cycle = function(call, sleep)
         end
     end
     sleep(30 * hsc.random_range(5, 9))
-    if global_random_bridge == 5 then
+    if 5 == global_random_bridge then
         hsc.ai_command_list("bridge/wander_crewman_3", "bridge_flavor_11")
     else
-        if global_random_bridge == 6 then
+        if 6 == global_random_bridge then
             hsc.ai_command_list("bridge/wander_crewman_3", "bridge_flavor_12")
         else
-            if global_random_bridge == 7 then
+            if 7 == global_random_bridge then
                 hsc.ai_command_list("bridge/wander_crewman_3", "bridge_flavor_13")
             else
-                if global_random_bridge == 8 then
+                if 8 == global_random_bridge then
                     hsc.ai_command_list("bridge/wander_crewman_3", "bridge_flavor_14")
                 else
-                    if global_random_bridge == 9 then
+                    if 9 == global_random_bridge then
                         hsc.ai_command_list("bridge/wander_crewman_3", "bridge_flavor_14")
                     else
-                        if global_random_bridge == 1 then
+                        if 1 == global_random_bridge then
                             hsc.ai_command_list("bridge/wander_crewman_3", "bridge_flavor_17")
                         else
-                            if global_random_bridge == 2 then
+                            if 2 == global_random_bridge then
                                 hsc.ai_command_list("bridge/wander_crewman_3", "bridge_flavor_17")
                             else
-                                if global_random_bridge == 3 then
+                                if 3 == global_random_bridge then
                                     hsc.ai_command_list("bridge/wander_crewman_3",
                                                         "bridge_flavor_18")
                                 else
-                                    if global_random_bridge == 4 then
+                                    if 4 == global_random_bridge then
                                         hsc.ai_command_list("bridge/wander_crewman_3",
                                                             "bridge_flavor_19")
                                     end
@@ -4275,22 +4306,24 @@ bridge_flavor_cycle = function(call, sleep)
     end
     sleep(30 * hsc.random_range(5, 9))
 end
-cinematic_x20 = function(call, sleep)
+script.continuous(a10.bridge_flavor_cycle)
+
+function a10.cinematic_x20(call, sleep)
     hsc.fade_out(1, 1, 1, 15)
     sleep(15)
     hsc.ai_erase("bridge/pilot_crewman_1")
     hsc.object_destroy("pilot_1")
     hsc.object_destroy("keyesa10")
-    if call(cinematic_skip_start) then
-        call(x20)
+    if call(a10.cinematic_skip_start) then
+        call(a10.x20)
     end
-    call(cinematic_skip_stop)
-    wake(title_escape)
+    call(a10.cinematic_skip_stop)
+    wake(a10.title_escape)
     hsc.fade_out(1, 1, 1, 0)
     sleep(5)
     hsc.switch_bsp(1)
-    hsc.object_teleport(call(player0), "chief_basea10")
-    hsc.object_teleport(call(player1), "player1_playona10")
+    hsc.object_teleport(call(a10.player0), "chief_basea10")
+    hsc.object_teleport(call(a10.player1), "player1_playona10")
     hsc.player_enable_input(false)
     hsc.player_camera_control(false)
     hsc.object_create_anew("keyesa10")
@@ -4316,7 +4349,8 @@ cinematic_x20 = function(call, sleep)
     hsc.player_enable_input(true)
     hsc.player_camera_control(true)
 end
-bridge_leave_prompt = function(call, sleep)
+
+function a10.bridge_leave_prompt(call, sleep)
     sleep(300)
     if hsc.volume_test_objects("bridge_trigger_3", hsc.players()) then
         hsc.sound_impulse_start("sound\\dialog\\a10\\a10_flavor_300_captkeyes", "keyesa10", 1)
@@ -4333,7 +4367,8 @@ bridge_leave_prompt = function(call, sleep)
         hsc.sound_impulse_start("sound\\dialog\\a10\\a10_641_cortana", "none", 1)
     end
 end
-bridge_kill_kill_kill = function(call, sleep)
+
+function a10.bridge_kill_kill_kill(call, sleep)
     hsc.device_set_position_immediate("bridge_kill_door_2", 0)
     hsc.volume_teleport_players_not_inside("bridge_all", "x20_post_flag_2")
     stop(bridge_leave_prompt)
@@ -4348,11 +4383,13 @@ bridge_kill_kill_kill = function(call, sleep)
     hsc.device_set_position_immediate("bridge_kill_door_1", 1)
     hsc.ai_magically_see_players("bridge_kill")
     sleep(240)
-    if global_meg_egg and not hsc.game_is_cooperative() and impossible == hsc.game_difficulty_get() then
+    if global_meg_egg and not (hsc.game_is_cooperative()) and hsc.game_difficulty_get() ==
+        impossible then
         hsc.device_set_position_immediate("bridge_kill_door_3", 1)
     end
 end
-mission_bridge = function(call, sleep)
+
+function a10.mission_bridge(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("bridge_trigger_1", hsc.players())
     end, 1)
@@ -4364,18 +4401,17 @@ mission_bridge = function(call, sleep)
     hsc.ai_attach_free("keyesa10", "characters\\captain\\captain")
     hsc.unit_set_seat("keyesa10", "alert")
     hsc.ai_command_list_by_unit("keyesa10", "keyes_2")
-    call(bridge_flavor)
+    call(a10.bridge_flavor)
     sleep(function()
         return hsc.volume_test_objects("bridge_all", hsc.players())
     end, 1)
     sleep(60)
     sleep(function()
         return hsc.volume_test_objects("bridge_trigger_3", hsc.players()) or
-                   not hsc.volume_test_objects("bridge_all", hsc.players())
-
+                   not (hsc.volume_test_objects("bridge_all", hsc.players()))
     end, 1)
     mark_bridge_cutscene_start = true
-    call(cinematic_x20)
+    call(a10.cinematic_x20)
     play_music_a10_03 = true
     hsc.vehicle_load_magic("pilot_1", "", hsc.ai_actors("bridge/pilot_crewman_1"))
     hsc.device_set_position("bridge_door_1", 0)
@@ -4388,18 +4424,19 @@ mission_bridge = function(call, sleep)
     hsc.ai_erase("crossfire_anti")
     hsc.ai_erase("fetch/fetch")
     stop(mission_crossfire)
-    wake(bridge_leave_prompt)
+    wake(a10.bridge_leave_prompt)
     bridge_living_count = hsc.ai_living_count("bridge")
 
     sleep(function()
         return hsc.unit_get_health("keyesa10") < 1 or hsc.ai_living_count("bridge") <
                    bridge_living_count or hsc.structure_bsp_index() > 1
     end, 5)
-    if not hsc.structure_bsp_index() > 1 then
-        call(bridge_kill_kill_kill)
+    if not (hsc.structure_bsp_index() > 1) then
+        call(a10.bridge_kill_kill_kill)
     end
 end
-mission_shoot = function(call, sleep)
+
+function a10.mission_shoot(call, sleep)
     hsc.object_destroy("bridge_barricade_1")
     hsc.object_create("bridge_barricade_1")
     sleep(function()
@@ -4410,20 +4447,21 @@ mission_shoot = function(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("shoot_trigger_3", hsc.players())
     end, 1)
-    hsc.player_add_equipment(call(player0), "bridge0_profile", false)
+    hsc.player_add_equipment(call(a10.player0), "bridge0_profile", false)
     mark_weapon = true
     hsc.ai_place("shoot_anti")
     hsc.unit_doesnt_drop_items(hsc.ai_actors("shoot_anti"))
     hsc.ai_try_to_fight_player("shoot_anti")
     hsc.ai_magically_see_players("shoot_anti")
     sleep(15)
-    hsc.player_add_equipment(call(player1), "bridge1_profile", false)
+    hsc.player_add_equipment(call(a10.player1), "bridge1_profile", false)
     sleep(function()
         return hsc.volume_test_objects("shoot_trigger_3", hsc.players())
     end, 1)
     mark_shoot = true
 end
-mission_cafeteria = function(call, sleep)
+
+function a10.mission_cafeteria(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("cafeteria_trigger_1", hsc.players())
     end, 1)
@@ -4436,7 +4474,8 @@ mission_cafeteria = function(call, sleep)
     hsc.ai_magically_see_encounter("cafeteria_anti", "cafeteria")
     hsc.ai_magically_see_encounter("cafeteria", "cafeteria_anti")
     sleep(function()
-        return hsc.ai_living_count("shoot_anti") == 0
+        return 0 == hsc.ai_living_count("shoot_anti")
+
     end, 5, delay_lost)
     hsc.object_create("cafeteria_ar")
     hsc.object_create("cafeteria_marine")
@@ -4458,7 +4497,7 @@ mission_cafeteria = function(call, sleep)
     hsc.device_set_power("cafeteria_door_1", 1)
     hsc.device_set_position("cafeteria_door_1", 1)
     sleep(function()
-        return hsc.ai_living_count("cafeteria_anti/init") == 0 or
+        return 0 == hsc.ai_living_count("cafeteria_anti/init") or
                    hsc.volume_test_objects("cafeteria_trigger_3", hsc.players())
     end, 1)
     hsc.ai_retreat("cafeteria/init")
@@ -4471,17 +4510,18 @@ mission_cafeteria = function(call, sleep)
     hsc.ai_magically_see_encounter("cafeteria_anti", "cafeteria")
     hsc.ai_magically_see_encounter("cafeteria", "cafeteria_anti")
     sleep(function()
-        return not hsc.volume_test_objects("cafeteria_trigger_4", hsc.players()) or
-                   hsc.volume_test_objects("cafeteria_trigger_4", hsc.ai_actors("cafeteria"))
-
+        return not (hsc.volume_test_objects("cafeteria_trigger_4", hsc.players()) or
+                   hsc.volume_test_objects("cafeteria_trigger_4", hsc.ai_actors("cafeteria")))
     end, 1)
     hsc.device_set_position("cafeteria_door_1", 0)
     sleep(function()
-        return hsc.device_get_position("cafeteria_door_1") == 0
+        return 0 == hsc.device_get_position("cafeteria_door_1")
+
     end, 1)
     hsc.device_set_power("cafeteria_door_1", 0)
 end
-mission_airlock_1 = function(call, sleep)
+
+function a10.mission_airlock_1(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("bsp1,2", hsc.players())
     end, 1)
@@ -4562,12 +4602,14 @@ mission_airlock_1 = function(call, sleep)
     end, 1)
     hsc.ai_migrate("airlock_1/main", "airlock_1/end")
     sleep(function()
-        return hsc.ai_living_count("airlock_1_anti") == 0
+        return 0 == hsc.ai_living_count("airlock_1_anti")
+
     end, 1)
     sleep(45)
     hsc.ai_conversation("airlock_1_2")
 end
-mission_flank = function(call, sleep)
+
+function a10.mission_flank(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("flank_trigger_1", hsc.players())
     end, 1)
@@ -4606,7 +4648,8 @@ mission_flank = function(call, sleep)
     hsc.ai_timer_expire("flank_anti/last_grunt")
     play_music_a10_05_alt = false
 end
-mission_loop = function(call, sleep)
+
+function a10.mission_loop(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("loop_trigger_1", hsc.players())
     end, 1)
@@ -4632,13 +4675,15 @@ mission_loop = function(call, sleep)
     hsc.object_pvs_clear()
     hsc.ai_place("loop_anti/search_grunt")
     sleep(function()
-        return hsc.ai_living_count("loop_anti") == 0
+        return 0 == hsc.ai_living_count("loop_anti")
+
     end, 1)
     sleep(15)
     hsc.ai_migrate("loop", "airlock_2/airlock")
     play_music_a10_05_alt = false
 end
-mission_airlock_2 = function(call, sleep)
+
+function a10.mission_airlock_2(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("airlock_2_trigger_1", hsc.players())
     end, 1)
@@ -4654,7 +4699,8 @@ mission_airlock_2 = function(call, sleep)
     hsc.ai_place("airlock_2_anti/rein")
     play_music_a10_05_alt = false
 end
-mission_knot = function(call, sleep)
+
+function a10.mission_knot(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("knot_trigger_1", hsc.players())
     end, 1)
@@ -4670,7 +4716,8 @@ mission_knot = function(call, sleep)
     sleep(60)
     hsc.units_set_current_vitality(hsc.ai_actors("knot"), 1, 0)
 end
-mission_stairs = function(call, sleep)
+
+function a10.mission_stairs(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("bsp3,4", hsc.players())
     end, 1)
@@ -4700,8 +4747,8 @@ mission_stairs = function(call, sleep)
     hsc.device_set_power("stairs_door_2", 1)
     hsc.device_set_position("stairs_door_2", 1)
     sleep(function()
-        return hsc.ai_living_count("stairs_anti/init") == 0 and
-                   hsc.ai_living_count("stairs_anti/lower") == 0 or
+        return 0 == hsc.ai_living_count("stairs_anti/init") and 0 ==
+                   hsc.ai_living_count("stairs_anti/lower") or
                    hsc.volume_test_objects("stairs_trigger_2", hsc.players())
     end, 1)
     hsc.ai_migrate("stairs", "containment_2")
@@ -4740,7 +4787,8 @@ mission_stairs = function(call, sleep)
                                     "stairs_1")
     end
 end
-mission_containment_2 = function(call, sleep)
+
+function a10.mission_containment_2(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("containment_2_trigger_1", hsc.players())
     end, 1)
@@ -4749,7 +4797,8 @@ mission_containment_2 = function(call, sleep)
     hsc.ai_migrate("stairs", "containment_2")
     hsc.ai_follow_target_players("containment_2")
 end
-lifepod_1_blasts = function(call, sleep)
+
+function a10.lifepod_1_blasts(call, sleep)
     sleep(function()
         return test_lifepod_blasts
     end, 1)
@@ -4776,7 +4825,9 @@ lifepod_1_blasts = function(call, sleep)
     hsc.effect_new("effects\\bursts\\space beam", "lifepod_1_flag_2e")
     mark_lifepod_blasts = false
 end
-lifepod_1_launch_1 = function(call, sleep)
+script.continuous(a10.lifepod_1_blasts)
+
+function a10.lifepod_1_launch_1(call, sleep)
     sleep(function()
         return hsc.objects_can_see_object(hsc.players(), "lifepod_1_light_1", 40)
     end, 1, delay_witness)
@@ -4803,7 +4854,8 @@ lifepod_1_launch_1 = function(call, sleep)
     end, 1)
     hsc.object_destroy("lifepod_1_1")
 end
-lifepod_1_launch_3 = function(call, sleep)
+
+function a10.lifepod_1_launch_3(call, sleep)
     sleep(function()
         return hsc.objects_can_see_object(hsc.players(), "lifepod_1_light_3", 40)
     end, 1, delay_witness)
@@ -4828,7 +4880,8 @@ lifepod_1_launch_3 = function(call, sleep)
     end, 1)
     hsc.object_destroy("lifepod_1_3")
 end
-lifepod_1_flavor = function(call, sleep)
+
+function a10.lifepod_1_flavor(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("lifepod_1_trigger_1", hsc.players())
     end, 1)
@@ -4854,14 +4907,14 @@ lifepod_1_flavor = function(call, sleep)
         return hsc.volume_test_objects("lifepod_trigger_3", hsc.players()) or
                    not mark_lifepod_blasts
     end, 1)
-    wake(lifepod_1_launch_1)
+    wake(a10.lifepod_1_launch_1)
     sleep(function()
         return hsc.volume_test_objects("lifepod_trigger_3", hsc.players()) or mark_launch_1
     end, 1)
     sleep(function()
         return hsc.volume_test_objects("lifepod_trigger_3", hsc.players())
     end, 1, 30)
-    wake(lifepod_1_launch_3)
+    wake(a10.lifepod_1_launch_3)
     sleep(function()
         return hsc.volume_test_objects("lifepod_trigger_3", hsc.players()) or mark_launch_1
     end, 1)
@@ -4904,15 +4957,17 @@ lifepod_1_flavor = function(call, sleep)
     hsc.object_destroy("lifepod_1_light_2")
     hsc.ai_conversation_advance("lifepod_launch_1")
 end
-mission_lifepod_1 = function(call, sleep)
-    wake(lifepod_1_flavor)
+
+function a10.mission_lifepod_1(call, sleep)
+    wake(a10.lifepod_1_flavor)
     sleep(function()
         return hsc.volume_test_objects("lifepod_1_trigger_1", hsc.players())
     end, 1)
     hsc.game_save()
     hsc.ai_place("lifepod_1_anti")
 end
-mission_tunnel = function(call, sleep)
+
+function a10.mission_tunnel(call, sleep)
     sleep(function()
         return hsc.volume_test_objects_all("tunnel_trigger_close", hsc.players())
     end, 1)
@@ -4933,7 +4988,7 @@ mission_tunnel = function(call, sleep)
     end, 1, delay_dawdle)
     hsc.activate_team_nav_point_flag("default_red", "player", "tunnel_flag_1", 0)
     sleep(30)
-    if not hsc.game_is_cooperative() and normal == hsc.game_difficulty_get() then
+    if not (hsc.game_is_cooperative()) and hsc.game_difficulty_get() == normal then
         hsc.display_scenario_help(6)
     end
     sleep(90)
@@ -4958,7 +5013,8 @@ mission_tunnel = function(call, sleep)
     play_music_a10_06 = false
     hsc.ai_retreat("tunnel_anti")
 end
-cryo_search = function(call, sleep)
+
+function a10.cryo_search(call, sleep)
     hsc.device_set_position_immediate("cryo_door_1", 1)
     hsc.device_set_position_immediate("cryo_door_2", 1)
     sleep(function()
@@ -4977,19 +5033,22 @@ cryo_search = function(call, sleep)
     end, 1, delay_witness)
     hsc.ai_command_list_advance("cryo_search")
     sleep(function()
-        return hsc.ai_command_list_status(hsc.ai_actors("cryo_search/elite_major")) == 2
+        return 2 == hsc.ai_command_list_status(hsc.ai_actors("cryo_search/elite_major"))
+
     end, 1)
     hsc.ai_command_list("cryo_search", "cryo_search_2")
 end
-mission_boom = function(call, sleep)
+
+function a10.mission_boom(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("boom_trigger_1", hsc.players())
     end, 1)
     hsc.ai_place("boom_anti")
     hsc.game_save()
     sleep(function()
-        return hsc.volume_test_objects("boom_trigger_2", hsc.players()) or
-                   hsc.ai_living_count("boom_anti/elite_boom") == 0
+        return hsc.volume_test_objects("boom_trigger_2", hsc.players()) or 0 ==
+                   hsc.ai_living_count("boom_anti/elite_boom")
+
     end, 1)
     hsc.effect_new("effects\\explosions\\medium explosion", "boom_flag_1")
     sleep(10)
@@ -4997,8 +5056,9 @@ mission_boom = function(call, sleep)
     sleep(5)
     hsc.effect_new("effects\\explosions\\medium explosion", "boom_flag_3")
     sleep(function()
-        return hsc.volume_test_objects("boom_trigger_3", hsc.players()) or
-                   hsc.ai_living_count("boom_anti/grunt_boom") == 0
+        return hsc.volume_test_objects("boom_trigger_3", hsc.players()) or 0 ==
+                   hsc.ai_living_count("boom_anti/grunt_boom")
+
     end, 1, delay_wait)
     hsc.effect_new("effects\\explosions\\medium explosion", "boom_flag_8")
     sleep(5)
@@ -5026,7 +5086,8 @@ mission_boom = function(call, sleep)
     end)
     hsc.ai_conversation("boom_1")
 end
-mission_final = function(call, sleep)
+
+function a10.mission_final(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("bsp5,6", hsc.players())
     end, 1)
@@ -5078,7 +5139,8 @@ mission_final = function(call, sleep)
         return hsc.ai_living_count("lifepod_2_anti") < 3
     end, 1, delay_lost)
     sleep(function()
-        return hsc.ai_living_count("lifepod_2_anti") == 0
+        return 0 == hsc.ai_living_count("lifepod_2_anti")
+
     end, 1, delay_lost)
     hsc.ai_kill("lifepod_2_anti")
     sleep(45)
@@ -5113,14 +5175,15 @@ mission_final = function(call, sleep)
     hsc.object_destroy("lifepod_x30")
     hsc.object_destroy("field_x30")
     global_rumble = false
-    if call(cinematic_skip_start) then
-        call(x30)
+    if call(a10.cinematic_skip_start) then
+        call(a10.x30)
     end
-    call(cinematic_skip_stop)
+    call(a10.cinematic_skip_stop)
     hsc.fade_out(1, 1, 1, 0)
     hsc.game_won()
 end
-fast_setup = function(call, sleep)
+
+function a10.fast_setup(call, sleep)
     hsc.ai_erase("cryo_tech/tech")
     hsc.ai_place("cryo_tech/tech")
     hsc.objects_predict(hsc.ai_actors("cryo_tech"))
@@ -5129,9 +5192,9 @@ fast_setup = function(call, sleep)
     if hsc.game_is_cooperative() then
         hsc.object_create("cryotube_2")
     end
-    hsc.unit_enter_vehicle(call(player0), "cryotube_1", "ct-driver")
+    hsc.unit_enter_vehicle(call(a10.player0), "cryotube_1", "ct-driver")
     if hsc.game_is_cooperative() then
-        hsc.unit_enter_vehicle(call(player1), "cryotube_2", "ct-driver")
+        hsc.unit_enter_vehicle(call(a10.player1), "cryotube_2", "ct-driver")
     end
     hsc.object_create("cryotube_1_steam_1")
     hsc.object_create("cryotube_1_steam_2")
@@ -5143,7 +5206,7 @@ fast_setup = function(call, sleep)
     end
     hsc.cinematic_start()
     hsc.camera_control(true)
-    hsc.object_beautify(call(player0), true)
+    hsc.object_beautify(call(a10.player0), true)
     hsc.game_skip_ticks(7)
     hsc.camera_set("tutorial_action_2", 0)
     hsc.camera_set("tutorial_action_1", 250)
@@ -5156,10 +5219,10 @@ fast_setup = function(call, sleep)
         hsc.unit_open("cryotube_2")
     end
     sleep(15)
-    hsc.unit_exit_vehicle(call(player0))
+    hsc.unit_exit_vehicle(call(a10.player0))
     sleep(30)
     if hsc.game_is_cooperative() then
-        hsc.unit_exit_vehicle(call(player1))
+        hsc.unit_exit_vehicle(call(a10.player1))
     end
     sleep(150)
     hsc.object_destroy("cryotube_1_steam_1")
@@ -5175,7 +5238,7 @@ fast_setup = function(call, sleep)
     end
     hsc.fade_out(1, 1, 1, 15)
     sleep(35)
-    hsc.object_beautify(call(player0), false)
+    hsc.object_beautify(call(a10.player0), false)
     hsc.camera_control(false)
     hsc.cinematic_stop()
     hsc.game_skip_ticks(7)
@@ -5191,11 +5254,13 @@ fast_setup = function(call, sleep)
         hsc.unit_close("cryotube_2")
     end
 end
-main_setup = function(call, sleep)
+
+function a10.main_setup(call, sleep)
     global_rumble = true
     global_intercom = true
 end
-x10_post = function(call, sleep)
+
+function a10.x10_post(call, sleep)
     hsc.object_create("x10_1")
     hsc.object_create("x10_2")
     hsc.object_create("x10_3")
@@ -5245,9 +5310,10 @@ x10_post = function(call, sleep)
     hsc.object_create("bsp1_door")
     hsc.object_create("crossfire_door_2")
     hsc.object_create("containment_1_door_3")
-    call(halo_setup)
+    call(a10.halo_setup)
 end
-linkage = function(call, sleep)
+
+function a10.linkage(call, sleep)
     hsc.ai_link_activation("containment_1", "containment_1_anti")
     hsc.ai_link_activation("containment_1_anti", "containment_1")
     hsc.ai_link_activation("first_contact", "first_contact_anti")
@@ -5277,43 +5343,44 @@ linkage = function(call, sleep)
     hsc.ai_link_activation("lifepod_2", "lifepod_2_anti")
     hsc.ai_link_activation("lifepod_2_anti", "lifepod_2")
 end
-mission_a10 = function(call, sleep)
-    --hsc.fade_out(0, 0, 0, 0)
-    --hsc.ai_allegiance("player", "human")
-    --hsc.ai_grenades(false)
-    --hsc.ai_dialogue_triggers(false)
-    --if call(cinematic_skip_start) then
-    --    call(x10)
-    --end
-    --call(cinematic_skip_stop)
+
+function a10.mission_a10(call, sleep)
+    hsc.fade_out(0, 0, 0, 0)
+    hsc.ai_allegiance("player", "human")
+    hsc.ai_grenades(false)
+    hsc.ai_dialogue_triggers(false)
+    -- if call(a10.cinematic_skip_start) then
+        --call(a10.x10)
+    -- end
+    -- call(a10.cinematic_skip_stop)
     --hsc.fade_out(1, 1, 1, 0)
-    --wake(x10_post)
-    --hsc.object_set_facing(call(player0), "facing_flag_1")
-    --hsc.object_set_facing(call(player1), "facing_flag_1")
+    wake(a10.x10_post)
+    hsc.object_set_facing(call(a10.player0), "facing_flag_1")
+    hsc.object_set_facing(call(a10.player1), "facing_flag_1")
     --if hsc.game_is_cooperative() then
-        wake(fast_setup)
+        wake(a10.fast_setup)
     --else
-    --    if not hsc.game_difficulty_get() == normal then
-    --        wake(fast_setup)
+    --    if not (normal == hsc.game_difficulty_get()) then
+    --        wake(a10.fast_setup)
     --    else
     --        if true then
-    --            wake(tutorial_setup)
+    --            wake(a10.tutorial_setup)
     --        end
     --    end
     --end
-    wake(mission_bsp)
-    wake(music_a10)
-    wake(linkage)
+    wake(a10.mission_bsp)
+    wake(a10.music_a10)
+    wake(a10.linkage)
     sleep(function()
         return mark_fast_setup or mark_tutorial_setup
     end, 1)
-    wake(main_setup)
-    wake(mission_cryo_explosion)
-    wake(mission_blam_burn)
-    wake(mission_blam_scare)
-    wake(mission_containment_1)
-    wake(mission_crossfire)
-    wake(mission_bridge)
+    wake(a10.main_setup)
+    wake(a10.mission_cryo_explosion)
+    wake(a10.mission_blam_burn)
+    wake(a10.mission_blam_scare)
+    wake(a10.mission_containment_1)
+    wake(a10.mission_crossfire)
+    wake(a10.mission_bridge)
     hsc.hud_set_objective_text("obj_bridge")
     hsc.show_hud_help_text(true)
     hsc.hud_set_help_text("obj_bridge")
@@ -5327,12 +5394,12 @@ mission_a10 = function(call, sleep)
     hsc.hud_set_help_text("obj_escape")
     sleep(120)
     hsc.show_hud_help_text(false)
-    wake(flavor_boarding)
-    wake(flavor_watchit)
+    wake(a10.flavor_boarding)
+    wake(a10.flavor_watchit)
     if hsc.game_is_cooperative() then
         hsc.ai_grenades(true)
     else
-        if not hsc.game_difficulty_get() == normal then
+        if not (normal == hsc.game_difficulty_get()) then
             hsc.ai_grenades(true)
         else
             if true then
@@ -5340,22 +5407,24 @@ mission_a10 = function(call, sleep)
             end
         end
     end
-    wake(mission_shoot)
-    wake(mission_cafeteria)
-    wake(mission_airlock_1)
-    wake(mission_flank)
-    wake(mission_loop)
-    wake(mission_airlock_2)
-    wake(mission_knot)
-    wake(mission_stairs)
-    wake(mission_containment_2)
-    wake(mission_lifepod_1)
-    wake(mission_tunnel)
-    wake(cryo_search)
-    wake(mission_boom)
-    wake(mission_final)
+    wake(a10.mission_shoot)
+    wake(a10.mission_cafeteria)
+    wake(a10.mission_airlock_1)
+    wake(a10.mission_flank)
+    wake(a10.mission_loop)
+    wake(a10.mission_airlock_2)
+    wake(a10.mission_knot)
+    wake(a10.mission_stairs)
+    wake(a10.mission_containment_2)
+    wake(a10.mission_lifepod_1)
+    wake(a10.mission_tunnel)
+    wake(a10.cryo_search)
+    wake(a10.mission_boom)
+    wake(a10.mission_final)
 end
-battle_start = function(call, sleep)
+script.startup(a10.mission_a10)
+
+function a10.battle_start(call, sleep)
     hsc.object_create_anew_containing("x10_battle")
     hsc.device_set_position("x10_battle_1", 1)
     hsc.device_set_position("x10_battle_2", 1)
@@ -5370,10 +5439,9 @@ battle_start = function(call, sleep)
     hsc.device_set_position("x10_battle_11", 1)
     hsc.device_set_position("x10_battle_12", 1)
 end
-battle_stop = function(call, sleep)
+
+function a10.battle_stop(call, sleep)
     hsc.object_destroy_containing("x10_battle")
 end
 
-script(function(call)
-    call(mission_a10)
-end)()
+return a10

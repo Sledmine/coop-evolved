@@ -123,7 +123,7 @@ local addressList = {
     screenResolution = 0x637CF0,
     currentWidgetIdAddress = 0x6B401C,
     cinematicGlobals = 0x0068c83c,
-    hscGlobalsPointer = 0x0064bab0
+    gameStateGlobals = 0x0064bab0
 }
 
 -- Server side addresses adjustment
@@ -132,7 +132,8 @@ if blam.isGameSAPP() then
     addressList.objectTable = 0x4005062C
     addressList.syncedNetworkObjects = 0x00598020 -- not pointer cause cheat engine sucks
     addressList.cinematicGlobals = 0x005f506c
-    addressList.hscGlobalsPointer = 0x005bd890
+    addressList.gameStateGlobals = 0x005bd890
+    addressList.hscGlobals = 0x6e144c
 end
 
 -- Tag classes values
@@ -616,9 +617,8 @@ end
 ---@param red? number
 ---@param green? number
 ---@param blue? number
-function console_out(message, red, green, blue)
-    -- TODO Add color printing to this function on SAPP
-    cprint(message)
+function console_out(...)
+    cprint(...)
 end
 
 ---Output text to console as debug message.
@@ -639,10 +639,40 @@ end
 
 ---Get the value of a Halo scripting global.\
 ---An error will be triggered if the global is not found
----@param name string Name of the global variable to get from hsc
+---@param globalName string Name of the  global variable to get from hsc
 ---@return boolean | number
-function get_global(name)
-    error("SAPP can not retrieve global variables as Chimera does.. yet!")
+function get_global(globalName)
+    if addressList.hscGlobals then
+        local hsGlobals = addressList.hscGlobals
+        --local firstGlobal = read_dword(addressList.hscGlobals + 1)
+        local firstGlobal = 0x00001ec
+        local hsGlobalsTable = read_dword(hsGlobals)
+        local hsTable = read_dword(hsGlobalsTable + 0x34)
+
+        local scenarioTag = blam.getTag(0).data
+        local globalsCount = read_dword(scenarioTag + 0x4A8)
+        local globalsAddress = read_dword(scenarioTag + 0x4A8 + 4)
+
+        for i = 0, globalsCount - 1 do
+            local global = globalsAddress + i * 92
+            if read_string(global) == globalName then
+                local globalType = read_word(global + 0x20)
+                local location = hsTable + (i + firstGlobal) * 8
+                if globalType == 5 then
+                    return read_byte(location + 4) == 1
+                elseif globalType == 6 then
+                    return read_float(location + 4)
+                elseif globalType == 7 then
+                    return read_short(location + 4)
+                elseif globalType == 8 then
+                    return read_int(location + 4)
+                else
+                    return read_int(location + 4)
+                end
+            end
+        end
+    end
+    error("Global not found: " .. globalName)
 end
 
 ---Print message to player HUD.\
@@ -3446,7 +3476,7 @@ end
 --- Returns current game difficulty index
 ---@return number
 function blam.getGameDifficultyIndex()
-    local hscGlobals = read_dword(addressList.hscGlobalsPointer)
+    local hscGlobals = read_dword(addressList.gameStateGlobals)
     return read_byte(hscGlobals + 0xe)
 end
 
