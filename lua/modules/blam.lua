@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.12.1"}
+local blam = {_VERSION = "1.15.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -122,7 +122,8 @@ local addressList = {
     syncedNetworkObjects = 0x006226F0, -- pointer, from Vulpes
     screenResolution = 0x637CF0,
     currentWidgetIdAddress = 0x6B401C,
-    cinematicGlobals = 0x0068c83c
+    cinematicGlobals = 0x0068c83c,
+    hscGlobalsPointer = 0x0064bab0
 }
 
 -- Server side addresses adjustment
@@ -131,6 +132,7 @@ if blam.isGameSAPP() then
     addressList.objectTable = 0x4005062C
     addressList.syncedNetworkObjects = 0x00598020 -- not pointer cause cheat engine sucks
     addressList.cinematicGlobals = 0x005f506c
+    addressList.hscGlobalsPointer = 0x005bd890
 end
 
 -- Tag classes values
@@ -332,6 +334,13 @@ local joystickInputs = {
     startButton = 9,
     leftStick = 10,
     rightStick = 11,
+    rightStick2 = 12,
+    -- TODO Add joys axis
+    leftStickUp = 30,
+    leftStickDown = 32,
+    rightStickUp = 34,
+    rightStickDown = 36,
+    triggers = 38,
     -- Multiple values on the same offset, check dPadValues table
     dPad = 96,
     -- Non zero values
@@ -343,8 +352,6 @@ local joystickInputs = {
     dPadDownRight = 103,
     dPadUpLeft = 107,
     dPadDownLeft = 105
-    -- TODO Add joys axis
-    -- rightJoystick = 30,
 }
 
 -- Values for the possible dPad values from the joystick inputs
@@ -958,7 +965,7 @@ end
 ---@return string
 function blam.readUnicodeString(address, rawRead)
     local stringAddress
-    if (rawRead) then
+    if rawRead then
         stringAddress = address
     else
         stringAddress = read_dword(address)
@@ -968,7 +975,7 @@ function blam.readUnicodeString(address, rawRead)
     -- TODO Refactor this to support full unicode char size
     for i = 1, length do
         local char = read_string(stringAddress + (i - 1) * 0x2)
-        if (char == "") then
+        if char == "" then
             break
         end
         output = output .. char
@@ -979,10 +986,10 @@ end
 --- Writes a unicode string in a given address
 ---@param address number
 ---@param newString string
----@param forced? boolean
-function blam.writeUnicodeString(address, newString, forced)
+---@param rawWrite? boolean
+function blam.writeUnicodeString(address, newString, rawWrite)
     local stringAddress
-    if (forced) then
+    if rawWrite then
         stringAddress = address
     else
         stringAddress = read_dword(address)
@@ -991,10 +998,11 @@ function blam.writeUnicodeString(address, newString, forced)
     if newString == false then
         return
     end
+    local newString = tostring(newString)
     -- TODO Refactor this to support writing ASCII and Unicode strings
     for i = 1, #newString do
         write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
-        if (i == #newString) then
+        if i == #newString then
             write_byte(stringAddress + #newString * 0x2, 0x0)
         end
     end
@@ -1110,6 +1118,23 @@ local function writeTagReference(address, propertyData, tagId)
     write_dword(address + 0xC, tagId)
 end
 
+local function safeReadUnicodeString(address)
+    local size = read_dword(address)
+    if size == 0 then
+        return ""
+    end
+    return blam.readUnicodeString(address + 0xC)
+end
+
+local function safeWriteUnicodeString(address, propertyData, text)
+    local size = read_dword(address)
+    local text = text
+    if #text > size then
+        text = text:sub(1, size)
+    end
+    return blam.writeUnicodeString(address + 0xC, text)
+end
+
 -- Data types operations references
 typesOperations = {
     bit = {read = readBit, write = writeBit},
@@ -1126,7 +1151,8 @@ typesOperations = {
     ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
     table = {read = readTable, write = writeTable},
-    tagref = {read = readTagReference, write = writeTagReference}
+    tagref = {read = readTagReference, write = writeTagReference},
+    sustring = {read = safeReadUnicodeString, write = safeWriteUnicodeString}
 }
 
 -- Magic luablam metatable
@@ -1433,6 +1459,8 @@ local unitStructure = extendStructure(objectStructure, {
     isControllable = {type = "bit", offset = 0x204, bitLevel = 5},
     isPlayerNotAllowedToEntry = {type = "bit", offset = 0x204, bitLevel = 16},
     parentSeatIndex = {type = "word", offset = 0x2F0},
+    weaponAnimationTypeIndex = {type = "byte", offset = 0x2A1},
+    weaponSlot = {type = "byte", offset = 0x2F2},
     firstWeaponObjectId = {type = "dword", offset = 0x2F8},
     secondWeaponObjectId = {type = "dword", offset = 0x2FC},
     thirdWeaponObjectId = {type = "dword", offset = 0x300},
@@ -1445,6 +1473,8 @@ local unitStructure = extendStructure(objectStructure, {
 ---@field isControllable boolean Unit controllable state
 ---@field isPlayerNotAllowedToEntry boolean Unit player not allowed to entry
 ---@field parentSeatIndex number Unit parent seat index
+---@field weaponAnimationTypeIndex number Unit weapon animation type index
+---@field weaponSlot number Current unit weapon slot
 ---@field firstWeaponObjectId number First weapon object id
 ---@field secondWeaponObjectId number Second weapon object id
 ---@field thirdWeaponObjectId number Third weapon object id
@@ -1470,7 +1500,6 @@ local bipedStructure = extendStructure(unitStructure, {
     grenadeHold = {type = "bit", offset = 0x208, bitLevel = 13},
     crouch = {type = "byte", offset = 0x2A0},
     shooting = {type = "float", offset = 0x284},
-    weaponSlot = {type = "byte", offset = 0x2A1},
     zoomLevel = {type = "byte", offset = 0x320},
     ---@deprecated
     invisibleScale = {type = "float", offset = 0x37C},
@@ -1603,12 +1632,15 @@ local tagCollectionStructure = {
 
 ---@class unicodeStringList
 ---@field count number Number of unicode strings
----@field stringList table List of unicode strings
+---@field strings string[] List of unicode strings
 
 -- UnicodeStringList structure
 local unicodeStringListStructure = {
     count = {type = "byte", offset = 0x0},
-    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14}
+    ---@deprecated
+    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14},
+    -- Previous string list property works because of magic (well because of shit code haha)
+    strings = {type = "list", offset = 0x4, elementsType = "sustring", jump = 0x14, noOffset = true}
 }
 
 ---@class bitmapSequence
@@ -1734,10 +1766,30 @@ local bitmapStructure = {
 ---@field type number Type of widget
 ---@field controllerIndex number Index of the player controller
 ---@field name string Name of the widget
+---@field top number Top bound of the widget
+---@field left number Left bound of the widget
+---@field bottom number Bottom bound of the widget
+---@field right number Right bound of the widget
 ---@field boundsY number Top bound of the widget
 ---@field boundsX number Left bound of the widget
 ---@field height number Bottom bound of the widget
 ---@field width number Right bound of the widget
+---@field passUnhandleEventsToFocusedChild boolean Pass unhandled events to focused child
+---@field pauseGameTime boolean Pause game time
+---@field flashBackgroundBitmap boolean Flash background bitmap
+---@field dpadUpDownTabsThruChildren boolean Dpad up down tabs thru children
+---@field dpadLeftRightTabsThruChildren boolean Dpad left right tabs thru children
+---@field dpadUpDownTabsThruListItems boolean Dpad up down tabs thru list items
+---@field dpadLeftRightTabsThruListItems boolean Dpad left right tabs thru list items
+---@field dontFocusSpecificChildWidget boolean Don't focus specific child widget
+---@field passUnhandledEventsToAllChildren boolean Pass unhandled events to all children
+---@field renderRegardlessOfControllerIndex boolean Render regardless of controller index
+---@field passHandledEventsToAllChildren boolean Pass handled events to all children
+---@field returnToMainMenuIfNoHistory boolean Return to main menu if no history
+---@field alwaysUseTagControllerIndex boolean Always use tag controller index
+---@field alwaysUseNiftyRenderFx boolean Always use nifty render fx
+---@field dontPushHistory boolean Don't push history
+---@field forceHandleMouse boolean Force handle mouse
 ---@field backgroundBitmap number Tag ID of the background bitmap
 ---@field eventHandlers uiWidgetDefinitionEventHandler[] tag ID list of the child widgets
 ---@field unicodeStringListTag number Tag ID of the unicodeStringList from this widget
@@ -1753,10 +1805,30 @@ local uiWidgetDefinitionStructure = {
     type = {type = "word", offset = 0x0},
     controllerIndex = {type = "word", offset = 0x2},
     name = {type = "string", offset = 0x4},
+    top = {type = "short", offset = 0x24},
+    left = {type = "short", offset = 0x26},
+    bottom = {type = "short", offset = 0x28},
+    right = {type = "short", offset = 0x2A},
     boundsY = {type = "short", offset = 0x24},
     boundsX = {type = "short", offset = 0x26},
     height = {type = "short", offset = 0x28},
     width = {type = "short", offset = 0x2A},
+    passUnhandleEventsToFocusedChild = {type = "bit", offset = 0x2C, bitLevel = 0},
+    pauseGameTime = {type = "bit", offset = 0x2C, bitLevel = 1},
+    flashBackgroundBitmap = {type = "bit", offset = 0x2C, bitLevel = 2},
+    dpadUpDownTabsThruChildren = {type = "bit", offset = 0x2C, bitLevel = 3},
+    dpadLeftRightTabsThruChildren = {type = "bit", offset = 0x2C, bitLevel = 4},
+    dpadUpDownTabsThruListItems = {type = "bit", offset = 0x2C, bitLevel = 5},
+    dpadLeftRightTabsThruListItems = {type = "bit", offset = 0x2C, bitLevel = 6},
+    dontFocusSpecificChildWidget = {type = "bit", offset = 0x2C, bitLevel = 7},
+    passUnhandledEventsToAllChildren = {type = "bit", offset = 0x2C, bitLevel = 8},
+    renderRegardlessOfControllerIndex = {type = "bit", offset = 0x2C, bitLevel = 9},
+    passHandledEventsToAllChildren = {type = "bit", offset = 0x2C, bitLevel = 10},
+    returnToMainMenuIfNoHistory = {type = "bit", offset = 0x2C, bitLevel = 11},
+    alwaysUseTagControllerIndex = {type = "bit", offset = 0x2C, bitLevel = 12},
+    alwaysUseNiftyRenderFx = {type = "bit", offset = 0x2C, bitLevel = 13},
+    dontPushHistory = {type = "bit", offset = 0x2C, bitLevel = 14},
+    forceHandleMouse = {type = "bit", offset = 0x2C, bitLevel = 15},
     backgroundBitmap = {type = "word", offset = 0x44},
     eventHandlers = {
         type = "table",
@@ -2539,7 +2611,7 @@ function blam.getJoystickInput(joystickOffset)
     joystickOffset = joystickOffset or 0
     -- Nothing is pressed by default
     ---@type boolean | number
-    local inputValue = false
+    local inputValue = 0
     -- Look for every input from every joystick available
     for controllerId = 0, 3 do
         local inputAddress = addressList.joystickInput + controllerId * 0xA0
@@ -2551,6 +2623,8 @@ function blam.getJoystickInput(joystickOffset)
             local tempValue = read_word(inputAddress + 96)
             if (tempValue == joystickOffset - 100) then
                 inputValue = true
+            else
+                inputValue = false
             end
         else
             inputValue = inputValue + read_byte(inputAddress + joystickOffset)
@@ -3367,6 +3441,13 @@ end
 ---@return cinematicGlobals
 function blam.cinematicGlobals()
     return createBindTable(read_dword(addressList.cinematicGlobals), cinematicGlobalsStructure)
+end
+
+--- Returns current game difficulty index
+---@return number
+function blam.getGameDifficultyIndex()
+    local hscGlobals = read_dword(addressList.hscGlobalsPointer)
+    return read_byte(hscGlobals + 0xe)
 end
 
 return blam
