@@ -2,11 +2,13 @@ local hsc = {}
 
 local luna = require "luna"
 local hscDoc = require "hscDoc"
-local balltze = Balltze
+local blam = require "blam"
 local engine = Engine
-local executeScript = engine.hsc.executeScript
+local hscExecuteScript = engine.hsc.executeScript
 
 math.randomseed(os.time())
+
+local middlewares = {}
 
 local cacheHscGlobals = {
     boolean = "lua_boolean",
@@ -31,13 +33,20 @@ local function getScriptArgs(args)
     end)
 end
 
+local function executeScript(script, functionName, args, metadata)
+    for _, middleware in ipairs(middlewares) do
+        script = middleware(functionName, args or {}) or script
+    end
+    hscExecuteScript(script)
+end
+
 local function getFunctionInvokation(hscFunction, args)
     return hscFunction.funcName .. " " .. table.concat(args, " ")
 end
 
 local function setVariable(varName, varValue)
     local varSet = "begin (set " .. varName .. " (" .. varValue .. "))"
-    executeScript(varSet)
+    hscExecuteScript(varSet)
 end
 
 local function getVariable(varName)
@@ -59,14 +68,9 @@ function hsc.begin_random(functions)
     end
 end
 
--- TODO Adapt depending on server or client version
-local hscGlobalsPointer = 0x0064bab0
-
 local difficulties = {"easy", "normal", "hard", "impossible"}
 function hsc.game_difficulty_get()
-    local hscGlobals = read_dword(hscGlobalsPointer)
-    local difficulty = read_byte(hscGlobals + 0xe)
-    return difficulties[difficulty + 1]
+    return difficulties[blam.getGameDifficultyIndex()]
 end
 hsc.game_difficulty_get_real = hsc.game_difficulty_get
 
@@ -80,13 +84,32 @@ end
 function hsc.cinematic_skip_stop_internal()
 end
 
+function hsc.game_save()
+    hsc.print("game_save not Lua implemented!")
+end
+
+function hsc.game_save_totally_unsafe()
+    hsc.print("game_save_totally_unsafe not Lua implemented!")
+end
+
+function hsc.game_save_no_timeout()
+    hsc.print("game_save_no_timeout not Lua implemented!")
+end
+
+function hsc.game_won()
+    hsc.sv_map_next()
+end
+
 -- Bind existing in game HSC functions to Lua
 setmetatable(hsc, {
     __index = function(_, key)
-        local hscFunction = table.find(hscDoc, function(doc)
+        local hscFunction = table.find(hscDoc.functions, function(doc)
             return doc.funcName:trim() == key
         end)
         if hscFunction then
+            if not hscFunction.isNative then
+                error("Function " .. key .. " is not native, needs to be reimplemented from Lua")
+            end
             local returnType = hscFunction.returnType
             -- Handle compatible primitive types trough Lua
             if returnType == "boolean" or returnType == "short" or returnType == "long" or
@@ -113,7 +136,7 @@ setmetatable(hsc, {
                     local args = getScriptArgs({...})
                     local functionInvokation = getFunctionInvokation(hscFunction, args)
                     logger:debug("Executing: {}", functionInvokation)
-                    executeScript(functionInvokation)
+                    executeScript(functionInvokation, hscFunction.funcName, args)
                 end
             end
         else
@@ -121,5 +144,16 @@ setmetatable(hsc, {
         end
     end
 })
+
+--- Add a middleware to the HSC execution pipeline
+---@param mid function
+function hsc.addMiddleWare(mid)
+    local midExists = table.find(middlewares, function(middleware)
+        return middleware == mid
+    end)
+    if not midExists then
+        table.insert(middlewares, mid)
+    end
+end
 
 return hsc
