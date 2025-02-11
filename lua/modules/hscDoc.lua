@@ -953,7 +953,7 @@ hscDoc.functions = { {
   funcName = "unit_enter_vehicle",
   hash = "D3416",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "vehicle", "string", "object_list" },

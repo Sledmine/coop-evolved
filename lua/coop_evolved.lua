@@ -127,7 +127,8 @@ function PluginLoad()
                     if serverType == "local" or serverType == "none" then
                         coop.enableSpawn(true)
                         local mapName = engine.map.getCurrentMapHeader().name
-                        local levelName = mapName:split("_")[1]
+                        local levelName = mapName:split("_coop")[1]
+                        logger:info("Loading level script for \"{}\"", levelName)
                         local ok, result = pcall(require, "levels." .. levelName)
                         if not ok then
                             logger:warning("Error loading level script: {}", result)
