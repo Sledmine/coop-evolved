@@ -37,14 +37,17 @@ function coop.getRequiredVotes(playersCount)
 end
 
 function coop.getAvailableBipeds()
-    local bipedTags = findTags("_mp", engine.tag.classes.biped)
-    assert(bipedTags, "Failed to load multiplayer biped tags")
+    --local bipedTags = findTags("_mp", engine.tag.classes.biped)
+    -- FIXME Use blam for cross compatibility as we move to use Balltze
+    local bipedTags = blam.findTagsList("_mp", tagClasses.biped) or {}
+    --assert(bipedTags, "Failed to load multiplayer biped tags")
     local bipedsList = {}
     for index, tag in pairs(bipedTags) do
         local tagPath = tag.path
         local tagSplit = tagPath:split "\\"
         local bipedName = tagSplit[#tagSplit]:gsub("_mp", ""):gsub("_", " "):upper()
-        bipedsList[index] = {name = bipedName, id = tag.handle.value}
+        --bipedsList[index] = {name = bipedName, id = tag.handle.value}
+        bipedsList[index] = {name = bipedName, id = tag.id}
         table.sort(bipedsList, function(a, b)
             return a.name < b.name
         end)

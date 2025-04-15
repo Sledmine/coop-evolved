@@ -70,7 +70,7 @@ end
 
 local difficulties = {"easy", "normal", "hard", "impossible"}
 function hsc.game_difficulty_get()
-    return difficulties[blam.getGameDifficultyIndex()]
+    return difficulties[blam.getGameDifficultyIndex() + 1]
 end
 hsc.game_difficulty_get_real = hsc.game_difficulty_get
 
@@ -97,7 +97,7 @@ function hsc.game_save_no_timeout()
 end
 
 function hsc.game_won()
-    hsc.sv_map_next()
+    execute_script("sv_map_next")
 end
 
 -- Bind existing in game HSC functions to Lua

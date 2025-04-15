@@ -1,4 +1,5 @@
 local blam = require "blam"
+local luna = require "luna"
 Balltze = Balltze or {
     logger = {}
 }
@@ -21,6 +22,18 @@ function Engine.tag.getTag(tagHandleOrPath, tagClass)
             indexed = tagEntry.indexed
         }
     end
+end
+
+---@diagnostic disable-next-line: duplicate-set-field
+function Engine.tag.findTags(tagName, tagClass)
+    local tags = blam.findTagsList(tagName, tagClass)
+    return table.map(tags, function(tag)
+        return {
+            handle = tag.id,
+            path = tag.path,
+            primaryClass = tag.class
+        }
+    end)
 end
 
 local color = {info = 2, error = 4, warning = 6, debug = 3}

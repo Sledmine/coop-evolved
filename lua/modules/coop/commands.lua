@@ -1,5 +1,6 @@
 local blam = require "blam"
 local coop = require "coop.coop"
+local luna = require "luna"
 
 return {
     force_spawn = {
@@ -18,5 +19,14 @@ return {
             blam.rcon.dispatch("CoopMenu")
             return false
         end
-    }
+    },
+    debug = {
+        description = "Debug",
+        help = "",
+        execute = function(enable)
+            DebugMode = luna.bool(enable)
+            logger:muteDebug(not DebugMode)
+            return false
+        end
+    },
 }

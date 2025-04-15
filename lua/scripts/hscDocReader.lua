@@ -48,10 +48,10 @@ local functionToSync = {
     "unit_stop_custom_animation",
     "unit_custom_animation_at_frame",
     -- Remember to replace with a vehicle enter function from SAPP, desyncs otherwise
-    -- "unit_enter_vehicle",
+    "unit_enter_vehicle",
     "object_teleport",
 
-    -- Not required as PC is now powerful enough to render all objects
+    -- Not required as PC is now powerful enough to render all objects (?)
     -- "object_pvs_activate",
 
     -- We need a more native implementation of this on Mimic

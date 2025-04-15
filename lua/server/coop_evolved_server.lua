@@ -158,7 +158,6 @@ local function getObjectIndexByName(objectName)
     assert(scenario, "Failed to load scenario tag")
     local objectIndex = table.indexof(scenario.objectNames, objectName)
     if objectIndex then
-        logger:warning("Value: {} is an object, converting to object index!", objectName)
         return objectIndex
     end
 end
@@ -168,7 +167,8 @@ local function getArgType(funcMeta, argIndex)
     if table.indexof(hscDoc.nativeTypes, argType) then
         return argType
     end
-    if argType == "object" or argType == "vehicle" or argType == "biped" or argType == "weapon" or argType == "unit" then
+    if argType == "object" or argType == "vehicle" or argType == "biped" or argType == "weapon" or
+        argType == "unit" or argType == "scenery" or argType == "device" or argType == "object_name" then
         return "object"
     end
     local tagType = snakeCaseTagClasses[argType]
@@ -181,7 +181,7 @@ end
 --- Create a packet string for an hsc function invocation
 ---@param functionName string
 ---@param args string[]
----@return string
+---@return string | nil
 local function createHscPacket(functionName, args)
     local funcMeta = table.find(hscDoc.functions, function(v, k)
         return v.funcName == functionName
@@ -209,6 +209,30 @@ local function createHscPacket(functionName, args)
         end
         return argValue
     end)
+    -- TODO Check if we might need to do something with object_destroy too
+    if funcMeta.funcName:startswith("object_create") then
+        local objectNameIndex = tointeger(tostring(args[1]))
+        if not objectNameIndex then
+            logger:error("Failed to convert object name index to integer!")
+            return
+        end
+        logger:debug("Object name index: {}", objectNameIndex)
+        local scenario = blam.scenario(0)
+        assert(scenario, "Failed to load scenario tag")
+        for _, bipedEntry in pairs(scenario.bipeds) do
+            if bipedEntry.nameIndex == objectNameIndex - 1 then
+                logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
+                return
+            end
+        end
+        -- TODO Add vehicle check
+        --for _, vehicleEntry in pairs(scenario.vehicles) do
+        --    if vehicleEntry.nameIndex == objectNameIndex - 1 then
+        --        logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
+        --        return
+        --    end
+        --end
+    end
 
     local packet = {packetPrefix .. funcMeta.hash, table.unpack(args)}
 
@@ -216,10 +240,16 @@ local function createHscPacket(functionName, args)
 end
 
 hsc.addMiddleWare(function(functionName, args)
+    local funcMeta = table.find(hscDoc.functions, function(v, k)
+        return v.funcName == functionName
+    end)
+    assert(funcMeta, "Function " .. functionName .. " not found in hscDoc")
+    if funcMeta.isSynchronizable then
     local hscPacket = createHscPacket(functionName, args)
     if hscPacket then
         logger:debug("HSC Packet: {}", hscPacket)
         Broadcast(hscPacket)
+        end
     end
 end)
 
@@ -256,7 +286,7 @@ function StartCoop()
     --local _ = require("a10")
 
     CoopStarted = true
-    local levelName = map:split("_")[1]
+    local levelName = map:split("_coop")[1]
     local ok, result = pcall(require, "levels." .. levelName)
     if not ok then
         logger:warning("Error loading level script: {}", result)
@@ -390,6 +420,10 @@ function OnTick()
             end
         end
     end
+end
+
+function OnMapLoad()
+
 end
 
 function OnScriptLoad()

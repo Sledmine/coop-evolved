@@ -65,8 +65,9 @@ local function sleepThreadFor(ticks)
 end
 
 ---@param evaluateCondition fun(): boolean
+---@param everyNTicks? number
 ---@param maximumTicks? number
-local function sleepThreadUntil(evaluateCondition, maximumTicks)
+local function sleepThreadUntil(evaluateCondition, everyNTicks, maximumTicks)
     logger:debug("Sleeping until condition is true")
     local currentTicks = getTickCount()
     while evaluateCondition() ~= true or (maximumTicks and getTickCount() - currentTicks < maximumTicks) do
@@ -100,6 +101,7 @@ local function handleScriptThread(scriptThread, result)
     if coroutine.status(scriptThread.thread) == "dead" then
         if scriptThread.type == "continuous" then
             scriptThread.thread = coroutine.create(scriptThread.func)
+            scriptThread.started = false
         else
             removeThreadFromTrace(scriptThread)
             if scriptThread.parent then
@@ -134,7 +136,8 @@ function script.thread(func, metadata)
 
     local call = function(funcToCall)
         if parentScriptThread.child then
-            error("Cannot call a function while another function is being called", 2)
+            --error("Cannot call a function while another function is being called", 2)/
+            return funcToCall()
         end
         local _, callScriptThread = script.thread(funcToCall)
         callScriptThread.parent = parentScriptThread
