@@ -2007,7 +2007,7 @@ function a10.burn_test(call, sleep)
     hsc.object_create_anew("lifeboat_burn")
     hsc.object_destroy("halo_x30_1")
     hsc.object_destroy("halo_x30_2")
-    hsc.object_set_scale("halo_closeup", 8, .25, 0)
+    hsc.object_set_scale("halo_closeup", 8.25, 0)
     hsc.object_teleport("lifeboat_burn", "entry_base")
     hsc.custom_animation("lifeboat_burn",
                          "scenery\\vehicles\\lifepod_atmosphere_entry\\lifepod_atmosphere_entry",
@@ -2026,7 +2026,7 @@ function a10.atmos_int_2(call, sleep)
     hsc.object_create_anew("lifeboat_burn")
     hsc.object_destroy("halo_x30_1")
     hsc.object_destroy("halo_x30_2")
-    hsc.object_set_scale("halo_closeup", 8, .25, 0)
+    hsc.object_set_scale("halo_closeup", 8.25, 0)
     hsc.object_teleport("lifeboat_burn", "entry_base")
     hsc.custom_animation("lifeboat_burn",
                          "scenery\\vehicles\\lifepod_atmosphere_entry\\lifepod_atmosphere_entry",
@@ -2406,29 +2406,29 @@ function a10.flavor_rumble(call, sleep)
                 call(a10.player_effect_rumble)
                 hsc.player_effect_start(hsc.real_random_range(0.55, 0.75), 1)
                 sleep(30)
-                hsc.player_effect_stop(hsc.real_random_range(0.75, 1, .25))
+                hsc.player_effect_stop(hsc.real_random_range(0.75, 1.25))
             else
                 if hsc.structure_bsp_index() == 1 then
                     call(a10.player_effect_rumble)
                     hsc.player_effect_start(hsc.real_random_range(0.65, 0.85), 1)
                     sleep(30)
-                    hsc.player_effect_stop(hsc.real_random_range(1, 1, .5))
+                    hsc.player_effect_stop(hsc.real_random_range(1, 1.5))
                 else
                     if hsc.structure_bsp_index() == 2 then
                         hsc.sound_impulse_start("sound\\sfx\\ambience\\a10\\pillarhits", "none",
                                                 hsc.real_random_range(0.4, 0.7))
                         call(a10.player_effect_rumble)
-                        hsc.player_effect_start(hsc.real_random_range(0.85, 1, .05), 1)
+                        hsc.player_effect_start(hsc.real_random_range(0.85, 1.05), 1)
                         sleep(30)
-                        hsc.player_effect_stop(hsc.real_random_range(1, .5, 2, .5))
+                        hsc.player_effect_stop(hsc.real_random_range(1.5, 2.5))
                     else
                         if hsc.structure_bsp_index() == 3 then
                             hsc.sound_impulse_start("sound\\sfx\\ambience\\a10\\pillarhits", "none",
                                                     hsc.real_random_range(0.5, 0.8))
                             call(a10.player_effect_rumble)
-                            hsc.player_effect_start(hsc.real_random_range(0.95, 1, .15), 1)
+                            hsc.player_effect_start(hsc.real_random_range(0.95, 1.15), 1)
                             sleep(30)
-                            hsc.player_effect_stop(hsc.real_random_range(2, 3, .5))
+                            hsc.player_effect_stop(hsc.real_random_range(2, 3.5))
                         else
                             if hsc.structure_bsp_index() == 4 then
                                 hsc.sound_impulse_start("sound\\sfx\\ambience\\a10\\pillarhits",
@@ -2436,23 +2436,22 @@ function a10.flavor_rumble(call, sleep)
                                 call(a10.player_effect_impact)
                                 hsc.player_effect_start(hsc.real_random_range(0.6, 0.8), 1)
                                 sleep(30)
-                                hsc.player_effect_stop(hsc.real_random_range(0.75, 1, .25))
+                                hsc.player_effect_stop(hsc.real_random_range(0.75, 1.25))
                             else
                                 if hsc.structure_bsp_index() == 5 then
                                     hsc.sound_impulse_start("sound\\sfx\\ambience\\a10\\pillarhits",
                                                             "none", hsc.real_random_range(0.7, 1))
                                     call(a10.player_effect_impact)
-                                    hsc.player_effect_start(hsc.real_random_range(0.85, 1, .05), 1)
+                                    hsc.player_effect_start(hsc.real_random_range(0.85, 1.05), 1)
                                     sleep(30)
-                                    hsc.player_effect_stop(hsc.real_random_range(1, 1, .5))
+                                    hsc.player_effect_stop(hsc.real_random_range(1, 1.5))
                                 else
                                     if hsc.structure_bsp_index() == 6 then
                                         hsc.sound_impulse_start(
                                             "sound\\sfx\\ambience\\a10\\pillarhits", "none",
                                             hsc.real_random_range(0.8, 1))
                                         call(a10.player_effect_impact)
-                                        hsc.player_effect_start(hsc.real_random_range(0.95, 1, .15),
-                                                                1)
+                                        hsc.player_effect_start(hsc.real_random_range(0.95, 1.15), 1)
                                         sleep(30)
                                         hsc.player_effect_stop(hsc.real_random_range(2, 3))
                                     end
@@ -2702,19 +2701,19 @@ function a10.tutorial_hud_health(call, sleep)
     hsc.hud_show_health(true)
     hsc.hud_blink_health(true)
     hsc.unit_set_maximum_vitality(call(a10.player0), 100, 0)
-    hsc.unit_set_current_vitality(call(a10.player0), 12, .5, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 12.5, 0)
     sleep(45)
     hsc.unit_set_current_vitality(call(a10.player0), 25, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(a10.player0), 37, .5, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 37.5, 0)
     sleep(15)
     hsc.unit_set_current_vitality(call(a10.player0), 50, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(a10.player0), 62, .5, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 62.5, 0)
     sleep(15)
     hsc.unit_set_current_vitality(call(a10.player0), 75, 0)
     sleep(15)
-    hsc.unit_set_current_vitality(call(a10.player0), 87, .5, 0)
+    hsc.unit_set_current_vitality(call(a10.player0), 87.5, 0)
     sleep(15)
     hsc.unit_set_current_vitality(call(a10.player0), 100, 0)
     sleep(15)
@@ -4371,8 +4370,8 @@ end
 function a10.bridge_kill_kill_kill(call, sleep)
     hsc.device_set_position_immediate("bridge_kill_door_2", 0)
     hsc.volume_teleport_players_not_inside("bridge_all", "x20_post_flag_2")
-    stop(bridge_leave_prompt)
-    stop(flavor_watchit)
+    sleep(-1, bridge_leave_prompt)
+    sleep(-1, flavor_watchit)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_642_cortana", "none", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_642_cortana"))
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_643_cortana", "none", 1)
@@ -4423,7 +4422,7 @@ function a10.mission_bridge(call, sleep)
     hsc.ai_erase("crossfire")
     hsc.ai_erase("crossfire_anti")
     hsc.ai_erase("fetch/fetch")
-    stop(mission_crossfire)
+    sleep(-1, mission_crossfire)
     wake(a10.bridge_leave_prompt)
     bridge_living_count = hsc.ai_living_count("bridge")
 
@@ -5350,16 +5349,16 @@ function a10.mission_a10(call, sleep)
     hsc.ai_grenades(false)
     hsc.ai_dialogue_triggers(false)
     -- if call(a10.cinematic_skip_start) then
-        --call(a10.x10)
+    -- call(a10.x10)
     -- end
     -- call(a10.cinematic_skip_stop)
-    --hsc.fade_out(1, 1, 1, 0)
+    -- hsc.fade_out(1, 1, 1, 0)
     wake(a10.x10_post)
     hsc.object_set_facing(call(a10.player0), "facing_flag_1")
     hsc.object_set_facing(call(a10.player1), "facing_flag_1")
-    --if hsc.game_is_cooperative() then
-        wake(a10.fast_setup)
-    --else
+    -- if hsc.game_is_cooperative() then
+    wake(a10.fast_setup)
+    -- else
     --    if not (normal == hsc.game_difficulty_get()) then
     --        wake(a10.fast_setup)
     --    else
@@ -5367,7 +5366,7 @@ function a10.mission_a10(call, sleep)
     --            wake(a10.tutorial_setup)
     --        end
     --    end
-    --end
+    -- end
     wake(a10.mission_bsp)
     wake(a10.music_a10)
     wake(a10.linkage)
