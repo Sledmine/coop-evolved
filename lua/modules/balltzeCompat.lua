@@ -104,5 +104,10 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function Engine.core.getTickCount()
-    return get_var(0, "$ticks")
+    return tonumber(get_var(0, "$ticks"))
+end
+
+---@diagnostic disable-next-line: duplicate-set-field
+function Engine.netgame.getServerType()
+    return "dedicated"
 end

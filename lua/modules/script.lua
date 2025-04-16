@@ -27,7 +27,7 @@ end
 ---@param scriptThread ScriptThread
 local function removeThreadFromTrace(scriptThread)
     local scriptThreadIndex = table.indexof(callTrace, scriptThread)
-    logger:debug("Removing dead script {}.", scriptThreadIndex)
+    --logger:debug("Removing dead script {}.", scriptThreadIndex)
     if scriptThread.parent then
         scriptThread.parent.child = nil
     end
@@ -68,9 +68,9 @@ end
 ---@param everyNTicks? number
 ---@param maximumTicks? number
 local function sleepThreadUntil(evaluateCondition, everyNTicks, maximumTicks)
-    logger:debug("Sleeping until condition is true")
+    --logger:debug("Sleeping until condition is true")
     local currentTicks = getTickCount()
-    while evaluateCondition() ~= true or (maximumTicks and getTickCount() - currentTicks < maximumTicks) do
+    while not evaluateCondition() and (not maximumTicks or getTickCount() - currentTicks < maximumTicks) do
         coroutine.yield()
     end
 end

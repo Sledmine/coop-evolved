@@ -16,9 +16,7 @@ local cacheHscGlobals = {
     long = "lua_long",
     real = "lua_real",
     string = "lua_string",
-    unit = "lua_unit",
-    object = "lua_object",
-    object_list = "lua_object_list"
+    unit = "lua_unit"
 }
 
 local function getScriptArgs(args)
@@ -94,6 +92,10 @@ end
 
 function hsc.game_save_no_timeout()
     hsc.print("game_save_no_timeout not Lua implemented!")
+end
+
+function hsc.game_is_cooperative()
+    return hsc.list_count(hsc.players()) > 1
 end
 
 function hsc.game_won()

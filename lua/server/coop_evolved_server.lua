@@ -257,9 +257,9 @@ end)
 ---@param playerIndex number
 function GetReadyForCoop(playerIndex)
     if not CoopStarted then
-        rprint(playerIndex, "sync_camera_control 1")
         for mapPattern, camera in pairs(introCameras) do
             if map:includes(mapPattern) then
+                rprint(playerIndex, "sync_camera_control 1")
                 rprint(playerIndex, "sync_camera_set " .. camera .. " 0")
                 break
             end
@@ -273,17 +273,6 @@ end
 
 ---Starts the coop game
 function StartCoop()
-
-    --hsc.print("Test hsc!!!!!!!!!!!!!!!!!")
-    --hsc.game_difficulty_set("hard")
-    --logger:debug("Return value: {}", hsc.volume_test_objects("motiontracker_4", "player0"))
-    --hsc.device_set_position("tunnel_door_3", 0)
-
-    --logger:debug("Return value: {}", hsc.device_get_position("tunnel_door_3"))
-    --hsc.fade_in(1, 1, 1, 1)
-    --hsc.object_create("cafeteria_door_1")
-    --hsc.effect_new("cinematics\\effects\\cortana effects\\cortana on off", "x10_cortana_effect")
-    --local _ = require("a10")
 
     CoopStarted = true
     local levelName = map:split("_coop")[1]

@@ -2,10 +2,14 @@ local hscDoc = {}
 
 hscDoc.nativeTypes = {
   "boolean",
+  "booleans",
   "real",
   "short",
   "long",
-  "string"
+  "string",
+  "strings",
+  "number",
+  "numbers"
 }
 
 hscDoc.nonNativeTypes = {
