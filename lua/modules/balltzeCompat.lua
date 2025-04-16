@@ -6,7 +6,8 @@ Balltze = Balltze or {
 Engine = Engine or {
     core = {},
     hsc = {},
-    tag = {}
+    tag = {},
+    netgame = {}
 }
 
 ---@diagnostic disable-next-line: duplicate-set-field
