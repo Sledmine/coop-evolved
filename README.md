@@ -45,14 +45,19 @@ including the patches and modifications required for the Coop Evolved mod to wor
 
 You can install all the server files required using this Mercury command:
 ```
-mercury install coopserver
+mercury install sapp
 ```
-**NOTE:** You have to install the coopevolved package as well!
+**NOTE:** You have to install the `coopevolved` package as well!
 
 ## Running the server
+Running a server with mods loaded can be difficult to configure manually but to make this easier
+Mercury has a command that launches a server for you with less configuration just by giving some
+parameters, launch the server using:
+```
+mercury serve a30_coop_evolved team_slayer -s mimic_server coop_evolved_server
+```
 
-After that you should be ready to go, just run the `haloceded.exe` in your root game folder and
-it should display a terminal with your server running, you will see some messages like these:
+After that you should be ready to go, a terminal will appear displaying some messages like these:
 
 ```
 -- Loading SAPP settings finished --
@@ -61,7 +66,7 @@ Successfully loaded sapp.dll!
 sv_name: Coop Evolved Server
 sv_maxplayers: 16
 sv_public_value: 0
-New Game, Map: a50_coop_evolved, Mode: coop
+New Game, Map: a30_coop_evolved, Mode: team_slayer
 New bsp index detected: 0
 halo(
 ```
@@ -76,19 +81,34 @@ the same way as in the image from below:
 ![network-settings](images/network-settings.png)
 
 With this configuration you can join to your server directly from the LAN servers menu, but careful,
-you will lose the ability to host or load maps in LAN mode using the in game option, close your
-local server `haloceded.exe` before doing that if that is the case.
+you will lose the ability to host or load maps in LAN mode using the in game option while your
+local dedicated server is running, close your server `haloceded.exe` before doing that if that is
+the case.
 
 **WARNING:** SAPP package hosted in the Mercury repository contains a modified version of
-the **Halo CE Dedicated Server** that is capable of loading huge maps built with a custom [Invader](https://github.com/SnowyMouse/invader) build, also it uses different initialization files to allow installing it among
-a Halo Custom Edition folder.
+the **Halo CE Dedicated Server** that has a few bug fixes, is capable of loading huge maps built
+with a custom [Invader](https://github.com/SnowyMouse/invader) build, also it uses different
+initialization files to allow installing it among other mods that rely on the same files without
+conflicting.
 
 ## Can I configure the server?
 Yes! but there are a lot of parameters to set up, so I'll try to explain you the basic fields
 you would like to play with, if you want to take a deeper look into how to configure your server,
 check [this documentation](https://github.com/Sledmine/lua-blam/blob/master/archive/SAPP_DOCS_2.5.pdf).
 
-Edit the `load.txt` file in the root folder of your game, change the properties in there as needed, 
+**WARNING:** Keep in mind that command `mercury serve` previously mentioned creates a server from a
+set of template files, everytime you launch the server trough this command, your server files will
+get replaced, files stay untouched if you launch the server trough `haloceded.exe`.
+
+If you still want to keep using the `mercury serve` command, there are a couple of parameters you
+can specify to the command to change the server configuration, check the following command for
+more information:
+```
+mercury serve --help
+```
+
+After the server has been created at least once, you can edit the server configuration, edit
+`load.txt` file in the root folder of your game, change the properties in there as needed, 
 here is a short description of properties you should edit:
 ```lisp
 sv_public 0
