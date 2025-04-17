@@ -84,7 +84,25 @@ New bsp index detected: 0
 halo(
 ```
 
-**NOTE:** Server map will not change automatically when finishing a game, you will have to
+Join the server using the in game menu, go to the LAN servers menu and you should see your
+server listed there, if you don't see it, make sure you are in the same network as the server
+and that your firewall is not blocking the server port (2302 by default) also launch the server
+after the game is running, if you launch the server first, the game might not be able to
+detect the server.
+
+If you prefer to connect with the in game console, you can do it using the command:
+```
+connect <server_ip>:2302 x
+```
+Where `<server_ip>` is the IP of the server, you can get it using the command `ipconfig` in the
+Windows terminal, look for the line that says `IPv4 Address` and copy the IP address that appears
+there, if you want to join your own server using the same machine that is hosting the server, you
+should use:
+```
+connect localhost:2302 x
+```
+
+**NOTE:** Server map will not change automatically when finishing a game yet... you will have to
 manually change the map using the command `sv_map <map_name> team_slayer` in the server
 terminal or launching `mercury serve` again with the new map name.
 
