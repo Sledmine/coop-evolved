@@ -56,6 +56,19 @@ parameters, launch the server using:
 ```
 mercury serve a30_coop_evolved team_slayer -s mimic_server coop_evolved_server
 ```
+Where `a30_coop_evolved` is the map you want to load and `team_slayer` is the gametype you want
+to play, you can change these values to whatever you want, but make sure the map and gametype
+you are using are compatible with each other.
+
+Here is a list of all the maps available in the mod, more maps will be added in the future:
+
+- a30_coop_evolved (Halo)
+- a50_coop_evolved (The Truth and Reconciliation)
+- b30_coop_evolved (The Silent Cartographer)
+- b40_coop_evolved (Assault on the Control Room)
+- c10_coop_evolved (343 Guilty Spark)
+- c20_coop_evolved (The Library)
+- d40_coop_evolved (The Maw)
 
 After that you should be ready to go, a terminal will appear displaying some messages like these:
 
@@ -70,6 +83,10 @@ New Game, Map: a30_coop_evolved, Mode: team_slayer
 New bsp index detected: 0
 halo(
 ```
+
+**NOTE:** Server map will not change automatically when finishing a game, you will have to
+manually change the map using the command `sv_map <map_name> team_slayer` in the server
+terminal or launching `mercury serve` again with the new map name.
 
 Share your server IP to your friends and ensure you all are on the same network, your server is not
 public to the internet unless you do another hard process to achieve that, try virtual local network
