@@ -6,6 +6,8 @@ local easy = "easy"
 local normal = "normal"
 local hard = "hard"
 local impossible = "impossible"
+local engine = Engine
+local blam = require "blam"
 
 local a10 = {}
 
@@ -106,6 +108,27 @@ local play_music_a10_06 = false
 local play_music_a10_06_alt = false
 local play_music_a10_07 = false
 local play_music_a10_07_alt = false
+
+local function getPlayerUnit(playerIndex)
+    return hsc.unit(hsc.list_get(hsc.players(), playerIndex))
+end
+
+local function getPlayerCount()
+    return hsc.list_count(hsc.players())
+end
+
+local function teleportPlayersTo(flag)
+    for i = 1, getPlayerCount() do
+        hsc.object_teleport(getPlayerUnit(i - 1), flag)
+    end
+end
+
+local function suspendPlayers(suspend)
+    for i = 0, getPlayerCount() - 1 do
+        hsc.unit_suspended(getPlayerUnit(i), suspend)
+    end
+end
+
 function a10.player0(call, sleep)
     return hsc.unit(hsc.list_get(hsc.players(), 0))
 end
@@ -122,7 +145,7 @@ function a10.cinematic_skip_start(call, sleep)
     hsc.cinematic_skip_start_internal()
     hsc.game_save_totally_unsafe()
     sleep(function()
-        return not (hsc.game_saving())
+       return not (hsc.game_saving())
     end, 1)
     return not (hsc.game_reverted())
 end
@@ -1196,8 +1219,9 @@ function a10.cryo(call, sleep)
     hsc.object_destroy_containing("x10_cryo_steam")
     hsc.camera_control(false)
     hsc.cinematic_stop()
-    hsc.unit_suspended(call(a10.player0), false)
-    hsc.unit_suspended(call(a10.player1), false)
+
+    suspendPlayers(true)
+
     hsc.object_pvs_activate("none")
 end
 
@@ -1247,8 +1271,9 @@ end
 function a10.capt_keyes(call, sleep)
     hsc.sound_looping_start("sound\\music\\x20_music\\x20_music_1", "none", 1)
     hsc.switch_bsp(1)
-    hsc.object_teleport(call(a10.player0), "player0_base")
-    hsc.object_teleport(call(a10.player1), "player1_base")
+
+    teleportPlayersTo("player0_base")
+
     hsc.object_create_anew("chief")
     hsc.object_create_anew("keyes")
     hsc.object_create_anew("cortana_effect")
@@ -2067,10 +2092,10 @@ end
 function a10.x10(call, sleep)
     hsc.sound_class_set_gain("device_machinery", 0, 0)
     hsc.fade_out(0, 0, 0, 0)
-    hsc.object_teleport(call(a10.player0), "player0_x10_base")
-    hsc.object_teleport(call(a10.player1), "player1_x10_base")
-    hsc.unit_suspended(call(a10.player0), true)
-    hsc.unit_suspended(call(a10.player1), true)
+
+    teleportPlayersTo("player0_x10_base")
+    suspendPlayers(true)
+
     hsc.switch_bsp(7)
     hsc.object_type_predict("levels\\a10\\devices\\space_battle\\space_battle")
     hsc.object_type_predict("vehicles\\fighterbomber\\fighterbomber")
@@ -2154,10 +2179,10 @@ function a10.x30(call, sleep)
     hsc.fade_out(1, 1, 1, 0)
     hsc.cinematic_start()
     hsc.camera_control(true)
-    hsc.object_teleport(call(a10.player0), "player0_x30_base")
-    hsc.object_teleport(call(a10.player1), "player1_x30_base")
-    hsc.unit_suspended(call(a10.player0), true)
-    hsc.unit_suspended(call(a10.player1), true)
+
+    teleportPlayersTo("player0_x30_base")
+    suspendPlayers(true)
+
     hsc.switch_bsp(6)
     call(a10.lifeboat_docked_load)
     call(a10.into_the_breach)
@@ -2467,6 +2492,7 @@ end
 script.continuous(a10.flavor_rumble)
 
 function a10.mission_bsp(call, sleep)
+    -- TODO Check for a volume trigger instead of bsp index
     sleep(function()
         return 0 < hsc.structure_bsp_index()
 
@@ -2630,7 +2656,10 @@ function a10.tutorial_introduction(call, sleep)
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_011_cryoassist", "none", 1)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a10\\a10_011_cryoassist"))
     sleep(45)
-    hsc.unit_open("cryotube_1")
+
+    -- Animate cryotube opening
+    a10.openCryotubes()
+
     sleep(60)
     hsc.ai_command_list("cryo_tech/tech", "introduction_3")
     hsc.sound_impulse_start("sound\\dialog\\a10\\a10_010_cryotech",
@@ -3602,8 +3631,12 @@ function a10.tutorial_setup(call, sleep)
     hsc.units_set_current_vitality(hsc.ai_actors("cryo_tech/asst"), 1, 0)
     hsc.unit_doesnt_drop_items(hsc.ai_actors("cryo_tech/asst"))
     hsc.ai_command_list("cryo_tech/asst", "introduction_1")
-    hsc.object_create("cryotube_1")
-    hsc.unit_enter_vehicle(call(a10.player0), "cryotube_1", "ct-driver")
+
+    -- Create cryotubes for all players
+    logger:debug("Creating cryotubes for all players")
+    a10.prepareCryotubes()
+    a10.enterCryotubes(true)
+
     hsc.object_create("cryotube_1_steam_1")
     hsc.object_create("cryotube_1_steam_2")
     wake(a10.title_training)
@@ -4321,8 +4354,12 @@ function a10.cinematic_x20(call, sleep)
     hsc.fade_out(1, 1, 1, 0)
     sleep(5)
     hsc.switch_bsp(1)
-    hsc.object_teleport(call(a10.player0), "chief_basea10")
-    hsc.object_teleport(call(a10.player1), "player1_playona10")
+
+    -- TODO This might not want to "hide" players for a cinematic, double check
+    teleportPlayersTo("chief_basea10")
+    -- hsc.object_teleport(call(a10.player0), "chief_basea10")
+    -- hsc.object_teleport(call(a10.player1), "player1_playona10")
+
     hsc.player_enable_input(false)
     hsc.player_camera_control(false)
     hsc.object_create_anew("keyesa10")
@@ -4446,14 +4483,15 @@ function a10.mission_shoot(call, sleep)
     sleep(function()
         return hsc.volume_test_objects("shoot_trigger_3", hsc.players())
     end, 1)
-    hsc.player_add_equipment(call(a10.player0), "bridge0_profile", false)
+
+    a10.addWeapons()
+
     mark_weapon = true
     hsc.ai_place("shoot_anti")
     hsc.unit_doesnt_drop_items(hsc.ai_actors("shoot_anti"))
     hsc.ai_try_to_fight_player("shoot_anti")
     hsc.ai_magically_see_players("shoot_anti")
     sleep(15)
-    hsc.player_add_equipment(call(a10.player1), "bridge1_profile", false)
     sleep(function()
         return hsc.volume_test_objects("shoot_trigger_3", hsc.players())
     end, 1)
@@ -5187,14 +5225,12 @@ function a10.fast_setup(call, sleep)
     hsc.ai_place("cryo_tech/tech")
     hsc.objects_predict(hsc.ai_actors("cryo_tech"))
     hsc.ai_command_list("cryo_tech/tech", "introduction_2")
-    hsc.object_create("cryotube_1")
-    if hsc.game_is_cooperative() then
-        hsc.object_create("cryotube_2")
-    end
-    hsc.unit_enter_vehicle(call(a10.player0), "cryotube_1", "ct-driver")
-    if hsc.game_is_cooperative() then
-        hsc.unit_enter_vehicle(call(a10.player1), "cryotube_2", "ct-driver")
-    end
+
+    -- Create cryotubes for all players
+    logger:info("Creating cryotubes for all players")
+    a10.prepareCryotubes()
+    a10.enterCryotubes(true)
+
     hsc.object_create("cryotube_1_steam_1")
     hsc.object_create("cryotube_1_steam_2")
     if hsc.game_is_cooperative() then
@@ -5212,17 +5248,14 @@ function a10.fast_setup(call, sleep)
     hsc.fade_in(1, 1, 1, 15)
     sleep(15)
     hsc.sound_looping_start("sound\\sinomatixx_foley\\a10_cryoexit_foley", "none", 1)
-    hsc.unit_open("cryotube_1")
-    sleep(30)
-    if hsc.game_is_cooperative() then
-        hsc.unit_open("cryotube_2")
-    end
+
+    -- Animate the cryotubes
+    a10.openCryotubes()
+
     sleep(15)
-    hsc.unit_exit_vehicle(call(a10.player0))
-    sleep(30)
-    if hsc.game_is_cooperative() then
-        hsc.unit_exit_vehicle(call(a10.player1))
-    end
+
+    a10.enterCryotubes(false)
+
     sleep(150)
     hsc.object_destroy("cryotube_1_steam_1")
     sleep(5)
@@ -5247,10 +5280,10 @@ function a10.fast_setup(call, sleep)
     hsc.player_camera_control(true)
     mark_fast_setup = true
     sleep(60)
-    hsc.unit_close("cryotube_1")
-    sleep(15)
-    if hsc.game_is_cooperative() then
-        hsc.unit_close("cryotube_2")
+
+    for i = 1, getPlayerCount() do
+        -- TODO Add a delay somehow between each cryotube opening
+        hsc.unit_close("cryotube_" .. i)
     end
 end
 
@@ -5441,6 +5474,69 @@ end
 
 function a10.battle_stop(call, sleep)
     hsc.object_destroy_containing("x10_battle")
+end
+
+function a10.prepareCryotubes()
+    -- Always create player 1 cryotube
+    hsc.object_create("cryotube_1")
+    -- Create player 2 or more cryotubes if in cooperative mode
+    if hsc.game_is_cooperative() then
+        local playerCount = hsc.list_count(hsc.players())
+        for i = 2, playerCount do
+            hsc.object_create("cryotube_" .. i)
+        end
+    end
+end
+
+function a10.enterCryotubes(isEntering)
+    -- Always enter player 1 cryotube
+    if isEntering then
+        hsc.unit_enter_vehicle(getPlayerUnit(0), "cryotube_1", "ct-driver")
+    else
+        hsc.unit_exit_vehicle(getPlayerUnit(0))
+    end
+    -- Enter player 2 or more cryotubes if in cooperative mode
+    if hsc.game_is_cooperative() then
+        local playerCount = hsc.list_count(hsc.players())
+        for i = 1, playerCount - 1 do
+            if isEntering then
+                hsc.unit_enter_vehicle(getPlayerUnit(i), "cryotube_" .. i + 1, "ct-driver")
+            else
+                hsc.unit_exit_vehicle(getPlayerUnit(i))
+            end
+        end
+    end
+end
+
+function a10.openCryotubes()
+    -- Animate cryotube opening
+    for i = 1, getPlayerCount() do
+        -- TODO Add a delay somehow between each cryotube opening
+        hsc.unit_open("cryotube_" .. i)
+    end
+end
+
+function a10.addWeapons()
+    for i = 0, getPlayerCount() - 1 do
+        local player = Engine.gameState.getPlayer(i + 1)
+        if player then
+            if Engine.netgame.getServerType() == "dedicated" then
+                -- TODO Migrate when Balltze properly runs on the server side
+                -- local pistolTag = engine.tag.findTags("weapons\\pistol\\pistol", engine.tag.classes.weapon)[1]
+                local pistolTag = blam.findTag("weapons\\pistol\\pistol", blam.tagClasses.weapon)
+                assert(pistolTag, "Could not find pistol tag")
+                local weaponHandle = Engine.gameState.createObject(pistolTag.id, nil, {
+                    x = player.position.x,
+                    y = player.position.y,
+                    z = player.position.z + 0.15
+                })
+                assign_weapon(weaponHandle.value, i + 1)
+            else
+                -- TODO This might fail because probably equipment profiles can only be used once?
+                hsc.player_add_equipment(getPlayerUnit(i), "bridge0_profile", false)
+            end
+        end
+    end
 end
 
 return a10
