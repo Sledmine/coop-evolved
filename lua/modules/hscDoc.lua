@@ -866,14 +866,14 @@ hscDoc.functions = { {
   funcName = "unit_open",
   hash = "0DD2B",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "unit" },
   funcName = "unit_close",
   hash = "18820",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "unit" },

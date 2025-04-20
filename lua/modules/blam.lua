@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.15.0"}
+local blam = {_VERSION = "1.15.1"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -444,6 +444,16 @@ backupFunctions.file_exists = _G.file_exists
 ---@param z number
 ---@return number? objectId
 function spawn_object(tagClass, tagPath, x, y, z)
+    if type(tagClass) == "number" then
+        local x = tagPath --[[@as number]]
+        local y = x
+        local z = y
+        local tag = blam.getTag(tagClass)
+        if tag then
+            return backupFunctions.spawn_object(tag.class, tag.path, x, y, z)
+        end
+    end
+    return backupFunctions.spawn_object(tagClass, tagPath, x, y, z)
 end
 
 ---Attempt to get the address of a player unit object given player index, returning nil on failure.<br>
@@ -453,7 +463,6 @@ end
 function get_dynamic_player(playerIndex)
 end
 
-spawn_object = backupFunctions.spawn_object
 get_dynamic_player = backupFunctions.get_dynamic_player
 
 ------------------------------------------------------------------------------

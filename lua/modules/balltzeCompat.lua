@@ -7,7 +7,8 @@ Engine = Engine or {
     core = {},
     hsc = {},
     tag = {},
-    netgame = {}
+    netgame = {},
+    gameState = {}
 }
 
 ---@diagnostic disable-next-line: duplicate-set-field
@@ -35,6 +36,51 @@ function Engine.tag.findTags(tagName, tagClass)
             primaryClass = tag.class
         }
     end)
+end
+
+---@param tagHandle EngineTagHandle|integer @The tag handle of the object
+---@param parentObjectHandle? EngineObjectHandle|integer @The handle of the parent object
+---@param position EnginePoint3D @The position of the object
+---@return EngineObjectHandle @The handle of the object
+---@diagnostic disable-next-line: duplicate-set-field
+function Engine.gameState.createObject(tagHandle, parentObjectHandle, position)
+    if type(tagHandle) == "number" then
+        local handleValue = spawn_object(tagHandle, position.x, position.y, position.z)
+        return {
+            value = handleValue,
+        }
+    end
+    local handleValue = spawn_object(tagHandle.value, position.x, position.y, position.z)
+    return {
+        value = handleValue,
+    }
+end
+
+-- Get a player
+---@param playerIndexOrHandle? EnginePlayerHandle|integer @The index or the handle of the player; If nil, the local player is returned
+---@return MetaEnginePlayer? @The player
+---@diagnostic disable-next-line: duplicate-set-field
+function Engine.gameState.getPlayer(playerIndexOrHandle)
+    local player = blam.player(get_player(playerIndexOrHandle))
+    if player then
+        local object = blam.object(get_object(player.objectId))
+        local position = { x = 0, y = 0, z = 0 }
+        if object then
+            position = {
+                x = object.x,
+                y = object.y,
+                z = object.z
+            }
+        end
+        return {
+            -- TODO Add missing player props
+            playerId = player.id,
+            name = player.name,
+            team = player.team,
+            position = position
+        }
+    end
+    return nil
 end
 
 local color = {info = 2, error = 4, warning = 6, debug = 3}

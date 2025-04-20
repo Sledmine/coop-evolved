@@ -32,12 +32,15 @@ logger = Balltze.logger.createLogger("Coop Evolved Server")
 CustomPlayerBipeds = {}
 CoopServerState = {
     remainingVotes = 0,
-    --difficulty = coop.difficulties[blam.getGameDifficultyIndex()],
+    -- difficulty = coop.difficulties[blam.getGameDifficultyIndex()],
     difficulty = coop.difficulties[1],
     playersReady = {}
 }
 CoopStarted = false
-local starterWeapons = {a50 = {[[weapons\sniper rifle\sniper rifle]], [[weapons\pistol\pistol]]}}
+local starterWeapons = {
+    a50 = {[[weapons\sniper rifle\sniper rifle]], [[weapons\pistol\pistol]]},
+    a10 = {blam.null, blam.null}
+}
 local isStarterWeaponsEnabled = true
 local forcedBipedTeams = {}
 local introCameras = {
@@ -226,12 +229,12 @@ local function createHscPacket(functionName, args)
             end
         end
         -- TODO Add vehicle check
-        --for _, vehicleEntry in pairs(scenario.vehicles) do
+        -- for _, vehicleEntry in pairs(scenario.vehicles) do
         --    if vehicleEntry.nameIndex == objectNameIndex - 1 then
         --        logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
         --        return
         --    end
-        --end
+        -- end
     end
 
     local packet = {packetPrefix .. funcMeta.hash, table.unpack(args)}
@@ -245,10 +248,10 @@ hsc.addMiddleWare(function(functionName, args)
     end)
     assert(funcMeta, "Function " .. functionName .. " not found in hscDoc")
     if funcMeta.isSynchronizable then
-    local hscPacket = createHscPacket(functionName, args)
-    if hscPacket then
-        logger:debug("HSC Packet: {}", hscPacket)
-        Broadcast(hscPacket)
+        local hscPacket = createHscPacket(functionName, args)
+        if hscPacket then
+            logger:debug("HSC Packet: {}", hscPacket)
+            Broadcast(hscPacket)
         end
     end
 end)
@@ -306,7 +309,11 @@ function OnObjectSpawn(playerIndex, tagId, parentId, objectId)
             for mapPattern, weapons in pairs(starterWeapons) do
                 if map:includes(mapPattern) then
                     -- TODO Add a way to detect secondary weapon
-                    return true, blam.getTag(weapons[1], blam.tagClasses.weapon).id
+                    local weapon = weapons[1]
+                    if isNull(weapon) then
+                        return false
+                    end
+                    return true, blam.getTag(weapon, blam.tagClasses.weapon).id
                 end
             end
         end
