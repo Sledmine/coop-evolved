@@ -9,6 +9,7 @@ scenarios:
   - levels/b40/b40_coop_evolved_dev
   - levels/c10/c10_coop_evolved_dev
   - levels/c20/c20_coop_evolved_dev
+  - levels/c40/c40_coop_evolved_dev
   - levels/d20/d20_coop_evolved_dev
   - levels/d40/d40_coop_evolved_dev
 commands:
