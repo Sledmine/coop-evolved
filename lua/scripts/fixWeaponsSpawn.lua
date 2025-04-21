@@ -46,7 +46,7 @@ local function blockToNetgameEquipment(block, palette)
             if not name then
                 local itemType = tag.get(scenarioTagPath, block, itemIndex, "type")
                 -- Example: weapons/assault rifle/assault rifle.weapon
-                local itemTagPath = palette[itemType]
+                local itemTagPath = palette[itemType]:replace("\\", "/")
 
                 -- "weapons", "assault rifle", "assault rifle.weapon"
                 local pathElements = itemTagPath:split "/"
