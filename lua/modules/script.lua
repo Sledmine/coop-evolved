@@ -56,7 +56,7 @@ local function sleepThreadFor(ticks)
     if ticks == -1 then
         logger:debug("Sleeping until woken up")
     else
-        logger:debug("Sleeping for " .. ticks .. " ticks")
+        --logger:debug("Sleeping for " .. ticks .. " ticks")
     end
     local currentTicks = getTickCount()
     while ticks == -1 or getTickCount() - currentTicks < ticks do
