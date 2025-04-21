@@ -8,6 +8,7 @@
     ],
     "name": "Coop Evolved Server",
     "modules": [
-        "levels/a10"
+        "levels/a10",
+        "levels/d20"
     ]
 }

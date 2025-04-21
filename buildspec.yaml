@@ -9,6 +9,7 @@ scenarios:
   - levels/b40/b40_coop_evolved_dev
   - levels/c10/c10_coop_evolved_dev
   - levels/c20/c20_coop_evolved_dev
+  - levels/d20/d20_coop_evolved_dev
   - levels/d40/d40_coop_evolved_dev
 commands:
   package:
@@ -22,15 +23,6 @@ commands:
     - rm package/balltze-plugins/*.lua
   symlinks:
     - ln -f -s "$PWD/dist/coop_evolved_server.lua" "$HALO_CE_DATA_PATH/sapp/lua/coop_evolved_server.lua"
-  hsc:
-    - invader-script -g gbx-custom levels/a10/a10_coop_evolved_dev
-    - invader-script -g gbx-custom levels/a30/a30_coop_evolved_dev
-    - invader-script -g gbx-custom levels/a50/a50_coop_evolved_dev
-    - invader-script -g gbx-custom levels/b30/b30_coop_evolved_dev
-    - invader-script -g gbx-custom levels/b40/b40_coop_evolved_dev
-    - invader-script -g gbx-custom levels/c10/c10_coop_evolved_dev
-    - invader-script -g gbx-custom levels/c20/c20_coop_evolved_dev
-    - invader-script -g gbx-custom levels/d40/d40_coop_evolved_dev
   release:
     - mercury build --release --output package/game-maps/
     - mercury build package
