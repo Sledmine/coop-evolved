@@ -34,6 +34,7 @@ local loadWhenIn = {
     "b40_coop_evolved",
     "c10_coop_evolved",
     "c20_coop_evolved",
+    "c40_coop_evolved",
     "d20_coop_evolved",
     "d40_coop_evolved"
 }
