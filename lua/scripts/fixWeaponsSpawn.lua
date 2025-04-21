@@ -1,7 +1,8 @@
 require "lua.modules.luna"
 local tag = require "lua.modules.tag"
 local inspect = require "lua.modules.inspect"
-local fs = require "fs"
+package.path = package.path .. ";lua/scripts/modules/?.lua"
+local fs = require "lua.scripts.modules.fs"
 
 local scenarioTagPath = arg[1]
 assert(scenarioTagPath, "No scenario tag path provided")
