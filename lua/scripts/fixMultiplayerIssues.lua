@@ -1,6 +1,7 @@
 local tag = require "lua.modules.tag"
 
 local scenarioTagPath = arg[1]
+local defaultTeam = arg[2] or "default_by_unit"
 assert(scenarioTagPath, "No scenario tag path provided")
 scenarioTagPath = scenarioTagPath:replace("\\", "/"):replace("tags/", "")
 
@@ -34,6 +35,7 @@ local scenarioTeams = {
     "unused9"
 }
 local multiplayerTeams = {"red", "blue"}
+-- Teams the player has allegiance with
 local allegianceTeams = {"default_by_unit", "player", "human", "sentinel"}
 local teamColor = {
     default_by_unit = "\27[31m", -- Red
@@ -62,7 +64,7 @@ end
 local encounters = {}
 local encounterCount = tag.count(scenarioTagPath, "encounters")
 for encounterIndex = 0, encounterCount - 1 do
-    local encounterTeam = "default_by_unit"
+    local encounterTeam = "unknown"
     local encounterName = tag.get(scenarioTagPath, "encounters[" .. encounterIndex .. "].name")
     print("Encounter:", encounterName)
 
@@ -77,8 +79,9 @@ for encounterIndex = 0, encounterCount - 1 do
     end
     local color = teamColor[encounterTeam] or teamColor.unknown
     print("Team:\t\t" .. color .. encounterTeam .. "\27[0m")
-    if encounterTeam == "default_by_unit" then
-        print("No team is assigned, it may not work as expected, check if this is correct!")
+    if encounterTeam == "unknown" then
+        print("No team is assigned, assigning to \"" .. defaultTeam .. "\" it may not work as expected, check if this is correct!")
+        encounterTeam = defaultTeam
     end
 
     -- Convert to multiplayer team
