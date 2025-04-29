@@ -2098,7 +2098,7 @@ hscDoc.functions = { {
   funcName = "switch_bsp",
   hash = "7E932",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = {},
@@ -3085,7 +3085,7 @@ hscDoc.functions = { {
   funcName = "rasterizer_model_ambient_reflection_tint",
   hash = "70830",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = {},
