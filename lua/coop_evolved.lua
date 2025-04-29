@@ -36,7 +36,8 @@ local loadWhenIn = {
     "c20_coop_evolved",
     "c40_coop_evolved",
     "d20_coop_evolved",
-    "d40_coop_evolved"
+    "d40_coop_evolved",
+    "tsce_coop"
 }
 
 loadWhenIn = table.extend(loadWhenIn, table.map(loadWhenIn, function(map)
@@ -126,23 +127,24 @@ function PluginLoad()
                         ether.render(constants.widgets.coopMenu.id)
                     end)
 
-                    local serverType = engine.netgame.getServerType()
-
-                    if serverType == "local" or serverType == "none" then
-                        coop.enableSpawn(true)
-                        local mapName = engine.map.getCurrentMapHeader().name
-                        local levelName = mapName:split("_coop")[1]
-                        logger:info("Loading level script for \"{}\"", levelName)
-                        local ok, result = pcall(require, "levels." .. levelName)
-                        if not ok then
-                            logger:warning("Error loading level script: {}", result)
-                        else
-                            logger:info("Loaded level script for \"{}\"", levelName)
-                        end
-                    end
-
-                    loaded = true
+                    coop.enableSpawn(true)
                 end
+
+                local serverType = engine.netgame.getServerType()
+
+                if serverType == "local" or serverType == "none" then
+                    local mapName = engine.map.getCurrentMapHeader().name
+                    local levelName = mapName:split("_coop")[1]
+                    logger:info("Loading level script for \"{}\"", levelName)
+                    local ok, result = pcall(require, "levels." .. levelName)
+                    if not ok then
+                        logger:warning("Error loading level script: {}", result)
+                    else
+                        logger:info("Loaded level script for \"{}\"", levelName)
+                    end
+                end
+
+                loaded = true
             end
         end
     end)
