@@ -9,6 +9,12 @@ local impossible = "impossible"
 
 local tsce = {}
 
+local original_hsc_object_create = hsc.object_create
+hsc.object_create = function(...)
+    logger:warning("OBJECT_CREATE: {}", inspect({...}))
+    return original_hsc_object_create(...)
+end
+
 function tsce.volume_test_players_any(call, sleep, volume)
     return hsc.volume_test_objects(volume, hsc.players())
 end
@@ -277,7 +283,7 @@ function tsce.X_HFX_update_player0(call, sleep)
     X_HFX_last_health_player0 = hsc.unit_get_health(call(tsce.player0))
 
 end
-script.continuous(tsce.X_HFX_update_player0)
+--script.continuous(tsce.X_HFX_update_player0)
 
 local X_HFX_last_health_player1 = 0
 function tsce.X_HFX_update_player1(call, sleep)
@@ -285,7 +291,7 @@ function tsce.X_HFX_update_player1(call, sleep)
     X_HFX_last_health_player1 = hsc.unit_get_health(call(tsce.player1))
 
 end
-script.continuous(tsce.X_HFX_update_player1)
+--script.continuous(tsce.X_HFX_update_player1)
 
 local X_WPN_test_id_primary = ""
 local X_WPN_test_id_secondary = ""
@@ -474,17 +480,17 @@ function tsce.X_WPN_update_player0(call, sleep)
     X_WPN_id_primary_player0 = X_WPN_test_id_primary
     X_WPN_id_secondary_player0 = X_WPN_test_id_secondary
 end
-script.continuous(tsce.X_WPN_update_player0)
+--script.continuous(tsce.X_WPN_update_player0)
 
 local X_WPN_id_primary_player1 = ""
 local X_WPN_id_secondary_player1 = ""
 function tsce.X_WPN_update_player1(call, sleep)
     call(tsce.X_WPN_test_reset)
     call(tsce.X_WPN_test_list, call(tsce.player1))
-    X_WPN_id_primary_player1 = X_WPN_test_id_primary
+    X_WPN_id_primary_player1 = X_WPN_test_id_primary    
     X_WPN_id_secondary_player1 = X_WPN_test_id_secondary
 end
-script.continuous(tsce.X_WPN_update_player1)
+--script.continuous(tsce.X_WPN_update_player1)
 
 function tsce.X_BPK_attach(call, sleep, attach_target, substitute, weapon_id)
     if "" ~= weapon_id then
@@ -716,7 +722,7 @@ function tsce.X_CAR_update_player0(call, sleep)
     X_CAR_max_sd_player0 = X_CAR_test_max_sd
     X_CAR_max_hp_player0 = X_CAR_test_max_hp
 end
-script.continuous(tsce.X_CAR_update_player0)
+--script.continuous(tsce.X_CAR_update_player0)
 
 local X_CAR_vehicle_player1 = "none"
 local X_CAR_id_player1 = ""
@@ -730,7 +736,7 @@ function tsce.X_CAR_update_player1(call, sleep)
     X_CAR_max_sd_player1 = X_CAR_test_max_sd
     X_CAR_max_hp_player1 = X_CAR_test_max_hp
 end
-script.continuous(tsce.X_CAR_update_player1)
+--script.continuous(tsce.X_CAR_update_player1)
 
 function tsce.X_VRG_tick(call,
                          sleep,
@@ -889,7 +895,7 @@ function tsce.X_VMG_player0(call, sleep)
         hsc.ai_migrate_by_unit(hsc.vehicle_riders(X_CAR_vehicle_player0), X_VMG_target)
     end
 end
-script.continuous(tsce.X_VMG_player0)
+--script.continuous(tsce.X_VMG_player0)
 
 function tsce.X_VMG_events_player0(call, sleep)
     sleep(function()
@@ -901,14 +907,14 @@ function tsce.X_VMG_events_player0(call, sleep)
     end, 1)
     call(tsce.X_VMG_on_exit, X_CAR_vehicle_player0, X_CAR_id_player0)
 end
-script.continuous(tsce.X_VMG_events_player0)
+--script.continuous(tsce.X_VMG_events_player0)
 
 function tsce.X_VMG_player1(call, sleep)
     if none ~= X_CAR_vehicle_player1 and none ~= X_VMG_target then
         hsc.ai_migrate_by_unit(hsc.vehicle_riders(X_CAR_vehicle_player1), X_VMG_target)
     end
 end
-script.continuous(tsce.X_VMG_player1)
+--script.continuous(tsce.X_VMG_player1)
 
 function tsce.X_VMG_events_player1(call, sleep)
     sleep(function()
@@ -920,7 +926,7 @@ function tsce.X_VMG_events_player1(call, sleep)
     end, 1)
     call(tsce.X_VMG_on_exit, X_CAR_vehicle_player1, X_CAR_id_player1)
 end
-script.continuous(tsce.X_VMG_events_player1)
+--script.continuous(tsce.X_VMG_events_player1)
 
 function tsce.game_is_easy(call, sleep)
     return easy == hsc.game_difficulty_get_real()
