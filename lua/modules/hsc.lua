@@ -142,6 +142,7 @@ function hsc.game_is_cooperative()
 end
 
 function hsc.game_won()
+    -- Execute depending of server type
     execute_script("sv_map_next")
 end
 
@@ -319,7 +320,8 @@ setmetatable(hsc, {
                 return function(...)
                     local args = getScriptArgs({...})
                     local functionInvokation = getFunctionInvokation(hscFunction, args)
-                    logger:debug("Executing: {}", functionInvokation)
+                    --logger:debug("Executing: {}", functionInvokation)
+                    --print("Executing: ", functionInvokation)
                     executeScript(functionInvokation, hscFunction.funcName, args)
                 end
             end

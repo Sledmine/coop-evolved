@@ -54,7 +54,7 @@ end
 ---@param ticks number
 local function sleepThreadFor(ticks)
     if ticks == -1 then
-        logger:debug("Sleeping until woken up")
+        -- logger:debug("Sleeping until woken up")
     else
         -- logger:debug("Sleeping for " .. ticks .. " ticks")
     end
