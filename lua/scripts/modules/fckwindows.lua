@@ -53,8 +53,8 @@ BOOL CreateProcessA(
 );
 
 BOOL CloseHandle(HANDLE hObject);
-
-BOOL GetLongPathNameW(const wchar_t* lpszShortPath, wchar_t* lpszLongPath, int cchBuffer);
+BOOL GetExitCodeProcess(HANDLE hProcess, DWORD* lpExitCode);
+DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
 ]]
 
 local windows = {}
@@ -81,20 +81,25 @@ function windows.createProcess(command)
     if success == 0 then
         error("CreateProcess failed")
     else
+        -- Return the process ID
+        --return tonumber(pi.dwProcessId)
+
+        -- Wait until the process exits
+        local waitResult = ffi.C.WaitForSingleObject(pi.hProcess, 0xFFFFFFFF) -- INFINITE
+        if waitResult ~= 0 then
+            error("WaitForSingleObject failed")
+        end
+
+        -- Return command exit code
+        local exitCode = ffi.new("DWORD[1]")
+        if ffi.C.GetExitCodeProcess(pi.hProcess, exitCode) == 0 then
+            error("GetExitCodeProcess failed")
+        end
         ffi.C.CloseHandle(pi.hProcess)
         ffi.C.CloseHandle(pi.hThread)
-        -- Return the process ID
-        return tonumber(pi.dwProcessId)
+        --return tonumber(exitCode[0])
+        return tonumber(exitCode[0]) == 0 -- Return true if exit code is 0 (success)
     end
-end
-
-function windows.getLongPathName(shortPath)
-    local buffer = ffi.new("wchar_t[?]", #shortPath + 260)
-    local result = ffi.C.GetLongPathNameW(shortPath, buffer, 260)
-    if result == 0 then
-        error("GetLongPathName failed")
-    end
-    return ffi.string(buffer, result * 2) -- Convert to Lua string (UTF-16 to UTF-8)
 end
 
 return windows
