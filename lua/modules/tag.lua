@@ -1,6 +1,7 @@
 -- Tag creator/editor module
 -- This module is a wrapper for invader-edit to create and edit tags
 local luna = require "lua.modules.luna"
+local windows = require "lua.scripts.modules.fckwindows"
 local tag = {}
 
 local editCmd = [[invader-edit "%s"]]
@@ -9,6 +10,16 @@ local getCmd = [[invader-edit "%s" -G %s]]
 local insertCmd = [[invader-edit "%s" -I %s %s %s]]
 local createCmd = [[invader-edit "%s" -N]]
 local eraseCmd = [[invader-edit "%s" -E %s]]
+
+local function executeCommand(cmd)
+    if jit.os and jit.os:lower() == "windows" then
+        -- Windows command execution
+        return windows.createProcess(cmd)
+    else
+        -- Unix-like command execution
+        return executeCommand(cmd)
+    end
+end
 
 function nulled(value)
     if (tonumber(value)) then
@@ -105,7 +116,7 @@ function tag.edit(tagPath, keys)
         updateTagCmd = updateTagCmd .. writeMapFields(property, value)
         return updateTagCmd
     end)
-    if os.execute(updateTagCmd) then
+    if executeCommand(updateTagCmd) then
         return true
     end
     error("Error at editing: " .. tagPath)
@@ -157,7 +168,7 @@ end
 ---@param key any
 ---@return boolean
 function tag.erase(tagPath, key)
-    if os.execute(eraseCmd:format(tagPath, key)) then
+    if executeCommand(eraseCmd:format(tagPath, key)) then
         return true
     end
     error("Error at attempting to erase: " .. tagPath .. " " .. key)
@@ -169,7 +180,7 @@ end
 ---@param count number
 ---@param position? number | '"end"'
 function tag.insert(tagPath, key, count, position)
-    if os.execute(insertCmd:format(tagPath, key, count, position or 0)) then
+    if executeCommand(insertCmd:format(tagPath, key, count, position or 0)) then
         return true
     end
     error("Error at attempting to insert: " .. tagPath .. " " .. key)
@@ -186,7 +197,7 @@ function tag.create(tagPath, keys)
         createTagCmd = createTagCmd .. createKeys(property, value)
         return createTagCmd
     end)
-    if os.execute(createTagCmd) then
+    if executeCommand(createTagCmd) then
         return true
     end
     error("Error at creating tag: " .. tagPath)

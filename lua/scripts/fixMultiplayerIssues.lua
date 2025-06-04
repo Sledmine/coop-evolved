@@ -66,6 +66,8 @@ local encounterCount = tag.count(scenarioTagPath, "encounters")
 for encounterIndex = 0, encounterCount - 1 do
     local encounterTeam = "unknown"
     local encounterName = tag.get(scenarioTagPath, "encounters[" .. encounterIndex .. "].name")
+    assert(encounterName, "Encounter name not found for index " .. encounterIndex)
+    encounterName = tostring(encounterName)
     print("Encounter:", encounterName)
 
     local squadCount = tag.count(scenarioTagPath, "encounters[" .. encounterIndex .. "].squads")
@@ -77,10 +79,22 @@ for encounterIndex = 0, encounterCount - 1 do
             break
         end
     end
+
+    if encounterTeam == "unknown" then
+        -- Force team based on encounter name
+        -- NOTE: This is a workaround for some encounters that are not properly assigned a team
+        -- Edit this if you want to handle specific cases where encounter team could not be determined
+        if encounterName:includes "marine" or encounterName:includes "jeep" or
+            encounterName:includes "tank" then
+            encounterTeam = "human"
+        end
+    end
+
     local color = teamColor[encounterTeam] or teamColor.unknown
     print("Team:\t\t" .. color .. encounterTeam .. "\27[0m")
     if encounterTeam == "unknown" then
-        print("No team is assigned, assigning to \"" .. defaultTeam .. "\" it may not work as expected, check if this is correct!")
+        print("No team is assigned, assigning to \"" .. defaultTeam ..
+                  "\" it may not work as expected, check if this is correct!")
         encounterTeam = defaultTeam
     end
 
