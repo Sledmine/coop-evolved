@@ -19,10 +19,14 @@ os.execute("invader-collection " .. referencesTempPath)
 local referencesCollection = scenarioTagPath:replace(".scenario", "") .. ".tag_collection"
 os.rename("tags/" .. referencesTempPath .. ".tag_collection", "tags/" .. referencesCollection)
 
+print("Cleaning up HSC data...")
+os.execute("invader-script -c " .. scenarioTagPath:replace(".scenario", ""))
+
 print("Migrating scenario references...")
 
 tag.erase(scenarioTagPath, "references", "*")
 tag.insert(scenarioTagPath, "references", 1)
+-- TODO Move this into a different tag as this will fail when scenario has child scenarios
 tag.edit(scenarioTagPath, {
     references = {
         {

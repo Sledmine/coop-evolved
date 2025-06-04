@@ -63,7 +63,7 @@ red team in multiplayer, so enemy team is team 1 or "player" team based in the t
 So in order to default to a proper team you can edit the unit default team or specify the script
 how to handle this case, for example:
 ```bash
-luajit lua/scripts/fixWeaponSpawns.lua <scenarioPath> covenant
+luajit lua/scripts/fixMultiplayerIssues.lua <scenarioPath> covenant
 ```
 This will set the default team to "covenant" so any unknown encounter will be assigned to this team,
 keep in mind this might not be what you want, but works well for most cases, so you can use this
@@ -82,8 +82,10 @@ and can not be change dynamically trough scripting.
 it will not remove the weapon spawns from the scenario, so if your map script has logic that spawns
 weapons, it will still work but remember your item will be garbage collected at some point, so
 you might want to change that for a custom logic that creates a weapon right when needed or that
-keeps it alive somehow.
-
+keeps it alive somehow, script can be run as follows:
+```bash
+luajit lua/scripts/fixWeaponSpawns.lua <scenarioPath>
+```
 Script is pretty much straight forward, it will look for the weapon spawns in the scenario and will
 convert them to item collections keeping rotation and position of the weapons spawn using a long 
 respawn time to make sure the item collection is not removed from the map, it ONLY will convert
@@ -92,10 +94,36 @@ name to spawn a weapon, so if you have a weapon spawn with a name assigned, it w
 converted, this helps to provide player with weapons and ammo when needed using weapons that should
 be already available in the map.
 
-Example when in b40 (Assault on the Control Room) map, there are some weapons suppossed to spawn after
+Example when in b30 (The Silent Cartographer) map, there are some weapons suppossed to spawn after
 a certain event, when the pelican from the helping marines arrives and crashes, weapons will be 
 spawn near the pelican, these weapons will not be converted to item collections, so they will spawn
 as expected, but will be removed from the map after a while.
+
+# Getting HSC tag references
+Singleplayer maps will have a Halo Script file that is used to define the logic of the map,
+we need to first compile this script so we can get all the referenced tags in the script, if the
+scenario already has referenced tags, we can skip this step, but if it does not have them, we
+need to compile the Halo Script file so we can get all the tags referenced in the script, this is
+done in Sapien under the "compile scripts" option or well even better
+using invader running the following command:
+```bash
+invader-script -g gbx-custom <scenarioPath>
+```
+
+Now we have to migrate all the tag references from the scenario into an external tag collection,
+this is done using the `migrateScenarioReferences.lua` script, this script will take the scenario and
+will create a new tag collection with all the tags referenced in the scenario, it will also
+create a new tag collection with all the tags referenced in the Halo Script file, so we can
+reference it later in another tag so referenced tags can get pulled into the map when compiling:
+```bash
+luajit lua/scripts/migrateScenarioReferences.lua <scenarioPath>
+```
+
+All of this is required as the Halo Script file not run, it will not exist anymore as it will get
+replaced with Lua scripts, so we need to make sure all the tags referenced in the Halo Script file
+are available in the map, so we can use them in the Lua scripts, so functions like `sound_impulse`
+or `effect_new_on_object_marker` will work as expected, if you don't do this step, these functions
+will not find the tags required and gameplay might not work as expected.
 
 ## Halo Script to Lua
 Halo Script is a scripting language used in Halo CE to create custom experiences mostly for singleplayer
