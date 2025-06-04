@@ -4,12 +4,12 @@ local luna = require "lua.modules.luna"
 local windows = require "lua.scripts.modules.fckwindows"
 local tag = {}
 
-local editCmd = [[invader-edit "%s"]]
-local countCmd = [[invader-edit "%s" -C %s]]
-local getCmd = [[invader-edit "%s" -G %s]]
-local insertCmd = [[invader-edit "%s" -I %s %s %s]]
-local createCmd = [[invader-edit "%s" -N]]
-local eraseCmd = [[invader-edit "%s" -E %s]]
+local editCmd = [[invader-edit "%s" -n]]
+local countCmd = [[invader-edit "%s" -n -C %s]]
+local getCmd = [[invader-edit "%s" -n -G %s]]
+local insertCmd = [[invader-edit "%s" -n -I %s %s %s]]
+local createCmd = [[invader-edit "%s" -n -N]]
+local eraseCmd = [[invader-edit "%s" -n -E %s]]
 
 local function executeCommand(cmd)
     if jit.os and jit.os:lower() == "windows" then
@@ -17,7 +17,7 @@ local function executeCommand(cmd)
         return windows.createProcess(cmd)
     else
         -- Unix-like command execution
-        return executeCommand(cmd)
+        return os.execute(cmd)
     end
 end
 
@@ -125,7 +125,7 @@ end
 ---Get a value from a tag given key
 ---@param tagPath string
 ---@param key string
----@param index? number
+---@param index? number | "*"
 ---@param subkey? string
 ---@return string | number | nil
 function tag.get(tagPath, key, index, subkey)
@@ -164,10 +164,14 @@ function tag.count(tagPath, key)
 end
 
 ---Erase structure from a tag given key
----@param tagPath any
----@param key any
+---@param tagPath string
+---@param key string
+---@param index? number | "*"
 ---@return boolean
-function tag.erase(tagPath, key)
+function tag.erase(tagPath, key, index)
+    if (index) then
+        key = key .. "[" .. index .. "]"
+    end
     if executeCommand(eraseCmd:format(tagPath, key)) then
         return true
     end
