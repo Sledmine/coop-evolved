@@ -64,3 +64,6 @@ hek/
 *.db*
 *.log
 Desktop.ini
+
+# Generated files
+global_scripts.hsc
