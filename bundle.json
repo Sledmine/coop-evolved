@@ -8,6 +8,15 @@
     ],
     "name": "Coop Evolved",
     "modules": [
-        "levels/a10"
+        "levels/a10",
+        "levels/a30",
+        "levels/a50",
+        "levels/b30",
+        "levels/b40",
+        "levels/c10",
+        "levels/c20",
+        "levels/c40",
+        "levels/d20",
+        "levels/d40"
     ]
 }
