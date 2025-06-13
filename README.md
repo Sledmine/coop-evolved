@@ -62,12 +62,15 @@ you are using are compatible with each other.
 
 Here is a list of all the maps available in the mod, more maps will be added in the future:
 
+- a10_coop_evolved (The Pillar Of Autumn)
 - a30_coop_evolved (Halo)
 - a50_coop_evolved (The Truth and Reconciliation)
 - b30_coop_evolved (The Silent Cartographer)
 - b40_coop_evolved (Assault on the Control Room)
 - c10_coop_evolved (343 Guilty Spark)
 - c20_coop_evolved (The Library)
+- c40_coop_evolved (Two Betrayals)
+- d20_coop_evolved (Keyes)
 - d40_coop_evolved (The Maw)
 
 After that you should be ready to go, a terminal will appear displaying some messages like these:
