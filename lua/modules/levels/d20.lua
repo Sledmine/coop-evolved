@@ -32,7 +32,7 @@ local music_03_alt = false
 local music_04_base = false
 local music_05_base = false
 local music_06_base = false
-local debug = true
+local debug = false
 local coop = false
 local spawn_scale = 1
 local min_combat_spawn = 2
@@ -2243,7 +2243,7 @@ end
 
 function d20.enc3_8_lift_manager(call, sleep)
     sleep(30)
-    if hsc.volume_test_objects(1, "_to_2_transition_trigger", hsc.players()) then
+    if hsc.volume_test_objects("1_to_2_transition_trigger", hsc.players()) then
         lift_counter = 1 + lift_counter
 
     else
@@ -2281,8 +2281,8 @@ function d20.enc3_8(call, sleep)
         hsc.ai_try_to_fight_player("enc3_8_flood")
     end
     sleep(function()
-        return hsc.volume_test_objects(1, "_to_2_transition_trigger", hsc.players()) and
-                   not (hsc.volume_test_objects(1, "_to_2_transition_trigger",
+        return hsc.volume_test_objects("1_to_2_transition_trigger", hsc.players()) and
+                   not (hsc.volume_test_objects("1_to_2_transition_trigger",
                                                 hsc.ai_actors("enc3_8_cov")))
     end)
     wake(d20.enc3_8_lift_manager)

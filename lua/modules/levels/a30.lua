@@ -761,7 +761,7 @@ end
 script.continuous(a30.gotohell_beatch)
 
 function a30.tutorial_sniper(call, sleep)
-    if hsc.game_is_cooperative() or not (normal == hsc.game_difficulty_get()) or
+    if hsc.game_is_cooperative() or not (hsc.game_difficulty_get() == normal) or
         hsc.unit_solo_player_integrated_night_vision_is_active() then
         sleep(-1)
     end
@@ -1202,7 +1202,7 @@ function a30.mission_lz_dropship(call, sleep)
     hsc.object_set_collideable("lz_cship", false)
     play_music_a30_01 = false
     sleep(function()
-        return 0 == hsc.ai_living_count("lz_search")
+        return hsc.ai_living_count("lz_search") == 0
     end, 1)
     mark_lz_dropship = true
 end
@@ -1271,7 +1271,8 @@ function a30.obj_first_all_killed(call, sleep)
 
     end, 15)
     sleep(function()
-        return global_first_end or hsc.ai_living_count("first_marine") == 0
+        return global_first_end or 0 == hsc.ai_living_count("first_marine")
+
     end)
     sleep(60)
     if not global_first_end then
@@ -1406,7 +1407,8 @@ function a30.mission_first_marine(call, sleep)
     sleep(45)
     wake(a30.mission_first_retreat)
     sleep(function()
-        return hsc.ai_living_fraction("first_marine") == 0
+        return 0 == hsc.ai_living_fraction("first_marine")
+
     end, 15)
     if global_first_end then
         sleep(-1)
@@ -1926,7 +1928,7 @@ function a30.objective_cave(call, sleep)
     sleep(function()
         return not (hsc.volume_test_objects_all("first_drop", hsc.players()))
     end, 1, delay_late)
-    if not (hsc.game_is_cooperative()) and hsc.game_difficulty_get() == normal then
+    if not (hsc.game_is_cooperative()) and normal == hsc.game_difficulty_get() then
         if hsc.player0_joystick_set_is_normal() then
             hsc.display_scenario_help(3)
         else
@@ -1982,7 +1984,8 @@ function a30.mission_first(call, sleep)
 
     end, 15)
     sleep(function()
-        return hsc.ai_living_count("first_wave") == 0
+        return 0 == hsc.ai_living_count("first_wave")
+
     end, 15, delay_fail)
     if 0 < hsc.ai_living_count("first_wave") then
         sleep(function()
@@ -2070,7 +2073,8 @@ function a30.mission_first(call, sleep)
     hsc.ai_magically_see_players("first_wave")
     play_music_a30_03_alt = true
     sleep(function()
-        return hsc.ai_living_count("first_wave") == 0
+        return 0 == hsc.ai_living_count("first_wave")
+
     end, 15, delay_fail)
     if 0 < hsc.ai_living_count("first_wave") then
         sleep(function()
@@ -2100,7 +2104,7 @@ function a30.mission_first(call, sleep)
     hsc.objects_predict("foehammer_first")
     hsc.ai_conversation("first_evac_1")
     sleep(function()
-        return hsc.recording_time("foehammer_first") == 0 or 4 <
+        return 0 == hsc.recording_time("foehammer_first") or 4 <
                    hsc.ai_conversation_status("first_evac_1")
 
     end, 1)
@@ -2149,7 +2153,8 @@ function a30.mission_first(call, sleep)
     end
     hsc.ai_go_to_vehicle("first_marine", "foehammer_first", "rider")
     sleep(function()
-        return hsc.ai_going_to_vehicle("foehammer_first") == 0
+        return 0 == hsc.ai_going_to_vehicle("foehammer_first")
+
     end, 45)
     hsc.vehicle_hover("foehammer_first", false)
     hsc.recording_play_and_delete("foehammer_first", "foehammer_first_exit")
@@ -2161,7 +2166,8 @@ function a30.obj_cave_prompt(call, sleep)
 
     end, 15)
     sleep(function()
-        return hsc.ai_living_count("cave_floor") - hsc.ai_living_count("cave_floor/plank_toon") == 0
+        return 0 == hsc.ai_living_count("cave_floor") - hsc.ai_living_count("cave_floor/plank_toon")
+
     end, 15, delay_lost)
     sleep(function()
         return hsc.volume_test_objects("bridge_edge", hsc.players())
@@ -2169,7 +2175,7 @@ function a30.obj_cave_prompt(call, sleep)
     sleep(function()
         return hsc.game_safe_to_speak()
     end, 15)
-    if 0 == hsc.structure_bsp_index() and hsc.device_group_get("bridge_control_position") == 0 then
+    if hsc.structure_bsp_index() == 0 and 0 == hsc.device_group_get("bridge_control_position") then
         hsc.ai_conversation("cave_bridge_prompt")
     end
 end
@@ -2289,7 +2295,7 @@ function a30.mission_cave(call, sleep)
     wake(a30.save_cave_floor_exit)
     hsc.ai_conversation("second_driving")
     sleep(function()
-        return 1 == hsc.structure_bsp_index()
+        return hsc.structure_bsp_index() == 1
     end)
     hsc.device_set_position_immediate("bridge", 0)
 end
@@ -2325,7 +2331,8 @@ end
 
 function a30.obj_cliff_all_killed(call, sleep)
     sleep(function()
-        return global_cliff_end or hsc.ai_living_count("cliff_marine") == 0
+        return global_cliff_end or 0 == hsc.ai_living_count("cliff_marine")
+
     end, 15)
     sleep(60)
     if not global_cliff_end then
@@ -2458,13 +2465,15 @@ function a30.mission_cliff(call, sleep)
     hsc.ai_follow_target_players("cliff_wave")
     hsc.ai_magically_see_players("cliff_wave")
     sleep(function()
-        return hsc.ai_living_count("cliff_wave") == 0
+        return 0 == hsc.ai_living_count("cliff_wave")
+
     end, 15, delay_late)
-    if not (global_cliff_all_killed or hsc.ai_living_count("cliff_wave") == 0) then
+    if not (global_cliff_all_killed or 0 == hsc.ai_living_count("cliff_wave")) then
         hsc.ai_conversation("cliff_cleanup")
     end
     sleep(function()
-        return hsc.ai_living_count("cliff_wave") == 0
+        return 0 == hsc.ai_living_count("cliff_wave")
+
     end, 15, delay_lost)
     test_cliff_kill = true
     hsc.ai_conversation_stop("cliff_welcome")
@@ -2557,7 +2566,8 @@ function a30.mission_cliff(call, sleep)
     hsc.ai_go_to_vehicle("cliff_marine", "foehammer_cliff", "riderlm")
     hsc.ai_go_to_vehicle("cliff_marine", "foehammer_cliff", "riderrm")
     sleep(function()
-        return hsc.ai_going_to_vehicle("foehammer_cliff") == 0
+        return 0 == hsc.ai_going_to_vehicle("foehammer_cliff")
+
     end, 15)
     sleep(60)
     hsc.vehicle_hover("foehammer_cliff", false)
@@ -2594,7 +2604,8 @@ end
 
 function a30.obj_rubble_all_killed(call, sleep)
     sleep(function()
-        return global_rubble_end or hsc.ai_living_count("rubble_marine") == 0
+        return global_rubble_end or 0 == hsc.ai_living_count("rubble_marine")
+
     end, 15)
     sleep(60)
     if not global_rubble_end then
@@ -2691,7 +2702,7 @@ function a30.mission_rubble_marine(call, sleep)
     wake(a30.mission_rubble_defend)
     sleep(90)
     sleep(function()
-        return impossible == hsc.game_difficulty_get() or global_rubble_wave_4 or 0.25 >
+        return hsc.game_difficulty_get() == impossible or global_rubble_wave_4 or 0.25 >
                    hsc.ai_living_fraction("rubble_marine")
 
     end, 15)
@@ -2701,7 +2712,8 @@ function a30.mission_rubble_marine(call, sleep)
     sleep(45)
     wake(a30.mission_rubble_retreat)
     sleep(function()
-        return global_rubble_wave_5 or hsc.ai_living_fraction("rubble_marine") == 0
+        return global_rubble_wave_5 or 0 == hsc.ai_living_fraction("rubble_marine")
+
     end, 15)
     hsc.ai_maneuver_enable("rubble_wave", false)
     hsc.ai_follow_target_players("rubble_wave")
@@ -3190,13 +3202,15 @@ function a30.mission_rubble(call, sleep)
     hsc.ai_follow_target_players("rubble_wave")
     hsc.ai_magically_see_players("rubble_wave")
     sleep(function()
-        return hsc.ai_living_count("rubble_wave") == 0
+        return 0 == hsc.ai_living_count("rubble_wave")
+
     end, 15, delay_lost)
-    if not (global_rubble_all_killed or hsc.ai_living_count("rubble_wave") == 0) then
+    if not (global_rubble_all_killed or 0 == hsc.ai_living_count("rubble_wave")) then
         hsc.ai_conversation("rubble_cleanup")
     end
     sleep(function()
-        return hsc.ai_living_count("rubble_wave") == 0
+        return 0 == hsc.ai_living_count("rubble_wave")
+
     end, 15, delay_lost)
     if 0 < hsc.ai_living_count("rubble_wave") then
         sleep(function()
@@ -3294,7 +3308,8 @@ function a30.mission_rubble(call, sleep)
     hsc.ai_go_to_vehicle("rubble_marine", "foehammer_rubble", "riderlm")
     hsc.ai_go_to_vehicle("rubble_marine", "foehammer_rubble", "riderrm")
     sleep(function()
-        return hsc.ai_going_to_vehicle("foehammer_rubble") == 0
+        return 0 == hsc.ai_going_to_vehicle("foehammer_rubble")
+
     end, 15)
     sleep(60)
     hsc.vehicle_hover("foehammer_rubble", false)
@@ -3357,7 +3372,8 @@ function a30.mission_river_marine(call, sleep)
     sleep(45)
     wake(a30.mission_river_retreat)
     sleep(function()
-        return hsc.ai_living_fraction("river_marine") == 0
+        return 0 == hsc.ai_living_fraction("river_marine")
+
     end, 15)
     hsc.ai_migrate("river_wave", "river_wave/wave_2_retreat")
     hsc.ai_follow_target_players("river_wave")
@@ -3393,7 +3409,8 @@ end
 
 function a30.obj_river_all_killed(call, sleep)
     sleep(function()
-        return global_river_end or hsc.ai_living_count("river_marine") == 0
+        return global_river_end or 0 == hsc.ai_living_count("river_marine")
+
     end, 15)
     sleep(60)
     if not global_river_end then
@@ -3616,13 +3633,15 @@ function a30.mission_river(call, sleep)
     hsc.ai_follow_target_players("river_wave")
     hsc.ai_magically_see_players("river_wave")
     sleep(function()
-        return hsc.ai_living_count("river_wave") == 0
+        return 0 == hsc.ai_living_count("river_wave")
+
     end, 15, delay_late)
-    if not (global_river_all_killed or hsc.ai_living_count("river_wave") == 0) then
+    if not (global_river_all_killed or 0 == hsc.ai_living_count("river_wave")) then
         hsc.ai_conversation("river_cleanup")
     end
     sleep(function()
-        return hsc.ai_living_count("river_wave") == 0
+        return 0 == hsc.ai_living_count("river_wave")
+
     end, 15, delay_lost)
     if 0 < hsc.ai_living_count("river_wave") then
         sleep(function()
@@ -3719,7 +3738,8 @@ function a30.mission_river(call, sleep)
     hsc.ai_go_to_vehicle("river_marine", "foehammer_river", "riderlm")
     hsc.ai_go_to_vehicle("river_marine", "foehammer_river", "riderrm")
     sleep(function()
-        return hsc.ai_going_to_vehicle("foehammer_river") == 0
+        return 0 == hsc.ai_going_to_vehicle("foehammer_river")
+
     end, 15)
     sleep(60)
     hsc.vehicle_hover("foehammer_river", false)
@@ -4182,9 +4202,9 @@ function a30.mission_killer(call, sleep)
     sleep(function()
         return global_extraction
     end, 1)
-    stop(mission_cliff)
-    stop(mission_rubble)
-    stop(mission_river)
+    sleep(-1, a30.mission_cliff)
+    sleep(-1, a30.mission_rubble)
+    sleep(-1, a30.mission_river)
 end
 script.startup(a30.mission_killer)
 

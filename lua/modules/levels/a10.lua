@@ -145,7 +145,7 @@ function a10.cinematic_skip_start(call, sleep)
     hsc.cinematic_skip_start_internal()
     hsc.game_save_totally_unsafe()
     sleep(function()
-       return not (hsc.game_saving())
+        return not (hsc.game_saving())
     end, 1)
     return not (hsc.game_reverted())
 end
@@ -2167,7 +2167,7 @@ function a10.x20(call, sleep)
     hsc.cinematic_set_near_clip_distance(0.0625)
 end
 
-function a10.str_void(call, sleep)
+function a10.x20_post(call, sleep)
     hsc.print("joe's cool ass cinematic")
 end
 
@@ -5381,25 +5381,19 @@ function a10.mission_a10(call, sleep)
     hsc.ai_allegiance("player", "human")
     hsc.ai_grenades(false)
     hsc.ai_dialogue_triggers(false)
-    -- if call(a10.cinematic_skip_start) then
-    -- call(a10.x10)
-    -- end
-    -- call(a10.cinematic_skip_stop)
-    -- hsc.fade_out(1, 1, 1, 0)
+    if call(a10.cinematic_skip_start) then
+        call(a10.x10)
+    end
+    call(a10.cinematic_skip_stop)
+    hsc.fade_out(1, 1, 1, 0)
     wake(a10.x10_post)
     hsc.object_set_facing(call(a10.player0), "facing_flag_1")
     hsc.object_set_facing(call(a10.player1), "facing_flag_1")
-    -- if hsc.game_is_cooperative() then
-    wake(a10.fast_setup)
-    -- else
-    --    if not (normal == hsc.game_difficulty_get()) then
-    --        wake(a10.fast_setup)
-    --    else
-    --        if true then
-    --            wake(a10.tutorial_setup)
-    --        end
-    --    end
-    -- end
+    if hsc.game_is_cooperative() or not (normal == hsc.game_difficulty_get()) then
+        wake(a10.fast_setup)
+    else
+        wake(a10.tutorial_setup)
+    end
     wake(a10.mission_bsp)
     wake(a10.music_a10)
     wake(a10.linkage)
