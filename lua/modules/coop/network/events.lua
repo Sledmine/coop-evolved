@@ -39,8 +39,10 @@ blam.rcon.event("Ready", function(message, playerIndex)
         end
 
         -- Player is not ready, update remaining votes
-        CoopServerState.remainingVotes = CoopServerState.remainingVotes - 1
-        CoopServerState.playersReady[playerIndex] = true
+        if CoopServerState.remainingVotes > 0 then
+            CoopServerState.remainingVotes = CoopServerState.remainingVotes - 1
+            CoopServerState.playersReady[playerIndex] = true
+        end
 
         -- All players are ready, start the game
         if CoopServerState.remainingVotes <= 0 then

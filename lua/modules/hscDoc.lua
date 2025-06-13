@@ -460,14 +460,14 @@ hscDoc.functions = { {
   funcName = "object_create_anew_containing",
   hash = "71C0B",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "string" },
   funcName = "object_destroy_containing",
   hash = "A0704",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = {},
@@ -481,7 +481,7 @@ hscDoc.functions = { {
   funcName = "objects_delete_by_definition",
   hash = "DEB12",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "object_list", "short" },

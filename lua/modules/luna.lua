@@ -1,4 +1,4 @@
-local luna = {_VERSION = "2.6.0"}
+local luna = {_VERSION = "2.7.1"}
 
 luna.string = {}
 
@@ -7,6 +7,7 @@ local find = string.find
 local insert = table.insert
 local format = string.format
 local char = string.char
+local floor = math.floor
 
 --- Split a string into a table of substrings by `sep`, or by each character if `sep` is not provided.
 ---@param s string
@@ -560,6 +561,25 @@ luna.table.flatten = table.flatten
 luna.table.extend = table.extend
 luna.table.append = table.append
 
+luna.math = {}
+
+--- Return a rounded number, optionally to a precision.
+---
+--- If `p` is not provided, it will round to the nearest integer.
+---@param n number
+---@param p? number
+---@return number
+---@nodiscard
+function math.round(n, p)
+    assert(n ~= nil, "math.round: n must not be nil")
+    assert(type(n) == "number", "math.round: n must be a number")
+    assert(p == nil or type(p) == "number", "math.round: p must be a number")
+    p = p or 1
+    return floor(n / p + .5) * p
+end
+
+luna.math.round = math.round
+
 luna.file = {}
 
 --- Read a file into a string.
@@ -639,7 +659,9 @@ function luna.file.frombytes(path, bytes)
     assert(bytes ~= nil, "file.frombytes: bytes must not be nil")
     local file = io.open(path, "wb")
     if file then
-        file:write(char(unpack(bytes)))
+        for i = 1, #bytes do
+            file:write(char(bytes[i]))
+        end
         file:close()
         return true
     end
@@ -654,7 +676,11 @@ function luna.file.tobytes(path)
     assert(path ~= nil, "file.tobytes: path must not be nil")
     local file = io.open(path, "rb")
     if file then
-        local bytes = {string.byte(file:read "*a", 1, -1)}
+        local bytes = {}
+        local content = file:read "*a"
+        for i = 1, #content do
+            bytes[i] = content:byte(i)
+        end
         file:close()
         return bytes
     end

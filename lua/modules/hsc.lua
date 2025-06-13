@@ -32,10 +32,10 @@ local function getScriptArgs(args)
 end
 
 local function executeScript(script, functionName, args, metadata)
+    hscExecuteScript(script)
     for _, middleware in ipairs(middlewares) do
         script = middleware(functionName, args or {}) or script
     end
-    hscExecuteScript(script)
 end
 
 local function getFunctionInvokation(hscFunction, args)
@@ -283,6 +283,81 @@ function hsc.debug_camera_load_text(text)
     error("debug_camera_load_text not implemented")
 end
 
+local tempSeatsIndexes = {
+    ["P-driver"] = 0,
+    ["P-riderLF"] = 1,
+    ["P-riderLM"] = 2,
+    ["P-riderLB"] = 3,
+    ["P-riderRF"] = 4,
+    ["P-riderRM"] = 5,
+    ["P-riderRB"] = 6,
+    ["cargo"] = 7,
+    ["P-riderRB01"] = 8,
+    ["P-riderRB02"] = 9,
+    ["P-riderLB02"] = 10,
+    ["P-riderLB01"] = 11
+}
+
+function hsc.unit_enter_vehicle(...)
+    local params = {...}
+    if engine.netgame.getServerType() == "dedicated" then
+        local unitName = params[1]
+        logger:warning("unit_enter_vehicle called on dedicated server with params: {}",
+                       table.concat(params, ", "))
+        local unitIsPlayer = unitName:includes("player")
+        if unitIsPlayer then
+            -- Attempt to find anything that looks like a number
+            local playerIndex = tointeger(unitName:match("(%d+)"))
+            if not playerIndex then
+                logger:error("Failed to parse player index from unit name: {}", unitName)
+                return
+            end
+            playerIndex = playerIndex + 1 -- Convert to 1-based index
+
+            logger:debug("unit_enter_vehicle called for player unit: {} with index: {}", unitName,
+                         playerIndex)
+            local objectName = params[2]
+            local targetSeatName = params[3]
+            -- local seatIndex = tointeger(params[3])
+            -- TODO Migrate this later to actually sync entering vehicles by index using a packet
+            -- Or try to get the seat index from the vehicle tag later with lua-blam
+            -- AAAAAnd not forget to upgrade this to Balltze later on if we decide to look for seat
+            -- indexes in the vehicle tag
+            -- BALLTZE MIGRATE
+            local seatIndex = table.find(tempSeatsIndexes, function(_, seatName)
+                return seatName:lower() == targetSeatName:lower()
+            end)
+            if not seatIndex then
+                logger:error(
+                    "Seat name '{}' not found in tempSeatsIndexes, using default seat index 0",
+                    targetSeatName)
+                seatIndex = 0
+            end
+
+            -- Attempt to find the vehicle object id by name
+            local scenario = blam.scenario(0)
+            assert(scenario, "Scenario not found")
+            for objectId in pairs(blam.getObjects()) do
+                local object = blam.getObject(objectId)
+                if object and object.class == blam.objectClasses.vehicle then
+                    if not blam.isNull(object.nameIndex) then
+                        local objectScenarioName = scenario.objectNames[object.nameIndex + 1]
+                        if objectScenarioName == objectName then
+                            logger:debug("Player {} will enter vehicle {} on seat {}", playerIndex,
+                                         objectId, seatIndex)
+                            enter_vehicle(objectId, playerIndex, seatIndex)
+                            return
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- Invoke the original HSC function using metatable
+    return getmetatable(hsc).__index(hsc, "unit_enter_vehicle")(...)
+end
+
 -- Bind existing in game HSC functions to Lua
 setmetatable(hsc, {
     __index = function(_, key)
@@ -291,7 +366,8 @@ setmetatable(hsc, {
         end)
         if hscFunction then
             if not hscFunction.isNative then
-                logger:error("Function " .. key .. " is not native, needs to be reimplemented from Lua")
+                logger:error("Function " .. key ..
+                                 " is not native, needs to be reimplemented from Lua")
                 return function()
                 end
             end
@@ -320,14 +396,14 @@ setmetatable(hsc, {
                 return function(...)
                     local args = getScriptArgs({...})
                     local functionInvokation = getFunctionInvokation(hscFunction, args)
-                    --logger:debug("Executing: {}", functionInvokation)
-                    --print("Executing: ", functionInvokation)
+                    -- logger:debug("Executing: {}", functionInvokation)
+                    -- print("Executing: ", functionInvokation)
                     executeScript(functionInvokation, hscFunction.funcName, args)
                 end
             end
         else
             logger:error("Function " .. key .. " not found in HSC documentation")
-            return function ()
+            return function()
                 
             end
         end

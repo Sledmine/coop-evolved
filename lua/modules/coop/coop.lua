@@ -1,10 +1,12 @@
 local blam = require "blam"
+local constants = require "coop.constants"
 local tagClasses = blam.tagClasses
 local isNull = blam.isNull
 local getIndexById = blam.getIndexById
 local balltze = Balltze
 local engine = Engine
 local findTags = engine.tag.findTags
+local hsc = require "hsc"
 
 local coop = {}
 
@@ -37,16 +39,16 @@ function coop.getRequiredVotes(playersCount)
 end
 
 function coop.getAvailableBipeds()
-    --local bipedTags = findTags("_mp", engine.tag.classes.biped)
+    -- local bipedTags = findTags("_mp", engine.tag.classes.biped)
     -- FIXME Use blam for cross compatibility as we move to use Balltze
     local bipedTags = blam.findTagsList("_mp", tagClasses.biped) or {}
-    --assert(bipedTags, "Failed to load multiplayer biped tags")
+    -- assert(bipedTags, "Failed to load multiplayer biped tags")
     local bipedsList = {}
     for index, tag in pairs(bipedTags) do
         local tagPath = tag.path
         local tagSplit = tagPath:split "\\"
         local bipedName = tagSplit[#tagSplit]:gsub("_mp", ""):gsub("_", " "):upper()
-        --bipedsList[index] = {name = bipedName, id = tag.handle.value}
+        -- bipedsList[index] = {name = bipedName, id = tag.handle.value}
         bipedsList[index] = {name = bipedName, id = tag.id}
         table.sort(bipedsList, function(a, b)
             return a.name < b.name
@@ -63,73 +65,71 @@ end
 
 --- Determine if this player is a candidate for respawn point
 ---@param playerBiped blamObject
----@param exceptionPlayer? number
+---@param exceptionPlayerIndex? number
 ---@return boolean isCandidate
-function coop.isRespawnCandidate(playerBiped, exceptionPlayer)
-    -- TODO Do we need this?
-    local playerIndex = getIndexById(playerBiped.playerId)
-    -- return not playerBiped.isOutSideMap and playerBiped.health >= 0 and playerBiped.isOnGround and
-    --           playerIndex ~= exceptionPlayer
-    return not playerBiped.isOutSideMap and playerBiped.isOnGround and playerIndex ~=
-               exceptionPlayer
+function coop.isRespawnCandidate(playerBiped, exceptionPlayerIndex)
+    return not playerBiped.isOutSideMap and playerBiped.isOnGround
 end
 
 --- Update the game spawn given player biped object
 ---@param playerBiped biped
----@return string | nil playerUsedForSpawn
 function coop.updateSpawn(playerBiped, playerIndex)
-    local playerUsedForSpawn
     local scenario = blam.scenario(0)
-    if scenario then
-        local playerName = get_var(playerIndex, "$name")
-        local playerSpawns = scenario.spawnLocationList
-        -- Update second player spawn point on the scenario
-        -- Usually the first spawn point is for local/campaign purposes only
-        -- TODO Check if a vehicle can use the is on ground flag as well
-        if isNull(playerBiped.vehicleObjectId) then
-            playerUsedForSpawn = playerName
+    assert(scenario, "Failed to load scenario")
+    local playerSpawns = scenario.spawnLocationList
+    -- Update second player spawn point on the scenario
+    -- Usually the first spawn point is for local/campaign purposes only
+    -- TODO Check if a vehicle can use the is on ground flag as well
+    if isNull(playerBiped.vehicleObjectId) then
+        for spawnIndex, spawn in pairs(playerSpawns) do
+            playerSpawns[spawnIndex].x = playerBiped.x
+            playerSpawns[spawnIndex].y = playerBiped.y
+            playerSpawns[spawnIndex].z = playerBiped.z + 0.3
+        end
+    else
+        local vehicle = blam.object(get_object(playerBiped.vehicleObjectId))
+        if vehicle then
             for spawnIndex, spawn in pairs(playerSpawns) do
-                playerSpawns[spawnIndex].x = playerBiped.x
-                playerSpawns[spawnIndex].y = playerBiped.y
-                playerSpawns[spawnIndex].z = playerBiped.z + 0.3
-            end
-        else
-            local vehicle = blam.object(get_object(playerBiped.vehicleObjectId))
-            if vehicle then
-                playerUsedForSpawn = playerName
-                for spawnIndex, spawn in pairs(playerSpawns) do
-                    playerSpawns[spawnIndex].x = vehicle.x
-                    playerSpawns[spawnIndex].y = vehicle.y
-                    playerSpawns[spawnIndex].z = vehicle.z + 0.6
-                end
+                playerSpawns[spawnIndex].x = vehicle.x
+                playerSpawns[spawnIndex].y = vehicle.y
+                playerSpawns[spawnIndex].z = vehicle.z + 0.6
             end
         end
-        -- Update player spawns list on the scenario
-        scenario.spawnLocationList = playerSpawns
-        return playerUsedForSpawn
     end
-    return nil
+    -- Update player spawns list on the scenario
+    scenario.spawnLocationList = playerSpawns
+    return true
 end
 
 --- Find a new spawn point for the players
 ---@param exceptionPlayerIndex? number Player index to ignore when searching for a new spawn
 ---@return boolean
 function coop.findNewSpawn(exceptionPlayerIndex)
+    local tellFunction = engine.core.consolePrint
+    if engine.netgame.getServerType() == "dedicated" then
+        -- BALLTZE MIGRATE
+        tellFunction = say_all
+    end
     local playerUsedForSpawn
     local cinematic = blam.cinematicGlobals()
     if not cinematic.isInProgress then
-        for playerIndex = 1, 16 do
-            local playerBiped = blam.biped(get_dynamic_player(playerIndex))
-            if playerBiped and player_present(playerIndex) then
-                if coop.isRespawnCandidate(playerBiped, exceptionPlayerIndex) then
-                    playerUsedForSpawn = coop.updateSpawn(playerBiped, playerIndex)
+        for playerIndex = constants.firstPlayerIndex, constants.lastPlayerIndex do
+            if playerIndex ~= exceptionPlayerIndex then
+                local playerBiped = blam.biped(get_dynamic_player(playerIndex))
+                local player = blam.player(get_player(playerIndex))
+                if player and playerBiped and hsc.game_safe_to_save() then
+                    if coop.isRespawnCandidate(playerBiped) then
+                        playerUsedForSpawn = coop.updateSpawn(playerBiped, playerIndex)
+                        playerUsedForSpawn = player.name
+                        break
+                    end
                 end
             end
         end
         if playerUsedForSpawn then
-            say_all("Using " .. playerUsedForSpawn .. " as respawn point..")
-        else
-            say_all("No respawn candidate was found!")
+            tellFunction("Using " .. playerUsedForSpawn .. " as respawn point..")
+        --else
+        --    tellFunction("No respawn candidate was found!")
         end
     end
     return true

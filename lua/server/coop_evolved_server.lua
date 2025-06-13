@@ -222,12 +222,25 @@ local function createHscPacket(functionName, args)
         logger:debug("Object name index: {}", objectNameIndex)
         local scenario = blam.scenario(0)
         assert(scenario, "Failed to load scenario tag")
-        for _, bipedEntry in pairs(scenario.bipeds) do
-            if bipedEntry.nameIndex == objectNameIndex - 1 then
-                logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
-                return
+
+        for objectId in pairs(blam.getObjects()) do
+            local object = blam.getObject(objectId)
+            if object and object.nameIndex == objectNameIndex - 1 then
+                if object.class == objectClasses.biped then
+                    logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
+                    return
+                elseif object.class == objectClasses.vehicle then
+                    logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
+                    return
+                end
             end
         end
+        -- for _, bipedEntry in pairs(scenario.bipeds) do
+        --    if bipedEntry.nameIndex == objectNameIndex - 1 then
+        --        logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
+        --        return
+        --    end
+        -- end
         -- TODO Add vehicle check
         -- for _, vehicleEntry in pairs(scenario.vehicles) do
         --    if vehicleEntry.nameIndex == objectNameIndex - 1 then
@@ -353,7 +366,9 @@ function OnPlayerLeave(playerIndex)
         if CoopServerState.playersReady[playerIndex] then
             CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
         end
-        CoopServerState.remainingVotes = CoopServerState.remainingVotes - 1
+        if CoopServerState.remainingVotes > 0 then
+            CoopServerState.remainingVotes = CoopServerState.remainingVotes - 1
+        end
         CoopServerState.playersReady[playerIndex] = nil
     end
     coop.findNewSpawn(playerIndex)
@@ -419,7 +434,7 @@ function OnTick()
 end
 
 function OnMapLoad()
-
+    constants.get()
 end
 
 function OnScriptLoad()
@@ -428,7 +443,12 @@ function OnScriptLoad()
     AvailableBipeds = coop.getAvailableBipeds()
 
     -- Start syncing AI every amount of seconds
-    FindNewSpawn = coop.findNewSpawn
+    FindNewSpawn = function()
+        if CoopStarted then
+            coop.findNewSpawn()
+        end
+        return true
+    end
 
     set_timer(constants.findNewSpawnEveryMillisecs, "FindNewSpawn")
 

@@ -12,6 +12,9 @@ local constants = require "coop.constants"
 local component = require "ui.component"
 local ether = require "ui.react"
 local script = require "script"
+local utils = require "coop.utils"
+inspect = require "inspect"
+
 
 -- Global state
 local lastBipedTagHandle
@@ -126,11 +129,19 @@ function PluginLoad()
                     CoopState = ether.reactive(CoopState, function()
                         ether.render(constants.widgets.coopMenu.id)
                     end)
-
-                    coop.enableSpawn(true)
                 end
 
                 local serverType = engine.netgame.getServerType()
+
+                if serverType == "local" then
+                    coop.enableSpawn(true)
+                    script.continuous(function(_, sleep)
+                        logger:info("Finding new spawn every {} ms", constants.findNewSpawnEveryMillisecs)
+                        coop.findNewSpawn()
+                        --sleep(utils.secondsToTicks(constants.findNewSpawnEveryMillisecs / 1000))
+                        sleep(utils.secondsToTicks(3))
+                    end)
+                end
 
                 if serverType == "local" or serverType == "none" then
                     local mapName = engine.map.getCurrentMapHeader().name
