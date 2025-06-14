@@ -1674,6 +1674,38 @@ function b30.mission_crash(call, sleep)
     hsc.ai_conversation("downed_seen")
 end
 
+local pelicanSeats = {
+    --"P-driver",
+    "P-riderLF",
+    "P-riderLM",
+    "P-riderLB",
+    "P-riderRF",
+    "P-riderRM",
+    "P-riderRB",
+    --"cargo",
+    "P-riderRB01",
+    "P-riderRB02",
+    "P-riderLB02",
+    "P-riderLB"
+
+}
+function b30.playersEnterPelican()
+    local playerCount = getPlayerCount()
+    local pelicans = { "insertion_pelican_1", "insertion_pelican_2" }
+    local currentSeatIndex = 1
+    for playerIndex = 0, playerCount - 1 do
+        local playerUnit = getPlayerUnit(playerIndex)
+        local targetVehicleName = pelicans[math.mod(playerIndex, #pelicans) + 1]
+        local seatName = pelicanSeats[currentSeatIndex]
+        logger:debug("Player {} entering vehicle {} at seat {}", playerIndex, targetVehicleName, seatName)
+        hsc.unit_enter_vehicle(playerUnit, targetVehicleName, seatName)
+        currentSeatIndex = currentSeatIndex + 1
+        if currentSeatIndex > #pelicanSeats then
+            currentSeatIndex = 1
+        end
+    end
+end
+
 function b30.cutscene_insertion(call, sleep)
     hsc.sound_looping_start("sound\\sinomatixx_foley\\b30_insertion_foley", "none", 1)
     hsc.sound_class_set_gain("vehicle", 0.3, 0)
@@ -1691,10 +1723,11 @@ function b30.cutscene_insertion(call, sleep)
     hsc.object_beautify("insertion_pelican_1", true)
     hsc.ai_place("beach_lz_marine")
     hsc.ai_place("beach_lz")
-    hsc.unit_enter_vehicle(call(b30.player0), "insertion_pelican_1", "p-riderlf")
-    hsc.unit_enter_vehicle(call(b30.player1), "insertion_pelican_2", "p-riderlf")
+
+    b30.playersEnterPelican()
+
     hsc.vehicle_load_magic("insertion_pelican_1", "rider",
-                           hsc.ai_actors("beach_lz_marine/left_marine"))
+hsc.ai_actors("beach_lz_marine/left_marine"))
     hsc.vehicle_load_magic("insertion_pelican_2", "rider",
                            hsc.ai_actors("beach_lz_marine/right_marine"))
     hsc.object_teleport("insertion_pelican_1", "insertion_pelican_flag_1")
