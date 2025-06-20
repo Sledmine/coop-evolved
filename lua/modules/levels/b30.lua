@@ -109,6 +109,21 @@ local play_music_b30_031_alt = false
 local play_music_b30_032 = false
 local play_music_b30_032_alt = false
 
+local pelicanSeats = {
+    -- "P-driver",
+    "P-riderLF",
+    "P-riderLM",
+    "P-riderLB",
+    "P-riderRF",
+    "P-riderRM",
+    "P-riderRB",
+    -- "cargo",
+    "P-riderRB01",
+    "P-riderRB02",
+    "P-riderLB02",
+    "P-riderLB"
+}
+
 
 local function getPlayerUnit(playerIndex)
     return hsc.unit(hsc.list_get(hsc.players(), playerIndex))
@@ -124,6 +139,18 @@ local function allPlayersExitVehicle()
         local playerUnit = getPlayerUnit(i)
         hsc.unit_exit_vehicle(playerUnit)
     end
+end
+
+local function isUnitInsidePelican(unit, vehicle)
+    local isInside = false
+    -- Loop trough all pelican seats
+    for _, seat in ipairs(pelicanSeats) do
+        if hsc.vehicle_test_seat(vehicle, seat, unit) then
+            isInside = true
+            break
+        end
+    end
+    return isInside
 end
 
 function b30.player0(call, sleep)
@@ -1349,16 +1376,22 @@ function b30.obj_shafta_goal(call, sleep)
     hsc.object_teleport("extraction_pelican", "extraction_pelican_flag_1")
     hsc.recording_play_and_hover("extraction_pelican", "extraction_pelican_1")
     sleep(hsc.recording_time("extraction_pelican"))
+    -- TODO This might break if there are more players than seats in the pelican, add new pelican
+    local allPlayersMustBeInPelican = hsc.game_is_cooperative()
     sleep(function()
-        return hsc.vehicle_test_seat_list("extraction_pelican", "p-riderlf", hsc.players()) or
-                   hsc.vehicle_test_seat_list("extraction_pelican", "p-riderrf", hsc.players())
-    end, 1)
-    if hsc.game_is_cooperative() then
-        sleep(function()
-            return hsc.vehicle_test_seat_list("extraction_pelican", "p-riderlf", hsc.players()) and
-                       hsc.vehicle_test_seat_list("extraction_pelican", "p-riderrf", hsc.players())
-        end, 1)
-    end
+        for i = 0, getPlayerCount() - 1 do
+            local playerUnit = getPlayerUnit(i)
+            if allPlayersMustBeInPelican then
+                if not isUnitInsidePelican(playerUnit, "extraction_pelican") then
+                    return false
+                end
+            else
+                if isUnitInsidePelican(playerUnit, "extraction_pelican") then
+                    return true
+                end
+            end
+        end
+    end)
     play_music_b30_06 = false
     hsc.player_enable_input(false)
     hsc.ai_braindead("shafta_entrance_inv", true)
@@ -1674,31 +1707,20 @@ function b30.mission_crash(call, sleep)
     hsc.ai_conversation("downed_seen")
 end
 
-local pelicanSeats = {
-    --"P-driver",
-    "P-riderLF",
-    "P-riderLM",
-    "P-riderLB",
-    "P-riderRF",
-    "P-riderRM",
-    "P-riderRB",
-    --"cargo",
-    "P-riderRB01",
-    "P-riderRB02",
-    "P-riderLB02",
-    "P-riderLB"
-
-}
+--- Function to have players enter Pelicans in a round-robin fashion.
 function b30.playersEnterPelican()
     local playerCount = getPlayerCount()
-    local pelicans = { "insertion_pelican_1", "insertion_pelican_2" }
+    local pelicans = {"insertion_pelican_1", "insertion_pelican_2"}
     local currentSeatIndex = 1
     for playerIndex = 0, playerCount - 1 do
         local playerUnit = getPlayerUnit(playerIndex)
+        -- Alternate between the two Pelicans
         local targetVehicleName = pelicans[math.mod(playerIndex, #pelicans) + 1]
         local seatName = pelicanSeats[currentSeatIndex]
-        logger:debug("Player {} entering vehicle {} at seat {}", playerIndex, targetVehicleName, seatName)
+        logger:debug("Player {} entering vehicle {} at seat {}", playerIndex, targetVehicleName,
+                     seatName)
         hsc.unit_enter_vehicle(playerUnit, targetVehicleName, seatName)
+        -- Move to the next seat for the next player
         currentSeatIndex = currentSeatIndex + 1
         if currentSeatIndex > #pelicanSeats then
             currentSeatIndex = 1
@@ -1727,7 +1749,7 @@ function b30.cutscene_insertion(call, sleep)
     b30.playersEnterPelican()
 
     hsc.vehicle_load_magic("insertion_pelican_1", "rider",
-hsc.ai_actors("beach_lz_marine/left_marine"))
+                           hsc.ai_actors("beach_lz_marine/left_marine"))
     hsc.vehicle_load_magic("insertion_pelican_2", "rider",
                            hsc.ai_actors("beach_lz_marine/right_marine"))
     hsc.object_teleport("insertion_pelican_1", "insertion_pelican_flag_1")
