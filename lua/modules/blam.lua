@@ -123,7 +123,7 @@ local addressList = {
     screenResolution = 0x637CF0,
     currentWidgetIdAddress = 0x6B401C,
     cinematicGlobals = 0x0068c83c,
-    gameStateGlobals = 0x0064bab0
+    hscGlobalsPointer = 0x0064bab0
 }
 
 -- Server side addresses adjustment
@@ -132,7 +132,7 @@ if blam.isGameSAPP() then
     addressList.objectTable = 0x4005062C
     addressList.syncedNetworkObjects = 0x00598020 -- not pointer cause cheat engine sucks
     addressList.cinematicGlobals = 0x005f506c
-    addressList.gameStateGlobals = 0x005bd890
+    addressList.hscGlobalsPointer = 0x005bd890
     addressList.hscGlobals = 0x6e144c
 end
 
@@ -1009,15 +1009,17 @@ function blam.readUnicodeString(address, rawRead)
     else
         stringAddress = read_dword(address)
     end
-    local length = stringAddress / 2
     local output = ""
-    -- TODO Refactor this to support full unicode char size
-    for i = 1, length do
-        local char = read_string(stringAddress + (i - 1) * 0x2)
-        if char == "" then
+    local i = 0
+    -- TODO Refactor this to support reading ASCII and UTF16? strings
+    while true do
+        local char = read_string(stringAddress + i * 0x2)
+        --local _, char = pcall(string.char, read_byte(stringAddress + (i - 1) * 0x2))
+        if not char or char == "" then
             break
         end
         output = output .. char
+        i = i + 1
     end
     return output
 end
@@ -1026,7 +1028,8 @@ end
 ---@param address number
 ---@param newString string
 ---@param rawWrite? boolean
-function blam.writeUnicodeString(address, newString, rawWrite)
+---@param noNullTerminator? boolean
+function blam.writeUnicodeString(address, newString, rawWrite, noNullTerminator)
     local stringAddress
     if rawWrite then
         stringAddress = address
@@ -1038,15 +1041,18 @@ function blam.writeUnicodeString(address, newString, rawWrite)
         return
     end
     local newString = tostring(newString)
-    -- TODO Refactor this to support writing ASCII and Unicode strings
+    -- TODO Refactor this to support writing ASCII and UTF16? strings
     for i = 1, #newString do
-        write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
-        if i == #newString then
-            write_byte(stringAddress + #newString * 0x2, 0x0)
+        local char = newString:sub(i, i)
+        local byte = string.byte(char) or string.byte("?")
+        local currentCharAddress = stringAddress + (i - 1) * 0x2
+        write_dword(currentCharAddress, byte)
+        if i == #newString and not noNullTerminator then
+            write_dword(currentCharAddress + 0x2, 0x0)
         end
     end
     if #newString == 0 then
-        write_string(stringAddress, "")
+        write_dword(stringAddress, 0)
     end
 end
 
@@ -1167,11 +1173,16 @@ end
 
 local function safeWriteUnicodeString(address, propertyData, text)
     local size = read_dword(address)
-    local text = text
-    if #text > size then
-        text = text:sub(1, size)
+    local newText = text
+    local maximumStringSize = size - 2
+    if #text * 2 >= maximumStringSize then
+        newText = newText:sub(1, maximumStringSize / 2)
+        -- String is too long, truncate it and write it without null terminator
+        return blam.writeUnicodeString(address + 0xC, newText, false, true)
     end
-    return blam.writeUnicodeString(address + 0xC, text)
+    -- String is short enough, write it with null terminator
+    -- This will ignore rest of the string if it was longer than new string size
+    return blam.writeUnicodeString(address + 0xC, newText, false, false)
 end
 
 -- Data types operations references
@@ -2275,6 +2286,7 @@ local modelAnimationsStructure = {
 ---@field primaryTriggerState number Primary trigger state of the weapon
 ---@field totalAmmo number Total ammo of the weapon
 ---@field loadedAmmo number Loaded ammo of the weapon   
+---@field reloadTicksRemainingFirstMagazine number Remaining ticks for weapon to finish reload (1st magazine)
 
 local weaponStructure = extendStructure(objectStructure, {
     pressedReloadKey = {type = "bit", offset = 0x230, bitLevel = 3},
@@ -2284,7 +2296,8 @@ local weaponStructure = extendStructure(objectStructure, {
     isInInventory = {type = "bit", offset = 0x1F4, bitLevel = 0},
     primaryTriggerState = {type = "byte", offset = 0x261},
     totalAmmo = {type = "word", offset = 0x2B6},
-    loadedAmmo = {type = "word", offset = 0x2B8}
+    loadedAmmo = {type = "word", offset = 0x2B8},
+    reloadTicksRemainingFirstMagazine = {type = "word", offset = 0x23A}
 })
 
 ---@class weaponTag
@@ -3485,7 +3498,7 @@ end
 --- Returns current game difficulty index
 ---@return number
 function blam.getGameDifficultyIndex()
-    local hscGlobals = read_dword(addressList.gameStateGlobals)
+    local hscGlobals = read_dword(addressList.hscGlobalsPointer)
     return read_byte(hscGlobals + 0xe)
 end
 
