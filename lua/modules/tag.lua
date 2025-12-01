@@ -1,7 +1,6 @@
 -- Tag creator/editor module
 -- This module is a wrapper for invader-edit to create and edit tags
 local luna = require "lua.modules.luna"
-local windows = require "lua.scripts.modules.fckwindows"
 local tag = {}
 
 local editCmd = [[invader-edit "%s" -n]]
@@ -11,6 +10,7 @@ local insertCmd = [[invader-edit "%s" -n -I %s %s %s]]
 local createCmd = [[invader-edit "%s" -n -N]]
 local eraseCmd = [[invader-edit "%s" -n -E %s]]
 
+local _, windows = pcall(require, "lua.scripts.modules.fckwindows")
 local function executeCommand(cmd)
     if jit.os and jit.os:lower() == "windows" then
         -- Windows command execution
@@ -169,7 +169,7 @@ end
 ---@param index? number | "*"
 ---@return boolean
 function tag.erase(tagPath, key, index)
-    if (index) then
+    if index then
         key = key .. "[" .. index .. "]"
     end
     if executeCommand(eraseCmd:format(tagPath, key)) then
@@ -204,6 +204,7 @@ function tag.create(tagPath, keys)
     if executeCommand(createTagCmd) then
         return true
     end
+    print(createTagCmd)
     error("Error at creating tag: " .. tagPath)
 end
 
