@@ -48,7 +48,12 @@ local function setVariable(varName, varValue)
 end
 
 local function getVariable(varName)
-    return get_global(varName)
+    local exists, result = pcall(get_global, varName)
+    if not exists then
+        logger:error("Failed to get HSC variable {}: {}", varName, result)
+        return nil
+    end
+    return result
 end
 
 -- Reimplement HSC functions with Lua
@@ -96,10 +101,10 @@ function hsc.cond(...)
         -- In the meantime we will return the first function that returns true
         -- as it works for most scenarios.
         if type(func) == "function" then
-            --logger:debug("Evaluating cond function at index {}:", i)
+            -- logger:debug("Evaluating cond function at index {}:", i)
             -- Only return if func result is true
             local result = func()
-            --logger:debug("Evaluating cond function result: {}", result)
+            -- logger:debug("Evaluating cond function result: {}", result)
             if result then
                 return result
             end
@@ -141,9 +146,23 @@ function hsc.game_is_cooperative()
     return hsc.list_count(hsc.players()) > 1
 end
 
+function hsc.game_revert()
+    -- Execute depending of server type
+    if engine.netgame.getServerType() == "sapp" then
+        execute_script("sv_map_next")
+    elseif engine.netgame.getServerType() == "local" then
+        getmetatable(hsc).__index(hsc, "game_revert")()
+    end
+
+end
+
 function hsc.game_won()
     -- Execute depending of server type
-    execute_script("sv_map_next")
+    if engine.netgame.getServerType() == "sapp" then
+        execute_script("sv_map_next")
+    elseif engine.netgame.getServerType() == "local" then
+        getmetatable(hsc).__index(hsc, "game_won")()
+    end
 end
 
 function hsc.pin(value, min, max)
@@ -159,43 +178,43 @@ function hsc.abs_real(value)
 end
 
 function hsc.bitwise_and(a, b)
-    return a & b
+    -- return a & b
 end
 
 function hsc.bitwise_or(a, b)
-    return a | b
+    -- return a | b
 end
 
 function hsc.bitwise_xor(a, b)
-    return a ~ b
+    -- return a ~ b
 end
 
 function hsc.bitwise_left_shift(value, shift)
-    return value << shift
+    -- return value << shift
 end
 
 function hsc.bitwise_right_shift(value, shift)
-    return value >> shift
+    -- return value >> shift
 end
 
 function hsc.bit_test(value, bit)
-    --return (value & (1 << bit)) ~= 0
-    return luna.bit((value & (1 << bit)) ~= 0)
+    -- return (value & (1 << bit)) ~= 0
+    -- return luna.bit((value & (1 << bit)) ~= 0)
 end
 
 function hsc.bit_toggle(value, bit, state)
     if state then
-        return value | (1 << bit)
+        -- return value | (1 << bit)
     else
-        return value & ~(1 << bit)
+        -- return value & ~(1 << bit)
     end
 end
 
 function hsc.bitwise_flags_toggle(value, flags, state)
     if state then
-        return value | flags
+        -- return value | flags
     else
-        return value & ~flags
+        -- return value & ~flags
     end
 end
 
@@ -225,15 +244,15 @@ end
 
 function hsc.objects_distance_to_object(object_list, object)
     local objectCount = hsc.list_count(object_list)
-    --local distances = {}
-    --for i = 0, objectCount - 1 do
+    -- local distances = {}
+    -- for i = 0, objectCount - 1 do
     --    local otherObject = hsc.list_get(object_list, i)
     --    if otherObject ~= object then
     --        --local distance = hsc.unit_distance(hsc.unit(object), hsc.unit(otherObject))
     --        table.insert(distances, distance)
     --    end
-    --end
-    --return distances
+    -- end
+    -- return distances
     logger:debug("objects_distance_to_object not implemented")
     return 0
 end
@@ -283,6 +302,21 @@ function hsc.debug_camera_load_text(text)
     error("debug_camera_load_text not implemented")
 end
 
+--[[
+ │   ├──label (P-driver)                                                  string
+ │   ├──label (P-riderLF)                                                 string
+ │   ├──label (P-riderLM)                                                 string
+ │   ├──label (P-riderLB)                                                 string
+ │   ├──label (P-riderRF)                                                 string
+ │   ├──label (P-riderRM)                                                 string
+ │   ├──label (P-riderRB)                                                 string
+ │   ├──label (cargo)                                                     string
+ │   ├──label (P-riderRB01)                                               string
+ │   ├──label (P-riderRB02)                                               string
+ │   ├──label (P-riderLB02)                                               string
+     ├──label (P-riderLB01)   
+]]
+
 local tempSeatsIndexes = {
     ["P-driver"] = 0,
     ["P-riderLF"] = 1,
@@ -300,7 +334,7 @@ local tempSeatsIndexes = {
 
 function hsc.unit_enter_vehicle(...)
     local params = {...}
-    if engine.netgame.getServerType() == "dedicated" then
+    if engine.netgame.getServerType() == "sapp" then
         local unitName = params[1]
         logger:warning("unit_enter_vehicle called on dedicated server with params: {}",
                        table.concat(params, ", "))
@@ -404,7 +438,7 @@ setmetatable(hsc, {
         else
             logger:error("Function " .. key .. " not found in HSC documentation")
             return function()
-                
+
             end
         end
     end
@@ -421,4 +455,6 @@ function hsc.addMiddleWare(mid)
     end
 end
 
+-- TODO Add exception fror object_create_anew_containing, strng arg is not an object name is a pattern!
+ 
 return hsc
