@@ -15,6 +15,7 @@ require "balltzeCompat"
 
 local isNull = blam.isNull
 require "luna"
+local inspect = require "inspect"
 
 local coop = require "coop.coop"
 local constants = require "coop.constants"
@@ -189,6 +190,8 @@ local function createHscPacket(functionName, args)
     local funcMeta = table.find(hscDoc.functions, function(v, k)
         return v.funcName == functionName
     end)
+    logger:debug("Creating HSC packet for function: {} with args: {}", functionName,
+                 inspect(args))
     if not funcMeta then
         error("Function " .. functionName .. " not found in hscDoc")
     end
@@ -281,8 +284,8 @@ function GetReadyForCoop(playerIndex)
             end
         end
         -- Dispatch coop menu event
+        -- TODO Conditionally send to players if coop menu tag is available
         blam.rcon.dispatch("CoopMenu", playerIndex)
-
         blam.rcon.dispatch("UpdateVotes", tostring(CoopServerState.remainingVotes))
     end
 end
@@ -356,6 +359,14 @@ function OnPlayerJoin(playerIndex)
     execute_script("st " .. playerIndex .. " red")
 
     if not CoopStarted then
+
+        -- Force game start for debugging purposes
+        if DebugMode then
+            StartCoop()
+            coop.enableSpawn(true)
+            return
+        end
+
         CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
         GetReadyForCoop(playerIndex)
     end
@@ -376,19 +387,6 @@ end
 
 function OnPlayerDead(deadPlayerIndex)
     coop.findNewSpawn(deadPlayerIndex)
-end
-
-function OnLoad()
-    CoopServerState.difficulty = coop.difficulties[blam.getGameDifficultyIndex()]
-    map = get_var(0, "$map")
-    isStarterWeaponsEnabled = true
-    -- Fix biped that do not belong to a an AI encounter like the gun from the spirit dropship
-    -- EXPERIMENTAL might not work or break stuff
-    local tag = blam.findTag("cd_gun", tagClasses.biped)
-    if tag then
-        forcedBipedTeams[tag.id] = blam.unitTeamClasses.covenant
-    end
-    AvailableBipeds = coop.getAvailableBipeds()
 end
 
 function OnCommand()
@@ -435,6 +433,18 @@ end
 
 function OnMapLoad()
     constants.get()
+
+    CoopServerState.difficulty = coop.difficulties[blam.getGameDifficultyIndex()]
+    map = get_var(0, "$map")
+    isStarterWeaponsEnabled = true
+    -- Fix biped that do not belong to a an AI encounter like the gun from the spirit dropship
+    -- EXPERIMENTAL might not work or break stuff
+    local tag = blam.findTag("cd_gun", tagClasses.biped)
+    if tag then
+        forcedBipedTeams[tag.id] = blam.unitTeamClasses.covenant
+    end
+    AvailableBipeds = coop.getAvailableBipeds()
+
 end
 
 function OnScriptLoad()
@@ -462,6 +472,7 @@ function OnScriptLoad()
     register_callback(cb["EVENT_LEAVE"], "OnPlayerLeave")
     register_callback(cb["EVENT_DIE"], "OnPlayerDead")
     register_callback(cb["EVENT_OBJECT_SPAWN"], "OnObjectSpawn")
+    register_callback(cb["EVENT_SPAWN"], "OnPlayerSpawn")
     register_callback(cb["EVENT_GAME_END"], "OnGameEnd")
     register_callback(cb["EVENT_TICK"], "OnTick")
 

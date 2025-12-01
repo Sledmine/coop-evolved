@@ -15,19 +15,12 @@ local script = require "script"
 local utils = require "coop.utils"
 inspect = require "inspect"
 
-
 -- Global state
 local lastBipedTagHandle
 AvailableBipeds = {}
 CoopState = {remainingVotes = 0, difficulty = coop.difficulties[4]}
 
 DebugMode = true
-
-function log(...)
-    if DebugMode then
-        logger:debug(...)
-    end
-end
 
 local loadWhenIn = {
     "a10_coop_evolved",
@@ -39,8 +32,7 @@ local loadWhenIn = {
     "c20_coop_evolved",
     "c40_coop_evolved",
     "d20_coop_evolved",
-    "d40_coop_evolved",
-    "tsce_coop"
+    "d40_coop_evolved"
 }
 
 loadWhenIn = table.extend(loadWhenIn, table.map(loadWhenIn, function(map)
@@ -89,7 +81,6 @@ end
 local loaded = false
 
 function PluginLoad()
-    balltze.features.setUIAspectRatio(4, 3)
     logger = balltze.logger.createLogger("Coop Evolved")
     logger:muteDebug(not DebugMode)
 
@@ -113,15 +104,15 @@ function PluginLoad()
                 if biped.tagId ~= lastBipedTagHandle then
                     lastBipedTagHandle = biped.tagId
                     coop.swapFirstPerson()
-                    log("Swapping first person...")
+                    logger:debug("Swapping first person...")
                 end
             end
             -- FIXME We should not do this, for some reason if we don't do it like this
             -- Game will fail to render update menus post opening them
             if not loaded then
+                component.callbacks()
                 if constants.widgets.coopMenu then
                     AvailableBipeds = coop.getAvailableBipeds()
-                    component.callbacks()
                     -- Tell bundler to load the coop menu module with comment below
                     -- require("coop.ui.components.coopMenu")
                     ether.mount("coopMenu", constants.widgets.coopMenu.id)
@@ -133,17 +124,29 @@ function PluginLoad()
 
                 local serverType = engine.netgame.getServerType()
 
+                -- We are on a local server, enable all spawns and find new spawn every X seconds
                 if serverType == "local" then
                     coop.enableSpawn(true)
                     script.continuous(function(_, sleep)
-                        logger:info("Finding new spawn every {} ms", constants.findNewSpawnEveryMillisecs)
                         coop.findNewSpawn()
-                        --sleep(utils.secondsToTicks(constants.findNewSpawnEveryMillisecs / 1000))
-                        sleep(utils.secondsToTicks(3))
+                        sleep(utils.secondsToTicks(constants.findNewSpawnEverySecs))
                     end)
                 end
 
-                if serverType == "local" or serverType == "none" then
+                -- If we are on a dedicated server, disable startup and continuous scripts
+                -- This way we can let level scripts handle logic to fetch tags, variables, etc
+                -- But preventing running the actual logic of the level script...
+                -- Allowing the server to just handle networking and player management
+                if serverType == "dedicated" then
+                    ---@diagnostic disable-next-line: duplicate-set-field
+                    script.startup = function()
+                    end
+                    ---@diagnostic disable-next-line: duplicate-set-field
+                    script.continuous = function()
+                    end
+                end
+
+                if serverType ~= "sapp" then
                     local mapName = engine.map.getCurrentMapHeader().name
                     local levelName = mapName:split("_coop")[1]
                     logger:info("Loading level script for \"{}\"", levelName)
@@ -182,6 +185,19 @@ function PluginLoad()
         if event.time == "after" then
             server_type = engine.netgame.getServerType()
             main()
+        end
+    end)
+
+    local generalBounds = {left = 0, top = 460, right = 640, bottom = 480}
+    local textColor = {1, 1, 1, 1}
+    balltze.event.frame.subscribe(function(event)
+        if event.time == "before" and DebugMode then
+            -- Draw current script memory usage
+            local memoryUsage = collectgarbage("count") / 1024
+            local memoryText = string.format("Coop Evolved script memory usage: %.2f MB",
+                                             memoryUsage)
+            draw_text(memoryText, 0, generalBounds.top - 32, generalBounds.right - 10,
+                      generalBounds.bottom, "console", "right", table.unpack(textColor))
         end
     end)
 

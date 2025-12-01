@@ -5,10 +5,11 @@ local findTag = blam.findTag
 
 local constants = {}
 
-constants.findNewSpawnEveryMillisecs = utils.secondsToMillisecs(7)
+constants.findNewSpawnEverySecs = 7
+constants.findNewSpawnEveryMillisecs = utils.secondsToMillisecs(constants.findNewSpawnEverySecs)
 constants.firstPlayerIndex = 0
 constants.lastPlayerIndex = 15
-if Engine.netgame.getServerType() == "dedicated" then
+if Engine.netgame.getServerType() == "sapp" then
     constants.firstPlayerIndex = 1
     constants.lastPlayerIndex = 16
 end

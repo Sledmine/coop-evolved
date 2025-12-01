@@ -106,7 +106,7 @@ end
 ---@return boolean
 function coop.findNewSpawn(exceptionPlayerIndex)
     local tellFunction = engine.core.consolePrint
-    if engine.netgame.getServerType() == "dedicated" then
+    if engine.netgame.getServerType() == "sapp" then
         -- BALLTZE MIGRATE
         tellFunction = say_all
     end
@@ -218,7 +218,7 @@ function coop.changeBiped(desiredBipedIndex)
     if desiredBiped and player then
         local mpInfo = globals.multiplayerInformation
         mpInfo[1].unit = desiredBiped.id
-        log("Replacing biped with " .. desiredBiped.name)
+        logger:debug("Replacing biped with " .. desiredBiped.name)
         globals.multiplayerInformation = mpInfo
         delete_object(player.objectId)
     end

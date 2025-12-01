@@ -1,17 +1,10 @@
+---@meta _
+---@diagnostic disable: duplicate-set-field
 local blam = require "blam"
 local luna = require "luna"
-Balltze = Balltze or {
-    logger = {}
-}
-Engine = Engine or {
-    core = {},
-    hsc = {},
-    tag = {},
-    netgame = {},
-    gameState = {}
-}
+Balltze = Balltze or {logger = {}}
+Engine = Engine or {core = {}, hsc = {}, tag = {}, netgame = {}, gameState = {}, userInterface = {}}
 
----@diagnostic disable-next-line: duplicate-set-field
 function Engine.tag.getTag(tagHandleOrPath, tagClass)
     ---@diagnostic disable-next-line: param-type-mismatch
     local tagEntry = blam.getTag(tagHandleOrPath, tagClass)
@@ -26,15 +19,10 @@ function Engine.tag.getTag(tagHandleOrPath, tagClass)
     end
 end
 
----@diagnostic disable-next-line: duplicate-set-field
 function Engine.tag.findTags(tagName, tagClass)
     local tags = blam.findTagsList(tagName, tagClass)
     return table.map(tags, function(tag)
-        return {
-            handle = tag.id,
-            path = tag.path,
-            primaryClass = tag.class
-        }
+        return {handle = tag.id, path = tag.path, primaryClass = tag.class}
     end)
 end
 
@@ -42,35 +30,25 @@ end
 ---@param parentObjectHandle? EngineObjectHandle|integer @The handle of the parent object
 ---@param position EnginePoint3D @The position of the object
 ---@return EngineObjectHandle @The handle of the object
----@diagnostic disable-next-line: duplicate-set-field
 function Engine.gameState.createObject(tagHandle, parentObjectHandle, position)
     if type(tagHandle) == "number" then
         local handleValue = spawn_object(tagHandle, position.x, position.y, position.z)
-        return {
-            value = handleValue,
-        }
+        return {value = handleValue}
     end
     local handleValue = spawn_object(tagHandle.value, position.x, position.y, position.z)
-    return {
-        value = handleValue,
-    }
+    return {value = handleValue}
 end
 
 -- Get a player
 ---@param playerIndexOrHandle? EnginePlayerHandle|integer @The index or the handle of the player; If nil, the local player is returned
 ---@return MetaEnginePlayer? @The player
----@diagnostic disable-next-line: duplicate-set-field
 function Engine.gameState.getPlayer(playerIndexOrHandle)
     local player = blam.player(get_player(playerIndexOrHandle))
     if player then
         local object = blam.object(get_object(player.objectId))
-        local position = { x = 0, y = 0, z = 0 }
+        local position = {x = 0, y = 0, z = 0}
         if object then
-            position = {
-                x = object.x,
-                y = object.y,
-                z = object.z
-            }
+            position = {x = object.x, y = object.y, z = object.z}
         end
         return {
             -- TODO Add missing player props
@@ -85,7 +63,6 @@ end
 
 local color = {info = 2, error = 4, warning = 6, debug = 3}
 
----@diagnostic disable-next-line: duplicate-set-field
 function Balltze.logger.createLogger(name)
     local mute = false
     return {
@@ -138,23 +115,24 @@ function Balltze.logger.createLogger(name)
     }
 end
 
----@diagnostic disable-next-line: duplicate-set-field
 function Engine.core.consolePrint(message)
     print(tostring(message))
     console_out(tostring(message))
 end
 
----@diagnostic disable-next-line: duplicate-set-field
 function Engine.hsc.executeScript(script)
     execute_script(script)
 end
 
----@diagnostic disable-next-line: duplicate-set-field
 function Engine.core.getTickCount()
     return tonumber(get_var(0, "$ticks"))
 end
 
----@diagnostic disable-next-line: duplicate-set-field
 function Engine.netgame.getServerType()
-    return "dedicated"
+    -- return "local"
+    return "sapp"
+end
+
+function Engine.userInterface.playSound(soundPath)
+    console_out("Should be playing sound: " .. soundPath)
 end
