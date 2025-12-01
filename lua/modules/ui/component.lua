@@ -5,11 +5,9 @@ local getTag = blam.getTag
 local uiWidgetDefinition = blam.uiWidgetDefinition
 local unicodeStringList = blam.unicodeStringList
 local isNull = blam.isNull
-
 local core = require "ui.core"
 local ether = require "ui.react"
-
----@alias uiComponentType "generic" | "list" | "button" | "checkbox" | "input" |  "spinner" | "bar"
+---@alias uiComponentType "generic" | "list" | "button" | "checkbox" | "slider" | "dropdown" | "text" | "image" | "spinner" | "progress"
 
 ---@class uiComponent
 local component = {
@@ -46,52 +44,7 @@ VirtualInputValue = {}
 ---@type MetaEngineTag
 local previousWidgetTag
 
-local function getStringFromWidget(widgetTagHandle)
-    local widget = blam.uiWidgetDefinition(widgetTagHandle)
-    assert(widget, "No widget found with tag id " .. widgetTagHandle)
-    local virtualValue = VirtualInputValue[widgetTagHandle]
-    if virtualValue then
-        return virtualValue
-    end
-    local unicodeStrings = blam.unicodeStringList(widget.unicodeStringListTag)
-    assert(unicodeStrings, "No unicodeStringList, can't get text from this widget")
-    return unicodeStrings.stringList[widget.stringListIndex + 1]
-end
-
-local function setStringToWidget(text, widgetTagHandle, mask)
-    local widgetDefinition = blam.uiWidgetDefinition(widgetTagHandle)
-    if widgetDefinition then
-        local unicodeStrings = blam.unicodeStringList(widgetDefinition.unicodeStringListTag)
-        if unicodeStrings then
-            if blam.isNull(unicodeStrings) then
-                error("No unicodeStringList, can't assign text to this widget")
-            end
-            local stringListIndex = widgetDefinition.stringListIndex
-            local newStrings = unicodeStrings.stringList
-            if mask then
-                VirtualInputValue[widgetTagHandle] = text
-                newStrings[stringListIndex + 1] = string.rep(mask, #text)
-            else
-                newStrings[stringListIndex + 1] = text
-            end
-            unicodeStrings.stringList = newStrings
-        end
-    end
-end
-
-local events = {}
-
----Create callbacks events for components and widgets
----@param unload? boolean
-function component.callbacks(unload)
-    if unload then
-        for _, event in pairs(events) do
-            event:remove()
-        end
-        events = {}
-        return
-    end
-
+function component.callbacks()
     ---@type MetaEngineTagDataUiWidgetDefinition?
     local editableWidgetTagData
     ---@type MetaEngineTag?
@@ -99,8 +52,9 @@ function component.callbacks(unload)
     ---@type MetaEngineTag?
     local lastFocusedWidgetTagEntry
 
-    events.uiWidgetAcceptEvent = balltze.event.uiWidgetAccept.subscribe(function(event)
+    balltze.event.uiWidgetAccept.subscribe(function(event)
         if event.time == "before" then
+            --logger:debug("Accepting widget: {}", event.context.widget.definitionTagHandle.value)
             local isCanceled = false
             local instance = component.widgets[event.context.widget.definitionTagHandle.value]
             if instance then
@@ -139,9 +93,9 @@ function component.callbacks(unload)
             end
         end
     end
-    events.uiWidgetFocusEvent =  balltze.event.uiWidgetFocus.subscribe(onWidgetFocus)
+    balltze.event.uiWidgetFocus.subscribe(onWidgetFocus)
 
-    events.uiWidgetMouseButtonPressEvent = balltze.event.uiWidgetMouseButtonPress.subscribe(function(event)
+    balltze.event.uiWidgetMouseButtonPress.subscribe(function(event)
         if event.time == "before" then
             local button = event.context.button:label()
             local widgetTag = engine.userInterface.findWidget(event.context.widget
@@ -150,11 +104,11 @@ function component.callbacks(unload)
             if editableWidgetTagData and editableWidgetTagEntry then
                 if widgetTag.definitionTagHandle.value == editableWidgetTagEntry.handle.value then
                     if button == "right" then
-                        engine.core.consolePrint("Button: " .. button)
-                        local inputString = getStringFromWidget(editableWidgetTagEntry.handle.value)
+                        local inputString = core.getStringFromWidget(
+                                                editableWidgetTagEntry.handle.value)
                         local text = inputString .. core.getClipboard()
-                        setStringToWidget(text, editableWidgetTagEntry.handle.value)
-                        local component = component.widgets[editableWidgetTagEntry.handle.value]
+                        core.setStringToWidget(text, editableWidgetTagEntry.handle.value)
+                        local component = component.widgets[editableWidgetTagEntry.handle.value] --[[@as uiComponentInput]]
                         if component and component.events.onInputText then
                             component.events.onInputText(text)
                         end
@@ -179,7 +133,7 @@ function component.callbacks(unload)
             component:scroll(mouse.scroll, true)
         end
     end
-    events.frameEvent = balltze.event.frame.subscribe(function(event)
+    balltze.event.frame.subscribe(function(event)
         if event.time == "before" then
             local widget = engine.userInterface.getRootWidget()
             if widget then
@@ -196,15 +150,24 @@ function component.callbacks(unload)
         end
     end)
 
-    events.uiWidgetCreateEvent = balltze.event.uiWidgetCreate.subscribe(function(event)
+    balltze.event.uiWidgetCreate.subscribe(function(event)
         if event.time == "after" then
             local tagHandle = event.context.definitionTagHandle.value
             local widget = engine.userInterface.findWidget(tagHandle)
-            if widget then
-                local widgetTag = engine.tag
-                                      .getTag(tagHandle, engine.tag.classes.uiWidgetDefinition)
+            if not widget then
+                local widgetTag = engine.tag.getTag(tagHandle, engine.tag.classes.uiWidgetDefinition)
                 assert(widgetTag, "Invalid widget tag")
-                log("Opening tag: {}", widgetTag.path)
+                --logger:debug("Creating widget: {}", widgetTag.path)
+                local componentInstance = component.widgets[tagHandle]
+                    -- TODO Add a new event for this called onCreate
+                if componentInstance and componentInstance.events.onOpen then
+                    componentInstance.events.onOpen()
+                end
+            end
+            if widget then
+                local widgetTag = engine.tag.getTag(tagHandle, engine.tag.classes.uiWidgetDefinition)
+                assert(widgetTag, "Invalid widget tag")
+                logger:debug("Opening tag: {}", widgetTag.path)
                 local componentInstance = component.widgets[tagHandle]
                 if componentInstance then
                     ether.render(tagHandle)
@@ -213,10 +176,9 @@ function component.callbacks(unload)
                     componentInstance.events.onOpen(previousWidgetTag)
                 end
                 if previousWidgetTag then
-                    local previousComponentInstance =
-                        component.widgets[previousWidgetTag.handle.value]
+                    local previousComponentInstance = component.widgets[previousWidgetTag.handle.value]
                     if previousComponentInstance and previousComponentInstance.events.onClose then
-                        -- previousComponentInstance.events.onClose()
+                        --previousComponentInstance.events.onClose()
                     end
                 end
                 if previousWidgetTag ~= widgetTag then
@@ -246,15 +208,15 @@ function component.callbacks(unload)
     end)
 
     -- We might be able to use this in the future to play custom sounds or something
-    -- balltze.event.uiWidgetSound.subscribe(function(event)
+    --balltze.event.uiWidgetSound.subscribe(function(event)
     --    if event.time == "before" then
     --        local sound = event.context.sound
     --    end
-    -- end)
+    --end)
 
-    events.uiWidgetBackEvent = balltze.event.uiWidgetBack.subscribe(function(event)
+    balltze.event.uiWidgetBack.subscribe(function(event)
         if event.time == "before" then
-            log("Closing tag: {}", event.context.widget.definitionTagHandle.value)
+            logger:debug("Closing tag: {}", event.context.widget.definitionTagHandle.value)
             local widgetTagHandleValue = event.context.widget.definitionTagHandle.value
             local component = component.widgets[widgetTagHandleValue]
             if component and component.events.onClose then
@@ -266,10 +228,9 @@ function component.callbacks(unload)
         end
     end)
 
-    events.uiWidgetListTabEvent = balltze.event.uiWidgetListTab.subscribe(function(event)
+    balltze.event.uiWidgetListTab.subscribe(function(event)
         if event.time == "before" then
             local pressedKey = event.context.tab
-            log("Pressed key: {}", pressedKey)
 
             local listWidgetTagId = event.context.widgetList.definitionTagHandle.value
             local previousFocusedWidgetId = event.context.widgetList.focusedChild
@@ -321,7 +282,7 @@ function component.callbacks(unload)
         end
     end)
 
-    events.keyboardInputEvent = balltze.event.keyboardInput.subscribe(function(event)
+    balltze.event.keyboardInput.subscribe(function(event)
         if event.time == "before" and not console_is_open() then
             local modifiers = event.context.key.modifier
             local char = event.context.key.character
@@ -340,20 +301,21 @@ function component.callbacks(unload)
                 -- If we pressed a key, update our editable widget
                 if pressedKey then
                     -- engine.core.consolePrint("Pressed key: " .. pressedKey)
-                    local inputString = getStringFromWidget(editableWidgetTagEntry.handle.value)
+                    local inputString =
+                        core.getStringFromWidget(editableWidgetTagEntry.handle.value)
                     -- engine.core.consolePrint("Input string: " .. inputString)
                     local text = core.mapKeyToText(pressedKey, inputString)
                     if text then
-                        if editableWidgetTagData.flags1.password or editableWidgetTagData.name:find "password" then
-                            setStringToWidget(text, editableWidgetTagEntry.handle.value, "*")
+                        -- TODO Use widget text flags from widget tag instead (add support for that in lua-blam)
+                        -- if editableWidgetTagData.name:find "password" then
+                        if editableWidgetTagData.name:find "password" or editableWidgetTagData.flags1.password then
+                            core.setStringToWidget(text, editableWidgetTagEntry.handle.value, "*")
                         else
-                            setStringToWidget(text, editableWidgetTagEntry.handle.value)
+                            core.setStringToWidget(text, editableWidgetTagEntry.handle.value)
                         end
-                        component = component.widgets[editableWidgetTagEntry.handle.value] --[[@as uiComponentInput?]]
-                        if component then
-                            if component:getType() == "input" and component.events.onInputText then
-                                component.events.onInputText(text)
-                            end
+                        local component = component.widgets[editableWidgetTagEntry.handle.value]
+                        if component and component.events.onInputText then
+                            component.events.onInputText(text)
                         end
                     end
                 end
@@ -372,7 +334,7 @@ function component.cleanAllEditableWidgets()
         if widgetStrings then
             local strings = widgetStrings.strings
             strings[1] = ""
-            log("Cleaned widget " .. widgetTag.path)
+            logger:debug("Cleaned widget " .. widgetTag.path)
             widgetStrings.strings = strings
         end
     end
@@ -413,7 +375,7 @@ function component.getText(self)
     end
     local unicodeStrings = blam.unicodeStringList(self.widgetDefinition.unicodeStringListTag)
     if unicodeStrings then
-        return unicodeStrings.stringList[self.widgetDefinition.stringListIndex + 1]
+        return unicodeStrings.strings[self.widgetDefinition.stringListIndex + 1]
     end
     error("No unicodeStringList found for widgetDefinition")
 end
@@ -439,14 +401,14 @@ function component.setText(self, text, mask)
         error("No unicodeStringList found for widgetDefinition " .. self.tag.path)
     end
     local stringListIndex = widgetDefinition.stringListIndex
-    local newStrings = unicodeStrings.stringList
+    local newStrings = unicodeStrings.strings
     if mask then
         VirtualInputValue[self.tagId] = text
         newStrings[stringListIndex + 1] = string.rep(mask, #text)
     else
         newStrings[stringListIndex + 1] = text
     end
-    unicodeStrings.stringList = newStrings
+    unicodeStrings.strings = newStrings
 end
 
 ---@param self uiComponent
@@ -471,6 +433,7 @@ end
 
 function component.free()
     component.widgets = {}
+    collectgarbage("collect")
 end
 
 ---@param self uiComponent
@@ -531,7 +494,6 @@ function component.findChildWidgetDefinition(self, name)
 end
 
 ---@param self uiComponent
----@return uiComponentType
 function component.getType(self)
     return self.type
 end
@@ -542,8 +504,34 @@ function component.replace(self, newWidgetTagId)
     core.replaceWidgetInDom(self.tagId, newWidgetTagId)
 end
 
+
+-- TODO Discuss with Mango so we can have this class also available in Balltze API
+---@class MetaEngineWidgetParams
+---@field definitionTagHandle? EngineTagHandle
+---@field name? string
+---@field controllerIndex? boolean
+---@field position? EnginePoint2DInt
+---@field type? EngineTagDataUIWidgetType
+---@field visible? boolean
+---@field renderRegardlessOfControllerIndex? boolean
+---@field pausesGameTime? boolean
+---@field deleted? boolean
+---@field creationProcessStartTime? integer
+---@field msToClose? integer
+---@field msToCloseFadeTime? integer
+---@field opacity? number
+---@field previousWidget? MetaEngineWidget|nil
+---@field nextWidget? MetaEngineWidget|nil
+---@field parentWidget? MetaEngineWidget|nil
+---@field childWidget? MetaEngineWidget|nil
+---@field focusedChild? MetaEngineWidget|nil
+---@field textAddress? integer @The address of the text; nil if the widget is not a text widget, be careful!
+---@field cursorIndex? integer @Index of the last child widget focused by the mouse
+---@field extendedDescriptionWidget? EngineWidget
+---@field bitmapIndex? integer
+
 ---@param self uiComponent
----@return uiWidgetValues?
+---@return MetaEngineWidget?
 function component.getWidgetValues(self)
     if core.getWidgetHandle(self.tagId) then
         return core.getWidgetValues(self.tagId)
@@ -551,7 +539,7 @@ function component.getWidgetValues(self)
 end
 
 ---@param self uiComponent
----@param values uiWidgetValues
+---@param values MetaEngineWidgetParams
 function component.setWidgetValues(self, values)
     core.setWidgetValues(self.tagId, values)
 end
