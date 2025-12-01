@@ -5510,21 +5510,29 @@ function a10.openCryotubes()
     end
 end
 
+
+local function addPlayerWeapon(weaponTagPath, playerIndex)
+    local player = Engine.gameState.getPlayer(playerIndex)
+    if player then
+        -- TODO BALLTZE MIGRATE
+        -- Migrate when Balltze properly runs on the server side
+        local weaponTag = blam.findTag(weaponTagPath, blam.tagClasses.weapon)
+        assert(weaponTag, "Could not find weapon tag: " .. tostring(weaponTagPath))
+        local weaponHandle = Engine.gameState.createObject(weaponTag.id, nil, {
+            x = player.position.x,
+            y = player.position.y,
+            z = player.position.z + 0.15
+        })
+        assign_weapon(weaponHandle.value, playerIndex)
+    end
+end
+
 function a10.addWeapons()
     for i = 0, getPlayerCount() - 1 do
         local player = Engine.gameState.getPlayer(i + 1)
         if player then
-            if Engine.netgame.getServerType() == "dedicated" then
-                -- TODO Migrate when Balltze properly runs on the server side
-                -- local pistolTag = engine.tag.findTags("weapons\\pistol\\pistol", engine.tag.classes.weapon)[1]
-                local pistolTag = blam.findTag("weapons\\pistol\\pistol", blam.tagClasses.weapon)
-                assert(pistolTag, "Could not find pistol tag")
-                local weaponHandle = Engine.gameState.createObject(pistolTag.id, nil, {
-                    x = player.position.x,
-                    y = player.position.y,
-                    z = player.position.z + 0.15
-                })
-                assign_weapon(weaponHandle.value, i + 1)
+            if Engine.netgame.getServerType() == "sapp" then
+                addPlayerWeapon("weapons\\pistol\\pistol", i + 1)
             else
                 -- TODO This might fail because probably equipment profiles can only be used once?
                 hsc.player_add_equipment(getPlayerUnit(i), "bridge0_profile", false)
