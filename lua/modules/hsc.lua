@@ -1,7 +1,10 @@
+---@class hsc
+---@diagnostic disable: duplicate-set-field
 local hsc = {}
 
 local luna = require "luna"
 local hscDoc = require "hscDoc"
+local blam2 = require "blam2"
 local blam = require "blam"
 local engine = Engine
 local hscExecuteScript = engine.hsc.executeScript
@@ -17,6 +20,22 @@ local cacheHscGlobals = {
     real = "lua_real",
     string = "lua_string",
     unit = "lua_unit"
+}
+
+---@enum ai_default_state
+hsc.aiDefaultState = {
+    none = 0,
+    sleeping = 1,
+    alert = 2,
+    repeatSamePosition = 3,
+    loop = 4,
+    loopBackAndForth = 5,
+    loopRandomly = 6,
+    randomly = 7,
+    guarding = 8,
+    guardingAtGuardPosition = 9,
+    searching = 10,
+    fleeing = 11
 }
 
 local function getScriptArgs(args)
@@ -56,9 +75,14 @@ local function getVariable(varName)
     return result
 end
 
--- Reimplement HSC functions with Lua
+local function native(name, ...)
+    return getmetatable(hsc).__index(hsc, name)(...)
+end
 
-function hsc.begin(functions)
+---Reimplement HSC functions with LuaBlam
+---@param ... function | function[]
+---@return any
+function hsc.begin(...)
     for i, func in ipairs(functions) do
         if type(func) == "function" then
             -- Return last evaluated function
@@ -89,7 +113,10 @@ function hsc.begin_random(functions)
     return result
 end
 
+---@param ... function | function[]
+---@return boolean
 function hsc.cond(...)
+    ---@type any
     local functions = {...}
     if type(functions[1]) == "table" then
         -- If the first argument is a table, treat it as a list of functions
@@ -115,6 +142,8 @@ function hsc.cond(...)
 end
 
 local difficulties = {"easy", "normal", "hard", "impossible"}
+---Get the current game difficulty
+---@return "easy" | "normal" | "hard" | "impossible"
 function hsc.game_difficulty_get()
     return difficulties[blam.getGameDifficultyIndex() + 1]
 end
@@ -149,9 +178,9 @@ end
 function hsc.game_revert()
     -- Execute depending of server type
     if engine.netgame.getServerType() == "sapp" then
-        execute_script("sv_map_next")
+        hscExecuteScript("sv_map_next")
     elseif engine.netgame.getServerType() == "local" then
-        getmetatable(hsc).__index(hsc, "game_revert")()
+        native("game_revert")()
     end
 
 end
@@ -159,9 +188,9 @@ end
 function hsc.game_won()
     -- Execute depending of server type
     if engine.netgame.getServerType() == "sapp" then
-        execute_script("sv_map_next")
+        hscExecuteScript("sv_map_next")
     elseif engine.netgame.getServerType() == "local" then
-        getmetatable(hsc).__index(hsc, "game_won")()
+        native("game_won")()
     end
 end
 
@@ -302,21 +331,6 @@ function hsc.debug_camera_load_text(text)
     error("debug_camera_load_text not implemented")
 end
 
---[[
- │   ├──label (P-driver)                                                  string
- │   ├──label (P-riderLF)                                                 string
- │   ├──label (P-riderLM)                                                 string
- │   ├──label (P-riderLB)                                                 string
- │   ├──label (P-riderRF)                                                 string
- │   ├──label (P-riderRM)                                                 string
- │   ├──label (P-riderRB)                                                 string
- │   ├──label (cargo)                                                     string
- │   ├──label (P-riderRB01)                                               string
- │   ├──label (P-riderRB02)                                               string
- │   ├──label (P-riderLB02)                                               string
-     ├──label (P-riderLB01)   
-]]
-
 local tempSeatsIndexes = {
     ["P-driver"] = 0,
     ["P-riderLF"] = 1,
@@ -352,21 +366,6 @@ function hsc.unit_enter_vehicle(...)
                          playerIndex)
             local objectName = params[2]
             local targetSeatName = params[3]
-            -- local seatIndex = tointeger(params[3])
-            -- TODO Migrate this later to actually sync entering vehicles by index using a packet
-            -- Or try to get the seat index from the vehicle tag later with lua-blam
-            -- AAAAAnd not forget to upgrade this to Balltze later on if we decide to look for seat
-            -- indexes in the vehicle tag
-            -- BALLTZE MIGRATE
-            local seatIndex = table.find(tempSeatsIndexes, function(_, seatName)
-                return seatName:lower() == targetSeatName:lower()
-            end)
-            if not seatIndex then
-                logger:error(
-                    "Seat name '{}' not found in tempSeatsIndexes, using default seat index 0",
-                    targetSeatName)
-                seatIndex = 0
-            end
 
             -- Attempt to find the vehicle object id by name
             local scenario = blam.scenario(0)
@@ -377,8 +376,20 @@ function hsc.unit_enter_vehicle(...)
                     if not blam.isNull(object.nameIndex) then
                         local objectScenarioName = scenario.objectNames[object.nameIndex + 1]
                         if objectScenarioName == objectName then
-                            logger:debug("Player {} will enter vehicle {} on seat {}", playerIndex,
-                                         objectId, seatIndex)
+                            logger:warning("Found vehicle object id {} for name {}", objectId,
+                                         objectName)
+                            local seatIndex = 0
+                            local vehicleTag = blam2.getTagEntry(object.tagId, blam2.tag.groups.vehicle)
+                            assert(vehicleTag, "Vehicle tag not found for object id " .. tostring(objectId))
+                            local vehicle  = vehicleTag.data --[[@as MetaEngineTagDataVehicle]]
+                            for i = 1, vehicle.base.seats.count do
+                                local seat = vehicle.base.seats.elements[i]
+                                if seat.label.string:lower() == targetSeatName:lower() then
+                                    seatIndex = i - 1 -- Convert to 0-based index
+                                    break
+                                end
+                            end
+                            logger:debug("Player {} will enter vehicle {} on seat {}", playerIndex, objectId, seatIndex)
                             enter_vehicle(objectId, playerIndex, seatIndex)
                             return
                         end
@@ -388,8 +399,8 @@ function hsc.unit_enter_vehicle(...)
         end
     end
 
-    -- Invoke the original HSC function using metatable
-    return getmetatable(hsc).__index(hsc, "unit_enter_vehicle")(...)
+    -- Invoke the original HSC function
+    return native("unit_enter_vehicle", ...)
 end
 
 -- Bind existing in game HSC functions to Lua
@@ -431,7 +442,6 @@ setmetatable(hsc, {
                     local args = getScriptArgs({...})
                     local functionInvokation = getFunctionInvokation(hscFunction, args)
                     -- logger:debug("Executing: {}", functionInvokation)
-                    -- print("Executing: ", functionInvokation)
                     executeScript(functionInvokation, hscFunction.funcName, args)
                 end
             end

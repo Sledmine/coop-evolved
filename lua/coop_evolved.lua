@@ -138,6 +138,7 @@ function PluginLoad()
                 -- But preventing running the actual logic of the level script...
                 -- Allowing the server to just handle networking and player management
                 if serverType == "dedicated" then
+                    logger:warning("Dedicated server detected, disabling startup and continuous scripts")
                     ---@diagnostic disable-next-line: duplicate-set-field
                     script.startup = function()
                     end
@@ -148,6 +149,7 @@ function PluginLoad()
 
                 if serverType ~= "sapp" then
                     local mapName = engine.map.getCurrentMapHeader().name
+                    logger:info("Current map name: \"{}\"", mapName)
                     local levelName = mapName:split("_coop")[1]
                     logger:info("Loading level script for \"{}\"", levelName)
                     local ok, result = pcall(require, "levels." .. levelName)

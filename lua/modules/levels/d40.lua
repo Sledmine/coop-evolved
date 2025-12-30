@@ -5613,5 +5613,6 @@ function d40.main_d40(call, sleep)
     hsc.object_create_containing("asspain")
     hsc.object_create_containing("trench_jeep")
 end
+script.startup(d40.main_d40)
 
 return d40

@@ -142,12 +142,13 @@ function a10.player_count(call, sleep)
 end
 
 function a10.cinematic_skip_start(call, sleep)
-    hsc.cinematic_skip_start_internal()
-    hsc.game_save_totally_unsafe()
-    sleep(function()
-        return not (hsc.game_saving())
-    end, 1)
-    return not (hsc.game_reverted())
+    --hsc.cinematic_skip_start_internal()
+    --hsc.game_save_totally_unsafe()
+    --sleep(function()
+    --    return not (hsc.game_saving())
+    --end, 1)
+    --return not (hsc.game_reverted())
+    return true
 end
 
 function a10.cinematic_skip_stop(call, sleep)
@@ -5381,19 +5382,19 @@ function a10.mission_a10(call, sleep)
     hsc.ai_allegiance("player", "human")
     hsc.ai_grenades(false)
     hsc.ai_dialogue_triggers(false)
-    if call(a10.cinematic_skip_start) then
-        call(a10.x10)
-    end
+    --if call(a10.cinematic_skip_start) then
+    --    call(a10.x10)
+    --end
     call(a10.cinematic_skip_stop)
     hsc.fade_out(1, 1, 1, 0)
     wake(a10.x10_post)
     hsc.object_set_facing(call(a10.player0), "facing_flag_1")
     hsc.object_set_facing(call(a10.player1), "facing_flag_1")
-    if hsc.game_is_cooperative() or not (normal == hsc.game_difficulty_get()) then
+    --if hsc.game_is_cooperative() or not (normal == hsc.game_difficulty_get()) then
         wake(a10.fast_setup)
-    else
-        wake(a10.tutorial_setup)
-    end
+    --else
+        --wake(a10.tutorial_setup)
+    --end
     wake(a10.mission_bsp)
     wake(a10.music_a10)
     wake(a10.linkage)

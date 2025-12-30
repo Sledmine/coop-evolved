@@ -46,13 +46,15 @@ function coop.getAvailableBipeds()
     local bipedsList = {}
     for index, tag in pairs(bipedTags) do
         local tagPath = tag.path
-        local tagSplit = tagPath:split "\\"
-        local bipedName = tagSplit[#tagSplit]:gsub("_mp", ""):gsub("_", " "):upper()
-        -- bipedsList[index] = {name = bipedName, id = tag.handle.value}
-        bipedsList[index] = {name = bipedName, id = tag.id}
-        table.sort(bipedsList, function(a, b)
-            return a.name < b.name
-        end)
+        if tagPath:endswith("_mp") then
+            local tagSplit = tagPath:split "\\"
+            local bipedName = tagSplit[#tagSplit]:gsub("_mp", ""):gsub("_", " "):upper()
+            -- bipedsList[index] = {name = bipedName, id = tag.handle.value}
+            bipedsList[index] = {name = bipedName, id = tag.id}
+            table.sort(bipedsList, function(a, b)
+                return a.name < b.name
+            end)
+        end
     end
     return bipedsList
 end
@@ -128,8 +130,8 @@ function coop.findNewSpawn(exceptionPlayerIndex)
         end
         if playerUsedForSpawn then
             tellFunction("Using " .. playerUsedForSpawn .. " as respawn point..")
-        --else
-        --    tellFunction("No respawn candidate was found!")
+            -- else
+            --    tellFunction("No respawn candidate was found!")
         end
     end
     return true

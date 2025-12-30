@@ -677,21 +677,21 @@ hscDoc.functions = { {
   funcName = "recording_play_and_delete",
   hash = "3B446",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "boolean"
 }, {
   args = { "vehicle", "cutscene_recording" },
   funcName = "recording_play_and_hover",
   hash = "E29B8",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "boolean"
 }, {
   args = { "unit" },
   funcName = "recording_kill",
   hash = "09318",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "unit" },
@@ -796,7 +796,7 @@ hscDoc.functions = { {
   funcName = "object_pvs_activate",
   hash = "3E9A1",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "object" },
@@ -824,7 +824,7 @@ hscDoc.functions = { {
   funcName = "render_lights",
   hash = "33B0C",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "boolean"
 }, {
   args = { "scenery" },
@@ -3134,21 +3134,21 @@ hscDoc.functions = { {
   funcName = "cinematic_screen_effect_set_video",
   hash = "D6842",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = {},
   funcName = "cinematic_screen_effect_stop",
   hash = "F4DE3",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "real" },
   funcName = "cinematic_set_near_clip_distance",
   hash = "D2AE5",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },

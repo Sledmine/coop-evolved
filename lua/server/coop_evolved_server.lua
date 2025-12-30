@@ -1,6 +1,8 @@
 api_version = "1.12.0.0"
 DebugMode = false
 
+require "luna"
+
 -- Bring compatibility with Lua 5.3
 require "compat53"
 print("Compatibility with Lua 5.3 has been loaded!")
@@ -12,9 +14,11 @@ console_out = cprint
 
 -- Bring compatibility with Balltze
 require "balltzeCompat"
+-- Pre require structures for blam2
+-- This helps the bundler to include modules properly
+require "structures.vehicle"
 
 local isNull = blam.isNull
-require "luna"
 local inspect = require "inspect"
 
 local coop = require "coop.coop"
@@ -215,8 +219,8 @@ local function createHscPacket(functionName, args)
         end
         return argValue
     end)
-    -- TODO Check if we might need to do something with object_destroy too
-    if funcMeta.funcName:startswith("object_create") then
+    local name = funcMeta.funcName
+    if (name:startswith("object_create") or name:startswith("object_destroy")) and not name:endswith("containing") then
         local objectNameIndex = tointeger(tostring(args[1]))
         if not objectNameIndex then
             logger:error("Failed to convert object name index to integer!")
@@ -266,7 +270,7 @@ hsc.addMiddleWare(function(functionName, args)
     if funcMeta.isSynchronizable then
         local hscPacket = createHscPacket(functionName, args)
         if hscPacket then
-            logger:debug("HSC Packet: {}", hscPacket)
+            --logger:debug("HSC Packet: {}", hscPacket)
             Broadcast(hscPacket)
         end
     end
@@ -292,8 +296,9 @@ end
 
 ---Starts the coop game
 function StartCoop()
-
     CoopStarted = true
+    -- Restore camera control to players (helps to avoid camera issues when a cinematic is playing)
+    hsc.camera_control(false)
     local levelName = map:split("_coop")[1]
     local ok, result = pcall(require, "levels." .. levelName)
     if not ok then
@@ -472,7 +477,7 @@ function OnScriptLoad()
     register_callback(cb["EVENT_LEAVE"], "OnPlayerLeave")
     register_callback(cb["EVENT_DIE"], "OnPlayerDead")
     register_callback(cb["EVENT_OBJECT_SPAWN"], "OnObjectSpawn")
-    register_callback(cb["EVENT_SPAWN"], "OnPlayerSpawn")
+    --register_callback(cb["EVENT_SPAWN"], "OnPlayerSpawn")
     register_callback(cb["EVENT_GAME_END"], "OnGameEnd")
     register_callback(cb["EVENT_TICK"], "OnTick")
 
