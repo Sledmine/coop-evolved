@@ -53,17 +53,18 @@ end
 local function executeScript(script, functionName, args, metadata)
     hscExecuteScript(script)
     for _, middleware in ipairs(middlewares) do
+        -- Trigger middleware
+        -- Optionally allow middleware to modify the script if needed
         script = middleware(functionName, args or {}) or script
     end
 end
 
-local function getFunctionInvokation(hscFunction, args)
+local function getFunctionInvocation(hscFunction, args)
     return hscFunction.funcName .. " " .. table.concat(args, " ")
 end
 
-local function setVariable(varName, varValue)
-    local varSet = "begin (set " .. varName .. " (" .. varValue .. "))"
-    hscExecuteScript(varSet)
+local function getSetVariableInvocation(varName, varValue)
+    return "begin (set " .. varName .. " (" .. varValue .. "))"
 end
 
 local function getVariable(varName)
@@ -187,9 +188,9 @@ end
 
 function hsc.game_won()
     -- Execute depending of server type
-    if engine.netgame.getServerType() == "sapp" then
+    if engine.netgame.getServerType() == "sapp" or engine.netgame.getServerType() == "local" then
         hscExecuteScript("sv_map_next")
-    elseif engine.netgame.getServerType() == "local" then
+    elseif engine.netgame.getServerType() == "none" then
         native("game_won")()
     end
 end
@@ -331,21 +332,6 @@ function hsc.debug_camera_load_text(text)
     error("debug_camera_load_text not implemented")
 end
 
-local tempSeatsIndexes = {
-    ["P-driver"] = 0,
-    ["P-riderLF"] = 1,
-    ["P-riderLM"] = 2,
-    ["P-riderLB"] = 3,
-    ["P-riderRF"] = 4,
-    ["P-riderRM"] = 5,
-    ["P-riderRB"] = 6,
-    ["cargo"] = 7,
-    ["P-riderRB01"] = 8,
-    ["P-riderRB02"] = 9,
-    ["P-riderLB02"] = 10,
-    ["P-riderLB01"] = 11
-}
-
 function hsc.unit_enter_vehicle(...)
     local params = {...}
     if engine.netgame.getServerType() == "sapp" then
@@ -377,11 +363,13 @@ function hsc.unit_enter_vehicle(...)
                         local objectScenarioName = scenario.objectNames[object.nameIndex + 1]
                         if objectScenarioName == objectName then
                             logger:warning("Found vehicle object id {} for name {}", objectId,
-                                         objectName)
+                                           objectName)
                             local seatIndex = 0
-                            local vehicleTag = blam2.getTagEntry(object.tagId, blam2.tag.groups.vehicle)
-                            assert(vehicleTag, "Vehicle tag not found for object id " .. tostring(objectId))
-                            local vehicle  = vehicleTag.data --[[@as MetaEngineTagDataVehicle]]
+                            local vehicleTag = blam2.getTagEntry(object.tagId,
+                                                                 blam2.tag.groups.vehicle)
+                            assert(vehicleTag,
+                                   "Vehicle tag not found for object id " .. tostring(objectId))
+                            local vehicle = vehicleTag.data --[[@as MetaEngineTagDataVehicle]]
                             for i = 1, vehicle.base.seats.count do
                                 local seat = vehicle.base.seats.elements[i]
                                 if seat.label.string:lower() == targetSeatName:lower() then
@@ -389,7 +377,8 @@ function hsc.unit_enter_vehicle(...)
                                     break
                                 end
                             end
-                            logger:debug("Player {} will enter vehicle {} on seat {}", playerIndex, objectId, seatIndex)
+                            logger:debug("Player {} will enter vehicle {} on seat {}", playerIndex,
+                                         objectId, seatIndex)
                             enter_vehicle(objectId, playerIndex, seatIndex)
                             return
                         end
@@ -422,8 +411,10 @@ setmetatable(hsc, {
                 returnType == "real" then
                 return function(...)
                     local args = getScriptArgs({...})
-                    local functionInvokation = getFunctionInvokation(hscFunction, args)
-                    setVariable(cacheHscGlobals[returnType], functionInvokation)
+                    local functionInvocation = getFunctionInvocation(hscFunction, args)
+                    local variableAssignment = getSetVariableInvocation(cacheHscGlobals[returnType],
+                                                                        functionInvocation)
+                    executeScript(variableAssignment, hscFunction.funcName, args)
                     local result = getVariable(cacheHscGlobals[returnType])
                     if returnType == "boolean" then
                         result = luna.bool(result)
@@ -434,13 +425,13 @@ setmetatable(hsc, {
             elseif returnType ~= "void" then
                 return function(...)
                     local args = getScriptArgs({...})
-                    local functionInvokation = getFunctionInvokation(hscFunction, args)
-                    return "(" .. functionInvokation .. ")"
+                    local functionInvocation = getFunctionInvocation(hscFunction, args)
+                    return "(" .. functionInvocation .. ")"
                 end
             else
                 return function(...)
                     local args = getScriptArgs({...})
-                    local functionInvokation = getFunctionInvokation(hscFunction, args)
+                    local functionInvokation = getFunctionInvocation(hscFunction, args)
                     -- logger:debug("Executing: {}", functionInvokation)
                     executeScript(functionInvokation, hscFunction.funcName, args)
                 end
@@ -465,6 +456,4 @@ function hsc.addMiddleWare(mid)
     end
 end
 
--- TODO Add exception fror object_create_anew_containing, strng arg is not an object name is a pattern!
- 
 return hsc

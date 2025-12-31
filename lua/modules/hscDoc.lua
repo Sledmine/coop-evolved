@@ -726,14 +726,14 @@ hscDoc.functions = { {
   funcName = "object_set_collideable",
   hash = "8E27A",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "object", "real", "short" },
   funcName = "object_set_scale",
   hash = "111AB",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "object", "string", "object", "string" },
@@ -2651,7 +2651,7 @@ hscDoc.functions = { {
   funcName = "players_unzoom_all",
   hash = "E6051",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
@@ -2665,7 +2665,7 @@ hscDoc.functions = { {
   funcName = "player_camera_control",
   hash = "C8BE4",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "boolean"
 }, {
   args = {},
@@ -2882,91 +2882,91 @@ hscDoc.functions = { {
   funcName = "player_effect_set_max_translation",
   hash = "DE9E4",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "real", "real", "real" },
   funcName = "player_effect_set_max_rotation",
   hash = "58251",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "real", "real" },
   funcName = "player_effect_set_max_vibrate",
   hash = "E504C",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "real", "real" },
   funcName = "player_effect_set_max_rumble",
   hash = "E4FC8",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "real", "real" },
   funcName = "player_effect_start",
   hash = "44BDC",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "real" },
   funcName = "player_effect_stop",
   hash = "2DD5C",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
   funcName = "hud_show_health",
   hash = "929CA",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
   funcName = "hud_blink_health",
   hash = "97DF7",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
   funcName = "hud_show_shield",
   hash = "1B675",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
   funcName = "hud_blink_shield",
   hash = "F586D",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
   funcName = "hud_show_motion_sensor",
   hash = "DBF59",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
   funcName = "hud_blink_motion_sensor",
   hash = "DE830",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
   funcName = "hud_show_crosshair",
   hash = "1729C",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = {},
