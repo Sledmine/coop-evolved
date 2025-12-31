@@ -170,6 +170,7 @@ function script.thread(func, metadata)
         end
         local args = {...}
 
+        -- Sleep another thread
         if type(args[1]) == "number" and type(args[2]) == "function" then
             local ticks = args[1]
             local scriptFunc = args[2]
@@ -181,10 +182,13 @@ function script.thread(func, metadata)
                 callScriptThread.parent = scriptThread
                 scriptThread.child = callScriptThread
                 callScriptThread.isSleep = true
-                return
+            else
+                --logger:warning("Tried to sleep a script that does not exist.")
             end
+            return
         end
 
+        -- Sleep current thread
         local _, callScriptThread = script.thread(function()
             if type(args[1]) == "number" then
                 local ticks = args[1]
