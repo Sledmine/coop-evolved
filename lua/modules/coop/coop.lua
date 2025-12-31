@@ -119,7 +119,9 @@ function coop.findNewSpawn(exceptionPlayerIndex)
             if playerIndex ~= exceptionPlayerIndex then
                 local playerBiped = blam.biped(get_dynamic_player(playerIndex))
                 local player = blam.player(get_player(playerIndex))
-                if player and playerBiped and hsc.game_safe_to_save() then
+                -- TODO Research more on how exactly conditions for "safe to save" work
+                -- if player and playerBiped and hsc.game_safe_to_save() then
+                if player and playerBiped then
                     if coop.isRespawnCandidate(playerBiped) then
                         playerUsedForSpawn = coop.updateSpawn(playerBiped, playerIndex)
                         playerUsedForSpawn = player.name

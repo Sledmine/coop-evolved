@@ -194,8 +194,7 @@ local function createHscPacket(functionName, args)
     local funcMeta = table.find(hscDoc.functions, function(v, k)
         return v.funcName == functionName
     end)
-    logger:debug("Creating HSC packet for function: {} with args: {}", functionName,
-                 inspect(args))
+    logger:debug("Creating HSC packet for function: \"{}\" with args: {}", functionName, inspect(args))
     if not funcMeta then
         error("Function " .. functionName .. " not found in hscDoc")
     end
@@ -204,7 +203,7 @@ local function createHscPacket(functionName, args)
         if argType == "object" then
             local objectIndex = getObjectIndexByName(argValue)
             if objectIndex then
-                logger:debug("Value {} is an object, converting to object index!", argValue)
+                --logger:debug("Value {} is an object, converting to object index!", argValue)
                 return objectIndex
             end
         elseif argType == "tag" then
@@ -212,7 +211,7 @@ local function createHscPacket(functionName, args)
             if not argIsSubExpression then
                 local tagEntry = blam.getTag(argValue, tagType)
                 if tagEntry then
-                    logger:debug("Value {} is a tag, converting to tag handle!", argValue)
+                    --logger:debug("Value {} is a tag, converting to tag handle!", argValue)
                     return tagEntry.id
                 end
             end
@@ -220,13 +219,16 @@ local function createHscPacket(functionName, args)
         return argValue
     end)
     local name = funcMeta.funcName
-    if (name:startswith("object_create") or name:startswith("object_destroy")) and not name:endswith("containing") then
+    if (name:startswith("object_create") or name:startswith("object_destroy")) and
+        not name:endswith("containing") then
         local objectNameIndex = tointeger(tostring(args[1]))
         if not objectNameIndex then
+            -- This usually happens when the argument is a sub-expression like (object_get_first ...)
+            -- We can change this later when Lua is able to resolve expression results to actual values
             logger:error("Failed to convert object name index to integer!")
             return
         end
-        logger:debug("Object name index: {}", objectNameIndex)
+        --logger:debug("Object name index: {}", objectNameIndex)
         local scenario = blam.scenario(0)
         assert(scenario, "Failed to load scenario tag")
 
@@ -234,10 +236,10 @@ local function createHscPacket(functionName, args)
             local object = blam.getObject(objectId)
             if object and object.nameIndex == objectNameIndex - 1 then
                 if object.class == objectClasses.biped then
-                    logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
+                    --logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
                     return
                 elseif object.class == objectClasses.vehicle then
-                    logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
+                    --logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
                     return
                 end
             end
@@ -270,7 +272,7 @@ hsc.addMiddleWare(function(functionName, args)
     if funcMeta.isSynchronizable then
         local hscPacket = createHscPacket(functionName, args)
         if hscPacket then
-            --logger:debug("HSC Packet: {}", hscPacket)
+            -- logger:debug("HSC Packet: {}", hscPacket)
             Broadcast(hscPacket)
         end
     end
@@ -449,11 +451,14 @@ function OnMapLoad()
         forcedBipedTeams[tag.id] = blam.unitTeamClasses.covenant
     end
     AvailableBipeds = coop.getAvailableBipeds()
+    -- TODO Remove this, just for testing purposes!
+    --StartCoop()
 
 end
 
 function OnScriptLoad()
     map = get_var(0, "$map")
+    logger:muteDebug(not DebugMode)
 
     AvailableBipeds = coop.getAvailableBipeds()
 
@@ -477,7 +482,7 @@ function OnScriptLoad()
     register_callback(cb["EVENT_LEAVE"], "OnPlayerLeave")
     register_callback(cb["EVENT_DIE"], "OnPlayerDead")
     register_callback(cb["EVENT_OBJECT_SPAWN"], "OnObjectSpawn")
-    --register_callback(cb["EVENT_SPAWN"], "OnPlayerSpawn")
+    -- register_callback(cb["EVENT_SPAWN"], "OnPlayerSpawn")
     register_callback(cb["EVENT_GAME_END"], "OnGameEnd")
     register_callback(cb["EVENT_TICK"], "OnTick")
 

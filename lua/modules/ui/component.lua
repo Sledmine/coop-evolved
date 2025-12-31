@@ -167,7 +167,6 @@ function component.callbacks()
             if widget then
                 local widgetTag = engine.tag.getTag(tagHandle, engine.tag.classes.uiWidgetDefinition)
                 assert(widgetTag, "Invalid widget tag")
-                logger:debug("Opening tag: {}", widgetTag.path)
                 local componentInstance = component.widgets[tagHandle]
                 if componentInstance then
                     ether.render(tagHandle)

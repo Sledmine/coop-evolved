@@ -148,7 +148,7 @@ function a10.cinematic_skip_start(call, sleep)
     --    return not (hsc.game_saving())
     --end, 1)
     --return not (hsc.game_reverted())
-    return true
+    return false
 end
 
 function a10.cinematic_skip_stop(call, sleep)
@@ -5382,14 +5382,15 @@ function a10.mission_a10(call, sleep)
     hsc.ai_allegiance("player", "human")
     hsc.ai_grenades(false)
     hsc.ai_dialogue_triggers(false)
-    --if call(a10.cinematic_skip_start) then
-    --    call(a10.x10)
-    --end
+    if call(a10.cinematic_skip_start) then
+        call(a10.x10)
+    end
     call(a10.cinematic_skip_stop)
     hsc.fade_out(1, 1, 1, 0)
     wake(a10.x10_post)
     hsc.object_set_facing(call(a10.player0), "facing_flag_1")
     hsc.object_set_facing(call(a10.player1), "facing_flag_1")
+    -- Always pass trough fast setup due to player0 specific actions not working in multiplayer
     --if hsc.game_is_cooperative() or not (normal == hsc.game_difficulty_get()) then
         wake(a10.fast_setup)
     --else
