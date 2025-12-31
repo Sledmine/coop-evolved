@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "2.0.0-dev", debug = true}
+local blam = {_VERSION = "2.0.0-dev", debug = false}
 
 local printdebug = function(...)
     if blam.debug then
