@@ -2,16 +2,17 @@ version: 1
 tag_space: 64M
 extend_limits: true
 scenarios:
-  - levels/a10/a10_coop_evolved_dev
-  - levels/a30/a30_coop_evolved_dev
-  - levels/a50/a50_coop_evolved_dev
-  - levels/b30/b30_coop_evolved_dev
-  - levels/b40/b40_coop_evolved_dev
-  - levels/c10/c10_coop_evolved_dev
-  - levels/c20/c20_coop_evolved_dev
-  - levels/c40/c40_coop_evolved_dev
-  - levels/d20/d20_coop_evolved_dev
-  - levels/d40/d40_coop_evolved_dev
+  - coop_evolved/levels/a10/a10_coop_evolved_dev
+  - coop_evolved/levels/a30/a30_coop_evolved_dev
+  - coop_evolved/levels/a30/a30_coop_evolved_dev
+  - coop_evolved/levels/a50/a50_coop_evolved_dev
+  - coop_evolved/levels/b30/b30_coop_evolved_dev
+  - coop_evolved/levels/b40/b40_coop_evolved_dev
+  - coop_evolved/levels/c10/c10_coop_evolved_dev
+  - coop_evolved/levels/c20/c20_coop_evolved_dev
+  - coop_evolved/levels/c40/c40_coop_evolved_dev
+  - coop_evolved/levels/d20/d20_coop_evolved_dev
+  - coop_evolved/levels/d40/d40_coop_evolved_dev
 commands:
   package:
     - rm -f dist/coop_evolved.lua
