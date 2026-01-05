@@ -934,43 +934,26 @@ function c20.fall_killerz(call, sleep)
                           hsc.list_get(hsc.players(), 0))
     end
     if coop then
-        hsc.begin({
-            function()
-                if hsc.volume_test_object("fall_killer1", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object(
-                        "effects\\damage effects\\guaranteed plummet to untimely death",
-                        hsc.list_get(hsc.players(), 1))
-                end
-            end,
-            function()
-                if hsc.volume_test_object("fall_killer2", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object(
-                        "effects\\damage effects\\guaranteed plummet to untimely death",
-                        hsc.list_get(hsc.players(), 1))
-                end
-            end,
-            function()
-                if hsc.volume_test_object("fall_killer3", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object(
-                        "effects\\damage effects\\guaranteed plummet to untimely death",
-                        hsc.list_get(hsc.players(), 1))
-                end
-            end,
-            function()
-                if hsc.volume_test_object("fall_killer4", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object(
-                        "effects\\damage effects\\guaranteed plummet to untimely death",
-                        hsc.list_get(hsc.players(), 1))
-                end
-            end,
-            function()
-                if hsc.volume_test_object("fall_killer5", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object(
-                        "effects\\damage effects\\guaranteed plummet to untimely death",
-                        hsc.list_get(hsc.players(), 1))
-                end
-            end
-        })
+        if hsc.volume_test_object("fall_killer1", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\guaranteed plummet to untimely death",
+                              hsc.list_get(hsc.players(), 1))
+        end
+        if hsc.volume_test_object("fall_killer2", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\guaranteed plummet to untimely death",
+                              hsc.list_get(hsc.players(), 1))
+        end
+        if hsc.volume_test_object("fall_killer3", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\guaranteed plummet to untimely death",
+                              hsc.list_get(hsc.players(), 1))
+        end
+        if hsc.volume_test_object("fall_killer4", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\guaranteed plummet to untimely death",
+                              hsc.list_get(hsc.players(), 1))
+        end
+        if hsc.volume_test_object("fall_killer5", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\guaranteed plummet to untimely death",
+                              hsc.list_get(hsc.players(), 1))
+        end
     end
     sleep(5)
 end
@@ -985,16 +968,10 @@ function c20.platforms(call, sleep)
         hsc.volume_test_objects("plat1_vol4", hsc.players()) then
         hsc.device_set_position("platform1", 1)
     else
-        hsc.begin({
-            function()
-                if hsc.device_get_position("platform1") > 0.9 then
-                    sleep(90)
-                end
-            end,
-            function()
-                return hsc.device_set_position("platform1", 0)
-            end
-        })
+        if hsc.device_get_position("platform1") > 0.9 then
+            sleep(90)
+        end
+        hsc.device_set_position("platform1", 0)
     end
     if hsc.volume_test_objects("tv_platform2_top", hsc.players()) or
         hsc.volume_test_objects("tv_platform2", hsc.players()) and
@@ -1004,16 +981,10 @@ function c20.platforms(call, sleep)
         hsc.volume_test_objects("plat2_vol4", hsc.players()) then
         hsc.device_set_position("platform2", 1)
     else
-        hsc.begin({
-            function()
-                if hsc.device_get_position("platform2") > 0.9 then
-                    sleep(90)
-                end
-            end,
-            function()
-                return hsc.device_set_position("platform2", 0)
-            end
-        })
+        if hsc.device_get_position("platform2") > 0.9 then
+            sleep(90)
+        end
+        hsc.device_set_position("platform2", 0)
     end
     if hsc.volume_test_objects("tv_platform3_top", hsc.players()) or
         hsc.volume_test_objects("tv_platform3", hsc.players()) and
@@ -1023,16 +994,10 @@ function c20.platforms(call, sleep)
         hsc.volume_test_objects("plat3_vol4", hsc.players()) then
         hsc.device_set_position("platform3", 1)
     else
-        hsc.begin({
-            function()
-                if hsc.device_get_position("platform3") > 0.9 then
-                    sleep(90)
-                end
-            end,
-            function()
-                return hsc.device_set_position("platform3", 0)
-            end
-        })
+        if hsc.device_get_position("platform3") > 0.9 then
+            sleep(90)
+        end
+        hsc.device_set_position("platform3", 0)
     end
     sleep(30)
 end
@@ -1077,46 +1042,22 @@ function c20.enc7_12_spawner(call, sleep)
 
     end)
     if hsc.volume_test_objects_all("enc7_12a", hsc.players()) then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc7_12/squadc")
-            end,
-            function()
-                return hsc.ai_spawn_actor("enc7_12/squadd")
-            end,
-            function()
-                enc7_12_limiter = enc7_12_limiter + 2
+        hsc.ai_spawn_actor("enc7_12/squadc")
+        hsc.ai_spawn_actor("enc7_12/squadd")
+        enc7_12_limiter = enc7_12_limiter + 2
 
-            end
-        })
     end
     if hsc.volume_test_objects_all("enc7_12b", hsc.players()) then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc7_12/squada")
-            end,
-            function()
-                return hsc.ai_spawn_actor("enc7_12/squadd")
-            end,
-            function()
-                enc7_12_limiter = enc7_12_limiter + 2
+        hsc.ai_spawn_actor("enc7_12/squada")
+        hsc.ai_spawn_actor("enc7_12/squadd")
+        enc7_12_limiter = enc7_12_limiter + 2
 
-            end
-        })
     end
     if hsc.volume_test_objects_all("enc7_12c", hsc.players()) then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc7_12/squada")
-            end,
-            function()
-                return hsc.ai_spawn_actor("enc7_12/squadb")
-            end,
-            function()
-                enc7_12_limiter = enc7_12_limiter + 2
+        hsc.ai_spawn_actor("enc7_12/squada")
+        hsc.ai_spawn_actor("enc7_12/squadb")
+        enc7_12_limiter = enc7_12_limiter + 2
 
-            end
-        })
     end
 end
 script.continuous(c20.enc7_12_spawner)
@@ -1124,34 +1065,16 @@ script.continuous(c20.enc7_12_spawner)
 function c20.enc7_5_spawner(call, sleep)
     if hsc.volume_test_objects("enc7_5_trigger", hsc.players()) and enc7_5_limiter < 30 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc7_5/combats") < 1.5 * min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc7_5/combats")
-                        end,
-                        function()
-                            enc7_5_limiter = enc7_5_limiter + 1
+        if hsc.ai_living_count("enc7_5/combats") < 1.5 * min_combat_spawn then
+            hsc.ai_spawn_actor("enc7_5/combats")
+            enc7_5_limiter = enc7_5_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc7_5/carriers") < 1.5 * min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc7_5/carriers")
-                        end,
-                        function()
-                            enc7_5_limiter = enc7_5_limiter + 1
+        end
+        if hsc.ai_living_count("enc7_5/carriers") < 1.5 * min_carrier_spawn then
+            hsc.ai_spawn_actor("enc7_5/carriers")
+            enc7_5_limiter = enc7_5_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
 end
 script.continuous(c20.enc7_5_spawner)
@@ -1160,15 +1083,9 @@ function c20.enc7_3_spawner(call, sleep)
     if hsc.volume_test_objects("enc7_3_trigger", hsc.players()) and enc7_3_limiter < 30 *
         spawn_scale then
         if hsc.ai_living_count("enc7_3/combats") < min_combat_spawn * 2 then
-            hsc.begin({
-                function()
-                    return hsc.ai_spawn_actor("enc7_3/combats")
-                end,
-                function()
-                    enc7_3_limiter = enc7_3_limiter + 1
+            hsc.ai_spawn_actor("enc7_3/combats")
+            enc7_3_limiter = enc7_3_limiter + 1
 
-                end
-            })
         end
     end
 end
@@ -1177,34 +1094,16 @@ script.continuous(c20.enc7_3_spawner)
 function c20.enc6_8_spawner(call, sleep)
     if hsc.volume_test_objects("tv_platform3", hsc.players()) and enc6_8_limiter < 15 * spawn_scale and
         hsc.device_group_get("platform3") > 0.4 then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc6_8/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc6_8/combats")
-                        end,
-                        function()
-                            enc6_8_limiter = enc6_8_limiter + 1
+        if hsc.ai_living_count("enc6_8/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc6_8/combats")
+            enc6_8_limiter = enc6_8_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc6_8/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc6_8/carriers")
-                        end,
-                        function()
-                            enc6_8_limiter = enc6_8_limiter + 1
+        end
+        if hsc.ai_living_count("enc6_8/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc6_8/carriers")
+            enc6_8_limiter = enc6_8_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(30)
 end
@@ -1214,15 +1113,9 @@ function c20.enc6_7_spawner(call, sleep)
     if hsc.volume_test_objects("enc6_7_trigger", hsc.players()) and enc6_7_limiter < 40 *
         spawn_scale then
         if hsc.ai_living_count("enc6_7/carriers") < min_carrier_spawn * 1.5 then
-            hsc.begin({
-                function()
-                    return hsc.ai_spawn_actor("enc6_7/carriers")
-                end,
-                function()
-                    enc6_7_limiter = enc6_7_limiter + 1
+            hsc.ai_spawn_actor("enc6_7/carriers")
+            enc6_7_limiter = enc6_7_limiter + 1
 
-                end
-            })
         end
     end
 end
@@ -1231,26 +1124,14 @@ script.continuous(c20.enc6_7_spawner)
 function c20.enc6_4_spawner(call, sleep)
     if hsc.volume_test_objects("enc6_4b_trigger", hsc.players()) and enc6_4_limiter < 40 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc6_4/combats") < min_combat_spawn * 2 then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc6_4/combats")
-                        end,
-                        function()
-                            enc6_4_limiter = enc6_4_limiter + 1
+        if hsc.ai_living_count("enc6_4/combats") < min_combat_spawn * 2 then
+            hsc.ai_spawn_actor("enc6_4/combats")
+            enc6_4_limiter = enc6_4_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc6_4/infs") < min_infection_spawn then
-                    hsc.ai_place("enc6_4/infs")
-                end
-            end
-        })
+        end
+        if hsc.ai_living_count("enc6_4/infs") < min_infection_spawn then
+            hsc.ai_place("enc6_4/infs")
+        end
     end
 end
 script.continuous(c20.enc6_4_spawner)
@@ -1258,34 +1139,16 @@ script.continuous(c20.enc6_4_spawner)
 function c20.enc6_2b_spawner(call, sleep)
     if hsc.volume_test_objects("enc6_2b_trigger", hsc.players()) and enc6_2_limiter < 15 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc6_2b/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc6_2b/combats")
-                        end,
-                        function()
-                            enc6_2_limiter = enc6_2_limiter + 1
+        if hsc.ai_living_count("enc6_2b/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc6_2b/combats")
+            enc6_2_limiter = enc6_2_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc6_2b/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc6_2b/carriers")
-                        end,
-                        function()
-                            enc6_2_limiter = enc6_2_limiter + 1
+        end
+        if hsc.ai_living_count("enc6_2b/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc6_2b/carriers")
+            enc6_2_limiter = enc6_2_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(30)
 end
@@ -1294,34 +1157,16 @@ script.continuous(c20.enc6_2b_spawner)
 function c20.enc6_2_spawner(call, sleep)
     if hsc.volume_test_objects("enc6_2_trigger", hsc.players()) and enc6_2_limiter < 15 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc6_2/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc6_2/combats")
-                        end,
-                        function()
-                            enc6_2_limiter = enc6_2_limiter + 1
+        if hsc.ai_living_count("enc6_2/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc6_2/combats")
+            enc6_2_limiter = enc6_2_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc6_2/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc6_2/carriers")
-                        end,
-                        function()
-                            enc6_2_limiter = enc6_2_limiter + 1
+        end
+        if hsc.ai_living_count("enc6_2/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc6_2/carriers")
+            enc6_2_limiter = enc6_2_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(30)
 end
@@ -1331,18 +1176,10 @@ function c20.enc5_5_spawner(call, sleep)
     if hsc.volume_test_objects("enc5_5_trigger", hsc.players()) and enc5_5_limiter < 30 *
         spawn_scale then
         if hsc.ai_living_count("enc5_5/carriers") < min_carrier_spawn * 3 then
-            hsc.begin({
-                function()
-                    return hsc.ai_spawn_actor("enc5_5/carriers")
-                end,
-                function()
-                    return hsc.ai_magically_see_players("enc5_5/carriers")
-                end,
-                function()
-                    enc5_5_limiter = enc5_5_limiter + 1
+            hsc.ai_spawn_actor("enc5_5/carriers")
+            hsc.ai_magically_see_players("enc5_5/carriers")
+            enc5_5_limiter = enc5_5_limiter + 1
 
-                end
-            })
         end
     end
 end
@@ -1351,40 +1188,18 @@ script.continuous(c20.enc5_5_spawner)
 function c20.enc5_3_spawner(call, sleep)
     if hsc.volume_test_objects("enc5_3_trigger", hsc.players()) and enc5_3_limiter < 20 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc5_3b/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc5_3b/combats")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc5_3b/combats")
-                        end,
-                        function()
-                            enc5_3_limiter = enc5_3_limiter + 1
+        if hsc.ai_living_count("enc5_3b/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc5_3b/combats")
+            hsc.ai_magically_see_players("enc5_3b/combats")
+            enc5_3_limiter = enc5_3_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc5_3b/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc5_3b/carriers")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc5_3b/carriers")
-                        end,
-                        function()
-                            enc5_3_limiter = enc5_3_limiter + 1
+        end
+        if hsc.ai_living_count("enc5_3b/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc5_3b/carriers")
+            hsc.ai_magically_see_players("enc5_3b/carriers")
+            enc5_3_limiter = enc5_3_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(30)
 end
@@ -1393,40 +1208,18 @@ script.continuous(c20.enc5_3_spawner)
 function c20.enc4_8_spawner(call, sleep)
     if hsc.volume_test_objects("enc4_8_trigger", hsc.players()) and enc4_8_limiter < 20 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc4_8/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4_8/combats")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc4_8/combats")
-                        end,
-                        function()
-                            enc4_8_limiter = enc4_8_limiter + 1
+        if hsc.ai_living_count("enc4_8/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc4_8/combats")
+            hsc.ai_magically_see_players("enc4_8/combats")
+            enc4_8_limiter = enc4_8_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc4_8/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4_8/carriers")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc4_8/carriers")
-                        end,
-                        function()
-                            enc4_8_limiter = enc4_8_limiter + 1
+        end
+        if hsc.ai_living_count("enc4_8/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc4_8/carriers")
+            hsc.ai_magically_see_players("enc4_8/carriers")
+            enc4_8_limiter = enc4_8_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(15)
 end
@@ -1435,40 +1228,18 @@ script.continuous(c20.enc4_8_spawner)
 function c20.enc4_6_spawner(call, sleep)
     if hsc.volume_test_objects("enc4_6_trigger", hsc.players()) and enc4_6_limiter < 20 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc4_6/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4_6/combats")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc4_6/combats")
-                        end,
-                        function()
-                            enc4_6_limiter = enc4_6_limiter + 1
+        if hsc.ai_living_count("enc4_6/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc4_6/combats")
+            hsc.ai_magically_see_players("enc4_6/combats")
+            enc4_6_limiter = enc4_6_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc4_6/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4_6/carriers")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc4_6/carriers")
-                        end,
-                        function()
-                            enc4_6_limiter = enc4_6_limiter + 1
+        end
+        if hsc.ai_living_count("enc4_6/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc4_6/carriers")
+            hsc.ai_magically_see_players("enc4_6/carriers")
+            enc4_6_limiter = enc4_6_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(15)
 end
@@ -1477,40 +1248,18 @@ script.continuous(c20.enc4_6_spawner)
 function c20.enc4_3_spawner(call, sleep)
     if hsc.volume_test_objects("enc4_3_trigger", hsc.players()) and enc4_3_limiter < 20 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc4_3/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4_3/combats")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc4_3/combats")
-                        end,
-                        function()
-                            enc4_3_limiter = enc4_3_limiter + 1
+        if hsc.ai_living_count("enc4_3/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc4_3/combats")
+            hsc.ai_magically_see_players("enc4_3/combats")
+            enc4_3_limiter = enc4_3_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc4_3/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4_3/carriers")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc4_3/carriers")
-                        end,
-                        function()
-                            enc4_3_limiter = enc4_3_limiter + 1
+        end
+        if hsc.ai_living_count("enc4_3/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc4_3/carriers")
+            hsc.ai_magically_see_players("enc4_3/carriers")
+            enc4_3_limiter = enc4_3_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(15)
 end
@@ -1519,15 +1268,9 @@ script.continuous(c20.enc4_3_spawner)
 function c20.enc4_0_spawner(call, sleep)
     if hsc.volume_test_objects("enc4_0", hsc.players()) and enc4_0_limiter < 6 * spawn_scale then
         if hsc.ai_living_count("enc4_0") < 20 then
-            hsc.begin({
-                function()
-                    return hsc.ai_place("enc4_0")
-                end,
-                function()
-                    enc4_0_limiter = enc4_0_limiter + 1
+            hsc.ai_place("enc4_0")
+            enc4_0_limiter = enc4_0_limiter + 1
 
-                end
-            })
         end
     end
 end
@@ -1537,15 +1280,9 @@ function c20.enc3_6_spawner(call, sleep)
     if hsc.volume_test_objects("enc3_6b_trigger", hsc.players()) and enc3_6_limiter < 2 *
         spawn_scale then
         if hsc.ai_living_count("enc3_6_flood/infs") < 20 then
-            hsc.begin({
-                function()
-                    return hsc.ai_place("enc3_6_flood/infs")
-                end,
-                function()
-                    enc3_6_limiter = enc3_6_limiter + 1
+            hsc.ai_place("enc3_6_flood/infs")
+            enc3_6_limiter = enc3_6_limiter + 1
 
-                end
-            })
         end
     end
 end
@@ -1554,47 +1291,23 @@ script.continuous(c20.enc3_6_spawner)
 function c20.enc3_4_spawner(call, sleep)
     if hsc.volume_test_objects("enc3_4_trigger", hsc.players()) and enc3_4_limiter < 30 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc3_4/combats") < 1.25 * min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc3_4/combats")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc3_4/combats")
-                        end,
-                        function()
-                            enc3_4_limiter = enc3_4_limiter + 2
+        if hsc.ai_living_count("enc3_4/combats") < 1.25 * min_combat_spawn then
+            hsc.ai_spawn_actor("enc3_4/combats")
+            hsc.ai_magically_see_players("enc3_4/combats")
+            enc3_4_limiter = enc3_4_limiter + 2
 
-                        end,
-                        function()
-                            if hsc.volume_test_objects_all("enc3_4b", hsc.players()) then
-                                hsc.ai_spawn_actor("enc3_4/leapers")
-                            else
-                                hsc.ai_spawn_actor("enc3_4/runners")
-                            end
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc3_4/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc3_4/carriers")
-                        end,
-                        function()
-                            return hsc.ai_magically_see_players("enc3_4/carriers")
-                        end,
-                        function()
-                            enc3_4_limiter = enc3_4_limiter + 1
-
-                        end
-                    })
-                end
+            if hsc.volume_test_objects_all("enc3_4b", hsc.players()) then
+                hsc.ai_spawn_actor("enc3_4/leapers")
+            else
+                hsc.ai_spawn_actor("enc3_4/runners")
             end
-        })
+        end
+        if hsc.ai_living_count("enc3_4/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc3_4/carriers")
+            hsc.ai_magically_see_players("enc3_4/carriers")
+            enc3_4_limiter = enc3_4_limiter + 1
+
+        end
     end
     sleep(30)
 end
@@ -1603,34 +1316,16 @@ script.continuous(c20.enc3_4_spawner)
 function c20.enc2_11_spawner(call, sleep)
     if hsc.volume_test_objects("enc2_11_trigger", hsc.players()) and enc2_11_limiter < 20 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc2_11/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc2_11/combats")
-                        end,
-                        function()
-                            enc2_11_limiter = enc2_11_limiter + 1
+        if hsc.ai_living_count("enc2_11/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc2_11/combats")
+            enc2_11_limiter = enc2_11_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc2_11/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc2_11/carriers")
-                        end,
-                        function()
-                            enc2_11_limiter = enc2_11_limiter + 1
+        end
+        if hsc.ai_living_count("enc2_11/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc2_11/carriers")
+            enc2_11_limiter = enc2_11_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(15)
 end
@@ -1639,34 +1334,16 @@ script.continuous(c20.enc2_11_spawner)
 function c20.enc2_9_spawner(call, sleep)
     if hsc.volume_test_objects("enc2_9_trigger", hsc.players()) and enc2_9_limiter < 20 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc2_9/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc2_9/combats")
-                        end,
-                        function()
-                            enc2_9_limiter = enc2_9_limiter + 1
+        if hsc.ai_living_count("enc2_9/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc2_9/combats")
+            enc2_9_limiter = enc2_9_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc2_9/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc2_9/carriers")
-                        end,
-                        function()
-                            enc2_9_limiter = enc2_9_limiter + 1
+        end
+        if hsc.ai_living_count("enc2_9/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc2_9/carriers")
+            enc2_9_limiter = enc2_9_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(30)
 end
@@ -1675,34 +1352,16 @@ script.continuous(c20.enc2_9_spawner)
 function c20.enc2_4_spawner(call, sleep)
     if hsc.volume_test_objects("enc2_4_trigger", hsc.players()) and enc2_4_limiter < 20 *
         spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc2_4/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc2_4/combats")
-                        end,
-                        function()
-                            enc2_4_limiter = enc2_4_limiter + 1
+        if hsc.ai_living_count("enc2_4/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc2_4/combats")
+            enc2_4_limiter = enc2_4_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc2_4/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc2_4/carriers")
-                        end,
-                        function()
-                            enc2_4_limiter = enc2_4_limiter + 1
+        end
+        if hsc.ai_living_count("enc2_4/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc2_4/carriers")
+            enc2_4_limiter = enc2_4_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
 end
 script.continuous(c20.enc2_4_spawner)
@@ -1710,15 +1369,9 @@ script.continuous(c20.enc2_4_spawner)
 function c20.enc2_0_spawner(call, sleep)
     if hsc.volume_test_objects("enc2_0_trigger", hsc.players()) and enc2_0_limiter < 6 * spawn_scale then
         if hsc.ai_living_count("enc2_0") < 20 then
-            hsc.begin({
-                function()
-                    return hsc.ai_place("enc2_0")
-                end,
-                function()
-                    enc2_0_limiter = enc2_0_limiter + 1
+            hsc.ai_place("enc2_0")
+            enc2_0_limiter = enc2_0_limiter + 1
 
-                end
-            })
         end
     end
 end
@@ -1727,15 +1380,9 @@ script.continuous(c20.enc2_0_spawner)
 function c20.enc1_9_spawner(call, sleep)
     if hsc.volume_test_objects("enc1_9_trigger", hsc.players()) and enc1_9_limiter < 6 * spawn_scale then
         if hsc.ai_living_count("enc1_9") < 20 then
-            hsc.begin({
-                function()
-                    return hsc.ai_place("enc1_9")
-                end,
-                function()
-                    enc1_9_limiter = enc1_9_limiter + 1
+            hsc.ai_place("enc1_9")
+            enc1_9_limiter = enc1_9_limiter + 1
 
-                end
-            })
         end
     end
 end
@@ -1743,34 +1390,16 @@ script.continuous(c20.enc1_9_spawner)
 
 function c20.enc7_spawner(call, sleep)
     if hsc.volume_test_objects("enc7_trigger", hsc.players()) and enc7_limiter < 15 * spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc7/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc7/combats")
-                        end,
-                        function()
-                            enc7_limiter = enc7_limiter + 1
+        if hsc.ai_living_count("enc7/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc7/combats")
+            enc7_limiter = enc7_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc7/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc7/carriers")
-                        end,
-                        function()
-                            enc7_limiter = enc7_limiter + 1
+        end
+        if hsc.ai_living_count("enc7/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc7/carriers")
+            enc7_limiter = enc7_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(60)
 end
@@ -1778,34 +1407,16 @@ script.continuous(c20.enc7_spawner)
 
 function c20.enc4_spawner(call, sleep)
     if hsc.volume_test_objects("enc4_trigger", hsc.players()) and enc4_limiter < 10 * spawn_scale then
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc4/combats") < min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4/combats")
-                        end,
-                        function()
-                            enc4_limiter = enc4_limiter + 1
+        if hsc.ai_living_count("enc4/combats") < min_combat_spawn then
+            hsc.ai_spawn_actor("enc4/combats")
+            enc4_limiter = enc4_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc4/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4/carriers")
-                        end,
-                        function()
-                            enc4_limiter = enc4_limiter + 1
+        end
+        if hsc.ai_living_count("enc4/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc4/carriers")
+            enc4_limiter = enc4_limiter + 1
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     sleep(15)
 end
@@ -3117,14 +2728,8 @@ function c20.enc3_5(call, sleep)
     hsc.ai_automatic_migration_target("enc3_5_sents/squadc", false)
     hsc.ai_place("enc3_5d")
     if hsc.ai_living_count("enc3_5_sents") <= 1 then
-        hsc.begin({
-            function()
-                return hsc.ai_place("enc3_5c")
-            end,
-            function()
-                return hsc.ai_migrate("enc3_5c", "enc3_5_sents")
-            end
-        })
+        hsc.ai_place("enc3_5c")
+        hsc.ai_migrate("enc3_5c", "enc3_5_sents")
     end
     sleep(function()
         return hsc.volume_test_objects("enc3_5c_trigger", hsc.players())
@@ -3136,14 +2741,8 @@ function c20.enc3_5(call, sleep)
     hsc.ai_place("enc3_5f")
     hsc.ai_try_to_fight("enc3_5f", "enc3_5_sents")
     if hsc.ai_living_count("enc3_5_sents") <= 1 then
-        hsc.begin({
-            function()
-                return hsc.ai_place("enc3_5e")
-            end,
-            function()
-                return hsc.ai_migrate("enc3_5e", "enc3_5_sents")
-            end
-        })
+        hsc.ai_place("enc3_5e")
+        hsc.ai_migrate("enc3_5e", "enc3_5_sents")
     end
 end
 
@@ -3267,14 +2866,8 @@ function c20.enc2_12(call, sleep)
     sleep(-1, c20.enc2_11_spawner)
     if 8 > hsc.ai_living_count("enc2_11/combats") + hsc.ai_living_count("enc2_9/combats") +
         hsc.ai_living_count("enc2_8/combats") then
-        hsc.begin({
-            function()
-                return hsc.ai_place("enc2_12b")
-            end,
-            function()
-                return hsc.ai_magically_see_players("enc2_12b")
-            end
-        })
+        hsc.ai_place("enc2_12b")
+        hsc.ai_magically_see_players("enc2_12b")
     end
     sleep(90)
     wake(c20.monitor1_16)
@@ -3640,93 +3233,51 @@ end
 
 function c20.coop_control(call, sleep)
     if hsc.list_count(hsc.players()) < 1 then
-        hsc.begin({
-            function()
-                if debug then
-                    hsc.print("difficulty adjusted for coop")
-                end
-            end,
-            function()
-                coop = true
-            end,
-            function()
-                spawn_scale = spawn_scale * 1.2
+        if debug then
+            hsc.print("difficulty adjusted for coop")
+        end
+        coop = true
+        spawn_scale = spawn_scale * 1.2
 
-            end,
-            function()
-                min_combat_spawn = min_combat_spawn + 1
+        min_combat_spawn = min_combat_spawn + 1
 
-            end
-        })
     end
 end
 
 function c20.diff_control(call, sleep)
     if easy == hsc.game_difficulty_get_real() then
-        hsc.begin({
-            function()
-                if debug then
-                    hsc.print("difficulty adjusted for easy")
-                end
-            end,
-            function()
-                spawn_scale = spawn_scale * 0.75
+        if debug then
+            hsc.print("difficulty adjusted for easy")
+        end
+        spawn_scale = spawn_scale * 0.75
 
-            end,
-            function()
-                return hsc.player_add_equipment(call(c20.player0), "easy_start", true)
-            end
-        })
+        hsc.player_add_equipment(call(c20.player0), "easy_start", true)
     end
     if hard == hsc.game_difficulty_get() then
-        hsc.begin({
-            function()
-                if debug then
-                    hsc.print("difficulty adjusted for hard")
-                end
-            end,
-            function()
-                spawn_scale = spawn_scale * 1.1
+        if debug then
+            hsc.print("difficulty adjusted for hard")
+        end
+        spawn_scale = spawn_scale * 1.1
 
-            end,
-            function()
-                min_combat_spawn = min_combat_spawn + 1
+        min_combat_spawn = min_combat_spawn + 1
 
-            end,
-            function()
-                min_carrier_spawn = min_carrier_spawn + 1
+        min_carrier_spawn = min_carrier_spawn + 1
 
-            end,
-            function()
-                min_infection_spawn = min_infection_spawn + 1
+        min_infection_spawn = min_infection_spawn + 1
 
-            end
-        })
     end
     if impossible == hsc.game_difficulty_get() then
-        hsc.begin({
-            function()
-                if debug then
-                    hsc.print("difficulty adjusted for impossible")
-                end
-            end,
-            function()
-                spawn_scale = spawn_scale * 1.25
+        if debug then
+            hsc.print("difficulty adjusted for impossible")
+        end
+        spawn_scale = spawn_scale * 1.25
 
-            end,
-            function()
-                min_combat_spawn = min_combat_spawn + 1
+        min_combat_spawn = min_combat_spawn + 1
 
-            end,
-            function()
-                min_carrier_spawn = min_carrier_spawn + 1
+        min_carrier_spawn = min_carrier_spawn + 1
 
-            end,
-            function()
-                min_infection_spawn = min_infection_spawn + 2
+        min_infection_spawn = min_infection_spawn + 2
 
-            end
-        })
     end
 end
 
@@ -3752,17 +3303,9 @@ function c20.mission(call, sleep)
     call(c20.diff_control)
     hsc.ai_allegiance("sentinel", "player")
     if call(c20.cinematic_skip_start) then
-        hsc.begin({
-            function()
-                cinematic_ran = true
-            end,
-            function()
-                return wake(c20.intro_cutscene_aux)
-            end,
-            function()
-                return call(c20.cinematic_intro)
-            end
-        })
+        cinematic_ran = true
+        wake(c20.intro_cutscene_aux)
+        call(c20.cinematic_intro)
     end
     call(c20.cinematic_skip_stop)
     sleep(-1, c20.intro_cutscene_aux)
