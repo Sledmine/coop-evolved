@@ -215,7 +215,6 @@ function component.callbacks()
 
     balltze.event.uiWidgetBack.subscribe(function(event)
         if event.time == "before" then
-            logger:debug("Closing tag: {}", event.context.widget.definitionTagHandle.value)
             local widgetTagHandleValue = event.context.widget.definitionTagHandle.value
             local component = component.widgets[widgetTagHandleValue]
             if component and component.events.onClose then

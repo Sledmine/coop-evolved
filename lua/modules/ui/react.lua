@@ -67,7 +67,6 @@ function ether.reactive(table, callback)
         end,
         __newindex = function(t, k, v)
             t[prefix .. k] = v
-            logger:debug("Setting reactive property " .. k .. " to " .. tostring(v))
             callback()
         end
     })
