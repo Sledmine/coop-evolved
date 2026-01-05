@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.15.1"}
+local blam = {_VERSION = "1.16.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -110,7 +110,6 @@ end
 -- Engine address list
 local addressList = {
     tagDataHeader = 0x40440000,
-    cameraType = 0x00647498, -- from giraffe
     gamePaused = 0x004ACA79,
     gameOnMenus = 0x00622058,
     joystickInput = 0x64D998, -- from aLTis
@@ -123,7 +122,9 @@ local addressList = {
     screenResolution = 0x637CF0,
     currentWidgetIdAddress = 0x6B401C,
     cinematicGlobals = 0x0068c83c,
-    hscGlobalsPointer = 0x0064bab0
+    hscGlobalsPointer = 0x0064bab0,
+    cameraState = 0x00647498,
+    objectNamesList = 0x00653be8
 }
 
 -- Server side addresses adjustment
@@ -134,6 +135,7 @@ if blam.isGameSAPP() then
     addressList.cinematicGlobals = 0x005f506c
     addressList.hscGlobalsPointer = 0x005bd890
     addressList.hscGlobals = 0x6e144c
+    addressList.cameraState = 0x5b9278
 end
 
 -- Tag classes values
@@ -653,7 +655,7 @@ end
 function get_global(globalName)
     if addressList.hscGlobals then
         local hsGlobals = addressList.hscGlobals
-        --local firstGlobal = read_dword(addressList.hscGlobals + 1)
+        -- local firstGlobal = read_dword(addressList.hscGlobals + 1)
         local firstGlobal = 0x00001ec
         local hsGlobalsTable = read_dword(hsGlobals)
         local hsTable = read_dword(hsGlobalsTable + 0x34)
@@ -1014,7 +1016,7 @@ function blam.readUnicodeString(address, rawRead)
     -- TODO Refactor this to support reading ASCII and UTF16? strings
     while true do
         local char = read_string(stringAddress + i * 0x2)
-        --local _, char = pcall(string.char, read_byte(stringAddress + (i - 1) * 0x2))
+        -- local _, char = pcall(string.char, read_byte(stringAddress + (i - 1) * 0x2))
         if not char or char == "" then
             break
         end
@@ -2590,12 +2592,53 @@ local hudGlobalsStructure = {
 }
 
 ---@class cinematicGlobals
----@field isInProgress boolean
 ---@field isShowingLetterbox boolean
+---@field isInProgress boolean
+---@field isSkipInProgress boolean
+---@field isSupressBspObjectCreation boolean
 
 local cinematicGlobalsStructure = {
+    isShowingLetterbox = {type = "bit", offset = 0x8, bitLevel = 0},
     isInProgress = {type = "bit", offset = 0x9, bitLevel = 0},
-    isShowingLetterbox = {type = "bit", offset = 0x8, bitLevel = 0}
+    isSkipInProgress = {type = "bit", offset = 0xa, bitLevel = 0},
+    isSupressBspObjectCreation = {type = "bit", offset = 0xb, bitLevel = 0}
+}
+
+---@class cameraState
+---@field type number Camera type
+---@field x number Camera x position
+---@field y number Camera y position
+---@field z number Camera z position
+---@field devcamX number Devcam x position
+---@field devcamY number Devcam y position
+---@field devcamZ number Devcam z position
+---@field finalX number Final x position
+---@field finalY number Final y position
+---@field finalZ number Final z position
+---@field vX number Camera vector x rotation
+---@field vY number Camera vector y rotation
+---@field vZ number Camera vector z rotation
+---@field v2X number Camera second vector x rotation
+---@field v2Y number Camera second vector y rotation
+---@field v2Z number Camera second vector z rotation
+
+local cameraStateStructure = {
+    type = {type = "word", offset = 0x0},
+    devcamX = {type = "float", offset = 0x54},
+    devcamY = {type = "float", offset = 0x58},
+    devcamZ = {type = "float", offset = 0x5C},
+    finalX = {type = "float", offset = 0x100},
+    finalY = {type = "float", offset = 0x104},
+    finalZ = {type = "float", offset = 0x108},
+    x = {type = "float", offset = 0x168},
+    y = {type = "float", offset = 0x16C},
+    z = {type = "float", offset = 0x170},
+    vX = {type = "float", offset = 0x120},
+    vY = {type = "float", offset = 0x124},
+    vZ = {type = "float", offset = 0x128},
+    v2X = {type = "float", offset = 0x12C},
+    v2Y = {type = "float", offset = 0x130},
+    v2Z = {type = "float", offset = 0x134}
 }
 
 ------------------------------------------------------------------------------
@@ -2636,7 +2679,7 @@ blam.null = null
 ---Get the current game camera type
 ---@return number?
 function blam.getCameraType()
-    local camera = read_word(addressList.cameraType)
+    local camera = read_word(addressList.cameraState)
     if camera then
         if camera == 22192 then
             return cameraTypes.scripted
@@ -3500,6 +3543,51 @@ end
 function blam.getGameDifficultyIndex()
     local hscGlobals = read_dword(addressList.hscGlobalsPointer)
     return read_byte(hscGlobals + 0xe)
+end
+
+--- Returns current game camera state
+---@return cameraState
+function blam.getCameraState()
+    return createBindTable(addressList.cameraState, cameraStateStructure)
+end
+
+--- Get or set object handle in global object name list
+---@overload fun(index: number, handle?: number): number?
+---@param objectName string
+---@param handle? number
+---@return number?
+function blam.objectNameHandle(objectName, handle)
+    local nameIndex
+
+    if type(objectName) == "number" then
+        -- If index is provided, use it directly
+        nameIndex = objectName
+    else
+        -- Find the index of the object name in the scenario object names list
+        local scenario = blam.scenario(0)
+        assert(scenario, "No scenario loaded, can't get object names list.")
+        if scenario then
+            local objectNamesList = scenario.objectNames
+            for index, name in pairs(objectNamesList) do
+                if name == objectName then
+                    nameIndex = index
+                    break
+                end
+            end
+        end
+    end
+    if not nameIndex then
+        error("Object name \"" .. objectName .. "\" not found in scenario object names list.")
+    end
+
+    local objectNamesListAddress = read_dword(addressList.objectNamesList)
+    if handle then
+        -- Set the object handle in the global object name list
+        write_dword(objectNamesListAddress + (nameIndex * 4), handle)
+    else
+        -- Get the object handle from the global object name list
+        return read_dword(objectNameListAddress + (nameIndex * 4))
+    end
 end
 
 return blam
