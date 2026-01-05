@@ -2,6 +2,7 @@
 local script = require "script"
 local wake = require"script".wake
 local hsc = require "hsc"
+local utils = require "coop.utils"
 local easy = "easy"
 local normal = "normal"
 local hard = "hard"
@@ -124,23 +125,6 @@ local pelicanSeats = {
     "P-riderLB"
 }
 
-
-local function getPlayerUnit(playerIndex)
-    return hsc.unit(hsc.list_get(hsc.players(), playerIndex))
-end
-
-local function getPlayerCount()
-    return hsc.list_count(hsc.players())
-end
-
-local function allPlayersExitVehicle()
-    local playerCount = getPlayerCount()
-    for i = 0, playerCount - 1 do
-        local playerUnit = getPlayerUnit(i)
-        hsc.unit_exit_vehicle(playerUnit)
-    end
-end
-
 local function isUnitInsidePelican(unit, vehicle)
     local isInside = false
     -- Loop trough all pelican seats
@@ -166,12 +150,13 @@ function b30.player_count(call, sleep)
 end
 
 function b30.cinematic_skip_start(call, sleep)
-    hsc.cinematic_skip_start_internal()
-    hsc.game_save_totally_unsafe()
-    sleep(function()
-        return not (hsc.game_saving())
-    end, 1)
-    return not (hsc.game_reverted())
+    -- hsc.cinematic_skip_start_internal()
+    -- hsc.game_save_totally_unsafe()
+    -- sleep(function()
+    --    return not (hsc.game_saving())
+    -- end, 1)
+    -- return not (hsc.game_reverted())
+    return RunCinematics
 end
 
 function b30.cinematic_skip_stop(call, sleep)
@@ -805,8 +790,9 @@ function b30.cutscene_ledge(call, sleep)
     hsc.switch_bsp(1)
     hsc.cinematic_start()
     hsc.camera_control(true)
-    hsc.object_teleport(call(b30.player0), "player0_ledge_wait")
-    hsc.object_teleport(call(b30.player1), "player1_ledge_wait")
+    -- hsc.object_teleport(call(b30.player0), "player0_ledge_wait")
+    -- hsc.object_teleport(call(b30.player1), "player1_ledge_wait")
+    teleportPlayersTo("player0_ledge_wait")
     hsc.object_create_anew("chief")
     hsc.object_create_anew("rock_kick")
     hsc.object_create_anew("rock_still")
@@ -834,8 +820,9 @@ function b30.cutscene_ledge(call, sleep)
     sleep(hsc.camera_time() - 15)
     hsc.fade_out(1, 1, 1, 15)
     sleep(15)
-    hsc.object_teleport(call(b30.player0), "player0_ledge_done")
-    hsc.object_teleport(call(b30.player1), "player1_ledge_done")
+    -- hsc.object_teleport(call(b30.player0), "player0_ledge_done")
+    -- hsc.object_teleport(call(b30.player1), "player1_ledge_done")
+    teleportPlayersTo("player0_ledge_done")
     hsc.object_destroy("chief")
     hsc.object_destroy("rock_kick")
     hsc.object_destroy("rifle")
@@ -870,8 +857,9 @@ function b30.cutscene_map(call, sleep)
     hsc.switch_bsp(1)
     hsc.cinematic_start()
     hsc.camera_control(true)
-    hsc.object_teleport(call(b30.player0), "player0_map_wait")
-    hsc.object_teleport(call(b30.player1), "player1_map_wait")
+    -- hsc.object_teleport(call(b30.player0), "player0_map_wait")
+    -- hsc.object_teleport(call(b30.player1), "player1_map_wait")
+    teleportPlayersTo("player0_map_wait")
     hsc.object_destroy("chief")
     hsc.object_destroy("rifle")
     hsc.object_create("chief")
@@ -899,8 +887,9 @@ function b30.cutscene_map(call, sleep)
     sleep(hsc.camera_time() - 15)
     hsc.fade_out(1, 1, 1, 15)
     sleep(15)
-    hsc.object_teleport(call(b30.player0), "player0_map_done")
-    hsc.object_teleport(call(b30.player1), "player1_map_done")
+    -- hsc.object_teleport(call(b30.player0), "player0_map_done")
+    -- hsc.object_teleport(call(b30.player1), "player1_map_done")
+    teleportPlayersTo("player0_map_done")
     hsc.object_destroy("chief")
     hsc.camera_control(false)
     hsc.cinematic_stop()
@@ -1332,10 +1321,12 @@ function b30.flavor_shafta_inv_cship(call, sleep)
     hsc.unit_close("shafta_inv_cship")
 end
 
+local secondsForWaitingPlayersInPelican = 30
+local ticksForPelicanPlayerWait = utils.secondsToTicks(secondsForWaitingPlayersInPelican)
+
 function b30.obj_shafta_goal(call, sleep)
     sleep(function()
         return 1 == hsc.device_group_get("map_position")
-
     end, 1)
     hsc.switch_bsp(1)
     hsc.volume_teleport_players_not_inside("shafta_control", "shafta_control_teleflag")
@@ -1361,7 +1352,6 @@ function b30.obj_shafta_goal(call, sleep)
     hsc.ai_braindead("shafta_entrance_inv", true)
     hsc.ai_set_blind("shafta_entrance_inv", true)
     global_timer = 90 + hsc.game_time()
-
     sleep(function()
         return hsc.volume_test_objects("shafta_entrance_inv", hsc.players())
     end, 1, 90)
@@ -1378,12 +1368,25 @@ function b30.obj_shafta_goal(call, sleep)
     sleep(hsc.recording_time("extraction_pelican"))
     -- TODO This might break if there are more players than seats in the pelican, add new pelican
     local allPlayersMustBeInPelican = hsc.game_is_cooperative()
+    if not allPlayersMustBeInPelican then
+        ticksForPelicanPlayerWait = nil
+    end
+    if ticksForPelicanPlayerWait then
+        hsc.hud_set_timer_position(0, 5, "bottom_right")
+        hsc.hud_set_timer_time(0, secondsForWaitingPlayersInPelican)
+        hsc.hud_set_timer_warning_time(1, 0)
+        hsc.show_hud_timer(true)
+    end
     sleep(function()
+        local result = false
         for i = 0, getPlayerCount() - 1 do
             local playerUnit = getPlayerUnit(i)
             if allPlayersMustBeInPelican then
                 if not isUnitInsidePelican(playerUnit, "extraction_pelican") then
-                    return false
+                    result = false
+                    break
+                else
+                    result = true
                 end
             else
                 if isUnitInsidePelican(playerUnit, "extraction_pelican") then
@@ -1391,7 +1394,10 @@ function b30.obj_shafta_goal(call, sleep)
                 end
             end
         end
-    end)
+        return result
+    end, 1, ticksForPelicanPlayerWait)
+    sleep(30)
+    hsc.show_hud_timer(false)
     play_music_b30_06 = false
     hsc.player_enable_input(false)
     hsc.ai_braindead("shafta_entrance_inv", true)
@@ -1709,10 +1715,10 @@ end
 
 --- Function to have players enter Pelicans in a round-robin fashion.
 function b30.playersEnterPelican()
-    local playerCount = getPlayerCount()
+    logger:debug("Player count: {}", getPlayerCount())
     local pelicans = {"insertion_pelican_1", "insertion_pelican_2"}
     local currentSeatIndex = 1
-    for playerIndex = 0, playerCount - 1 do
+    for playerIndex = 0, getPlayerCount() - 1 do
         local playerUnit = getPlayerUnit(playerIndex)
         -- Alternate between the two Pelicans
         local targetVehicleName = pelicans[math.mod(playerIndex, #pelicans) + 1]
@@ -1743,22 +1749,29 @@ function b30.cutscene_insertion(call, sleep)
     hsc.object_create("insertion_pelican_1")
     hsc.object_create("insertion_pelican_2")
     hsc.object_beautify("insertion_pelican_1", true)
-    hsc.ai_place("beach_lz_marine")
     hsc.ai_place("beach_lz")
+
+    -- Only place marines and load pelicans in non-coop mode
+    --if not hsc.game_is_cooperative() then
+    if false then
+        hsc.ai_place("beach_lz_marine")
+        hsc.objects_predict(hsc.ai_actors("beach_lz_marine"))
+        hsc.vehicle_load_magic("insertion_pelican_1", "rider",
+                               hsc.ai_actors("beach_lz_marine/left_marine"))
+        hsc.vehicle_load_magic("insertion_pelican_2", "rider",
+                               hsc.ai_actors("beach_lz_marine/right_marine"))
+    end
+
+    hsc.object_teleport("insertion_pelican_1", "insertion_pelican_flag_1")
+    hsc.recording_play_and_hover("insertion_pelican_1", "insertion_pelican_1_in")
+    
+    hsc.object_teleport("insertion_pelican_2", "insertion_pelican_flag_2")
+    hsc.recording_play_and_hover("insertion_pelican_2", "insertion_pelican_2_in")
 
     b30.playersEnterPelican()
 
-    hsc.vehicle_load_magic("insertion_pelican_1", "rider",
-                           hsc.ai_actors("beach_lz_marine/left_marine"))
-    hsc.vehicle_load_magic("insertion_pelican_2", "rider",
-                           hsc.ai_actors("beach_lz_marine/right_marine"))
-    hsc.object_teleport("insertion_pelican_1", "insertion_pelican_flag_1")
-    hsc.recording_play_and_hover("insertion_pelican_1", "insertion_pelican_1_in")
-    hsc.object_teleport("insertion_pelican_2", "insertion_pelican_flag_2")
-    hsc.recording_play_and_hover("insertion_pelican_2", "insertion_pelican_2_in")
     hsc.objects_predict("insertion_pelican_1")
     hsc.objects_predict("insertion_pelican_2")
-    hsc.objects_predict(hsc.ai_actors("beach_lz_marine"))
     hsc.objects_predict(hsc.ai_actors("beach_lz"))
     hsc.object_type_predict("scenery\\c_storage\\c_storage")
     hsc.object_type_predict("scenery\\c_uplink\\c_uplink")
@@ -1798,12 +1811,15 @@ function b30.cutscene_insertion(call, sleep)
     hsc.sound_class_set_gain("vehicle", 1, 2)
     sleep(60)
     hsc.vehicle_unload("insertion_pelican_2", "rider")
-    hsc.sound_impulse_start("sound\\dialog\\b30\\b30_insert_050_sarge2", "none", 1)
+    if not hsc.game_is_cooperative() then
+        hsc.sound_impulse_start("sound\\dialog\\b30\\b30_insert_050_sarge2", "none", 1)
+    end
     sleep(30)
     hsc.vehicle_unload("insertion_pelican_1", "rider")
     sleep(function()
         return not (hsc.volume_test_objects("mission_start", hsc.players()))
     end)
+
     hsc.vehicle_hover("insertion_pelican_1", false)
     hsc.recording_play_and_delete("insertion_pelican_1", "insertion_pelican_1_out")
     sleep(120)

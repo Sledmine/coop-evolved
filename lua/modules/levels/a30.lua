@@ -144,7 +144,7 @@ function a30.cinematic_skip_start(call, sleep)
     --    return not (hsc.game_saving())
     --end, 1)
     --return not (hsc.game_reverted())
-    return false
+    return RunCinematics
 end
 
 function a30.cinematic_skip_stop(call, sleep)

@@ -140,6 +140,7 @@ local hangar_second_limit_i = 2
 local hangar_second_q = true
 local hangar_second_counter_q = 0
 local hangar_second_limit_q = 2
+
 function a50.player0(call, sleep)
     return hsc.unit(hsc.list_get(hsc.players(), 0))
 end
@@ -159,7 +160,7 @@ function a50.cinematic_skip_start(call, sleep)
     --    return not (hsc.game_saving())
     --end, 1)
     --return not (hsc.game_reverted())
-    return false
+    return RunCinematics
 end
 
 function a50.cinematic_skip_stop(call, sleep)
@@ -404,8 +405,9 @@ function a50.cutscene_extraction(call, sleep)
     hsc.cinematic_start()
     hsc.camera_control(true)
     hsc.switch_bsp(2)
-    hsc.object_teleport(call(a50.player0), "player0_extract_base")
-    hsc.object_teleport(call(a50.player1), "player1_extract_base")
+    --hsc.object_teleport(call(a50.player0), "player0_extract_base")
+    --hsc.object_teleport(call(a50.player1), "player1_extract_base")
+    teleportPlayersTo("player0_extract_base")
     hsc.object_create_anew("chief")
     hsc.object_create_anew("chief_ar")
     hsc.object_create_anew("extraction_dropship")
@@ -1227,8 +1229,9 @@ function a50.cutscene_energy_lift(call, sleep)
     hsc.objects_attach("chief_lift", "right hand", "rifle", "")
     hsc.object_beautify("chief_lift", true)
     hsc.recording_play("chief_lift", "chief_lift_watch")
-    hsc.object_teleport(call(a50.player0), "player0_lift_safe")
-    hsc.object_teleport(call(a50.player1), "player1_lift_safe")
+    --hsc.object_teleport(call(a50.player0), "player0_lift_safe")
+    --hsc.object_teleport(call(a50.player1), "player1_lift_safe")
+    teleportPlayersTo("player0_lift_safe")
     hsc.object_teleport("lift_marine_1", "lift_marine_1_base")
     hsc.object_teleport("lift_marine_2", "lift_marine_2_base")
     hsc.object_teleport("lift_marine_3", "lift_marine_3_base")
@@ -4477,8 +4480,9 @@ end
 
 function a50.ini_post_rescue(call, sleep)
     hsc.switch_bsp(3)
-    hsc.object_teleport(call(a50.player0), "prison_player0_teleport")
-    hsc.object_teleport(call(a50.player1), "prison_player1_teleport")
+    --hsc.object_teleport(call(a50.player0), "prison_player0_teleport")
+    --hsc.object_teleport(call(a50.player1), "prison_player1_teleport")
+    teleportPlayersTo("prison_player0_teleport")
     hsc.object_create("captain_keyes")
     hsc.object_create("free_marine_1")
     hsc.object_create("free_marine_2")
@@ -4787,10 +4791,13 @@ function a50.mission_area5(call, sleep)
         call(a50.cutscene_energy_lift)
     end
     call(a50.cinematic_skip_stop)
+    suspendPlayers(true)
     hsc.switch_bsp(1)
-    hsc.object_teleport(call(a50.player0), "gravity_teleport0_flag")
-    hsc.object_teleport(call(a50.player1), "gravity_teleport1_flag")
-    hsc.ai_detach(call(a50.player0))
+    hsc.volume_teleport_players_not_inside("null", "gravity_teleport0_flag")
+    suspendPlayers(false)
+    --hsc.object_teleport(call(a50.player0), "gravity_teleport0_flag")
+    --hsc.object_teleport(call(a50.player1), "gravity_teleport1_flag")
+    --hsc.ai_detach(call(a50.player0))
 end
 
 function a50.mission_gravity_room(call, sleep)

@@ -71,12 +71,13 @@ function b40.player_count(call, sleep)
 end
 
 function b40.cinematic_skip_start(call, sleep)
-    hsc.cinematic_skip_start_internal()
-    hsc.game_save_totally_unsafe()
-    sleep(function()
-        return not (hsc.game_saving())
-    end, 1)
-    return not (hsc.game_reverted())
+    --hsc.cinematic_skip_start_internal()
+    --hsc.game_save_totally_unsafe()
+    --sleep(function()
+    --    return not (hsc.game_saving())
+    --end, 1)
+    --return not (hsc.game_reverted())
+    return RunCinematics
 end
 
 function b40.cinematic_skip_stop(call, sleep)

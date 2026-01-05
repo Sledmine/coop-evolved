@@ -109,26 +109,6 @@ local play_music_a10_06_alt = false
 local play_music_a10_07 = false
 local play_music_a10_07_alt = false
 
-local function getPlayerUnit(playerIndex)
-    return hsc.unit(hsc.list_get(hsc.players(), playerIndex))
-end
-
-local function getPlayerCount()
-    return hsc.list_count(hsc.players())
-end
-
-local function teleportPlayersTo(flag)
-    for i = 1, getPlayerCount() do
-        hsc.object_teleport(getPlayerUnit(i - 1), flag)
-    end
-end
-
-local function suspendPlayers(suspend)
-    for i = 0, getPlayerCount() - 1 do
-        hsc.unit_suspended(getPlayerUnit(i), suspend)
-    end
-end
-
 function a10.player0(call, sleep)
     return hsc.unit(hsc.list_get(hsc.players(), 0))
 end
@@ -142,13 +122,13 @@ function a10.player_count(call, sleep)
 end
 
 function a10.cinematic_skip_start(call, sleep)
-    --hsc.cinematic_skip_start_internal()
-    --hsc.game_save_totally_unsafe()
-    --sleep(function()
+    -- hsc.cinematic_skip_start_internal()
+    -- hsc.game_save_totally_unsafe()
+    -- sleep(function()
     --    return not (hsc.game_saving())
-    --end, 1)
-    --return not (hsc.game_reverted())
-    return false
+    -- end, 1)
+    -- return not (hsc.game_reverted())
+    return RunCinematics
 end
 
 function a10.cinematic_skip_stop(call, sleep)
@@ -5391,11 +5371,11 @@ function a10.mission_a10(call, sleep)
     hsc.object_set_facing(call(a10.player0), "facing_flag_1")
     hsc.object_set_facing(call(a10.player1), "facing_flag_1")
     -- Always pass trough fast setup due to player0 specific actions not working in multiplayer
-    --if hsc.game_is_cooperative() or not (normal == hsc.game_difficulty_get()) then
-        wake(a10.fast_setup)
-    --else
-        --wake(a10.tutorial_setup)
-    --end
+    -- if hsc.game_is_cooperative() or not (normal == hsc.game_difficulty_get()) then
+    wake(a10.fast_setup)
+    -- else
+    -- wake(a10.tutorial_setup)
+    -- end
     wake(a10.mission_bsp)
     wake(a10.music_a10)
     wake(a10.linkage)
@@ -5511,7 +5491,6 @@ function a10.openCryotubes()
         hsc.unit_open("cryotube_" .. i)
     end
 end
-
 
 local function addPlayerWeapon(weaponTagPath, playerIndex)
     local player = Engine.gameState.getPlayer(playerIndex)
