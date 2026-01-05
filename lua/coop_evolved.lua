@@ -143,7 +143,7 @@ function PluginLoad()
                 -- But preventing running the actual logic of the level script...
                 -- Allowing the server to just handle networking and player management
                 if serverType == "dedicated" then
-                    logger:warning(
+                    logger:debug(
                         "Dedicated server detected, disabling startup and continuous scripts")
                     ---@diagnostic disable-next-line: duplicate-set-field
                     script.startup = function()
@@ -162,7 +162,7 @@ function PluginLoad()
                     if not ok then
                         logger:warning("Error loading level script: {}", result)
                     else
-                        logger:info("Loaded level script for \"{}\"", levelName)
+                        logger:debug("Loaded level script for \"{}\"", levelName)
                     end
                 end
 
