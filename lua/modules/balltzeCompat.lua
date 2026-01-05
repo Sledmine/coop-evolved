@@ -76,7 +76,7 @@ function Balltze.logger.createLogger(name)
                     index = index + 1
                     return tostring(arg)
                 end)
-                console_out("[DEBUG][" .. name .. "] " .. formattedMessage, color.debug)
+                cprint("[DEBUG][" .. name .. "] " .. formattedMessage, color.debug)
             end
         end,
         info = function(self, message, ...)
@@ -87,7 +87,7 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            console_out("[INFO][" .. name .. "] " .. formattedMessage, color.info)
+            cprint("[INFO][" .. name .. "] " .. formattedMessage, color.info)
         end,
         warning = function(self, message, ...)
             local args = {...}
@@ -97,7 +97,7 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            console_out("[WARNING][" .. name .. "] " .. formattedMessage, color.warning)
+            cprint("[WARNING][" .. name .. "] " .. formattedMessage, color.warning)
         end,
         error = function(self, message, ...)
             local args = {...}
@@ -107,7 +107,7 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            console_out("[ERROR][" .. name .. "] " .. formattedMessage, color.error)
+            cprint("[ERROR][" .. name .. "] " .. formattedMessage, color.error)
         end,
         muteDebug = function(self, value)
             mute = value == true
@@ -115,9 +115,16 @@ function Balltze.logger.createLogger(name)
     }
 end
 
-function Engine.core.consolePrint(message)
-    print(tostring(message))
-    console_out(tostring(message))
+function Engine.core.consolePrint(format, ...)
+    -- Look for all "{}" in the message and replace them with the arguments
+    local args = {...}
+    local index = 1
+    local formattedMessage = format:gsub("{}", function()
+        local arg = args[index]
+        index = index + 1
+        return tostring(arg)
+    end)
+    console_out(formattedMessage)
 end
 
 function Engine.hsc.executeScript(script)
