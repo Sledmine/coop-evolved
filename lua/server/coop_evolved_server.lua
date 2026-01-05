@@ -1,5 +1,7 @@
+local utils = require "coop.utils"
 api_version = "1.12.0.0"
 DebugMode = false
+IsLevelDebugMode = false
 
 require "luna"
 
@@ -24,6 +26,7 @@ local inspect = require "inspect"
 local coop = require "coop.coop"
 local constants = require "coop.constants"
 local events = require "coop.network.events"
+require "coop.gameplay.utils"
 
 local script = require "script"
 local hsc = require "hsc"
@@ -37,11 +40,12 @@ logger = Balltze.logger.createLogger("Coop Evolved Server")
 CustomPlayerBipeds = {}
 CoopServerState = {
     remainingVotes = 0,
-    -- difficulty = coop.difficulties[blam.getGameDifficultyIndex()],
     difficulty = coop.difficulties[1],
     playersReady = {}
 }
-CoopStarted = false
+RunCinematics = false
+IsCoopStarted = false
+IsVotingRequired = true
 local starterWeapons = {
     a50 = {[[weapons\sniper rifle\sniper rifle]], [[weapons\pistol\pistol]]},
     a10 = {blam.null, blam.null}
@@ -54,7 +58,7 @@ local introCameras = {
     a50 = "insertion_3",
     b30 = "insertion_1a",
     b40 = "b40_start",
-    c10 = "index_drop_1a",
+    c10 = "c10_start",
     c20 = "insertion_1",
     d40 = "chief_climb_2c"
 }
@@ -240,6 +244,8 @@ local function createHscPacket(functionName, args)
                     return
                 elseif object.class == objectClasses.vehicle then
                     --logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
+                elseif object.class == objectClasses.weapon then
+                    --logger:debug("Object {} is a weapon, not syncing!", objectNameIndex)
                     return
                 end
             end
@@ -281,7 +287,7 @@ end)
 ---Setup coop state prior to starting the game
 ---@param playerIndex number
 function GetReadyForCoop(playerIndex)
-    if not CoopStarted then
+    if not IsCoopStarted then
         for mapPattern, camera in pairs(introCameras) do
             if map:includes(mapPattern) then
                 rprint(playerIndex, "sync_camera_control 1")
@@ -298,20 +304,40 @@ end
 
 ---Starts the coop game
 function StartCoop()
-    CoopStarted = true
-    -- Restore camera control to players (helps to avoid camera issues when a cinematic is playing)
+    -- Restore game player state
+    -- Give camera control to players (helps to avoid camera issues when a cinematic is playing)
     hsc.camera_control(false)
-    local levelName = map:split("_coop")[1]
-    local ok, result = pcall(require, "levels." .. levelName)
-    if not ok then
-        logger:warning("Error loading level script: {}", result)
-    else
-        logger:info("Loaded level script for \"{}\"", levelName)
+    -- Remove fade in effect
+    hsc.fade_in(0, 0, 0, 0)
+
+    -- Load level script
+    if not IsLevelDebugMode then
+        script.create(function (_, sleep)
+            -- Wait for all players to spawn
+            sleep(function ()
+                sleep(utils.secondsToTicks(1))
+                say_all("Waiting for all players to spawn...")
+                local spawnedPlayers = 0
+                for playerIndex = 1, 16 do
+                    if player_present(playerIndex) then
+                        spawnedPlayers = spawnedPlayers + 1
+                    end
+                end
+                return spawnedPlayers >= getPlayerCount()
+            end)
+            logger:info("Starting Coop Evolved!")
+            IsCoopStarted = true
+            local levelName = map:split("_coop")[1]
+            local ok, result = pcall(require, "levels." .. levelName)
+            if not ok then
+                logger:warning("Error loading level script: {}", result)
+            else
+                logger:info("Loaded level script for \"{}\"", levelName)
+            end
+            sleep(utils.secondsToTicks(3))
+            isStarterWeaponsEnabled = false
+        end)
     end
-    DisableStarterWeapons = function()
-        isStarterWeaponsEnabled = false
-    end
-    set_timer(3000, "DisableStarterWeapons")
 end
 
 function OnObjectSpawn(playerIndex, tagId, parentId, objectId)
@@ -365,7 +391,7 @@ function OnPlayerJoin(playerIndex)
     -- Set players on the same team for coop purposes
     execute_script("st " .. playerIndex .. " red")
 
-    if not CoopStarted then
+    if not IsCoopStarted then
 
         -- Force game start for debugging purposes
         if DebugMode then
@@ -374,13 +400,15 @@ function OnPlayerJoin(playerIndex)
             return
         end
 
-        CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
-        GetReadyForCoop(playerIndex)
+        if IsVotingRequired then
+            CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
+            GetReadyForCoop(playerIndex)
+        end
     end
 end
 
 function OnPlayerLeave(playerIndex)
-    if not CoopStarted then
+    if not IsCoopStarted then
         if CoopServerState.playersReady[playerIndex] then
             CoopServerState.remainingVotes = CoopServerState.remainingVotes + 1
         end
@@ -400,12 +428,20 @@ function OnCommand()
 end
 
 function OnRconMessage(playerIndex, message, password)
+    -- TODO Add a proper command handling for this
+    --if message:lower() == "start_coop" then
+    --    StartCoop()
+    --    coop.enableSpawn(true)
+    --    return false
+    --end
     return blam.rcon.handle(message, password, playerIndex)
 end
 
 function OnGameEnd()
-    CoopStarted = false
+    IsCoopStarted = false
     CoopServerState = {remainingVotes = 0, difficulty = coop.difficulties[1], playersReady = {}}
+    -- Unload level script
+    package.loaded["levels." .. map:split("_coop")[1]] = nil
 end
 
 function OnTick()
@@ -453,7 +489,6 @@ function OnMapLoad()
     AvailableBipeds = coop.getAvailableBipeds()
     -- TODO Remove this, just for testing purposes!
     --StartCoop()
-
 end
 
 function OnScriptLoad()
@@ -464,7 +499,7 @@ function OnScriptLoad()
 
     -- Start syncing AI every amount of seconds
     FindNewSpawn = function()
-        if CoopStarted then
+        if IsCoopStarted then
             coop.findNewSpawn()
         end
         return true
@@ -494,6 +529,7 @@ function OnScriptUnload()
 end
 
 function OnError(message)
+    say_all("An error has occurred in the server side!")
     print(message)
     print(debug.traceback())
 end
