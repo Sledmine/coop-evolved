@@ -74,11 +74,11 @@ function c20.player_count(call, sleep)
 end
 
 function c20.cinematic_skip_start(call, sleep)
-    --hsc.cinematic_skip_start_internal()
-    --hsc.game_save_totally_unsafe()
-    --sleep(function()
+    -- hsc.cinematic_skip_start_internal()
+    -- hsc.game_save_totally_unsafe()
+    -- sleep(function()
     --    return not (hsc.game_saving())
-    --end, 1)
+    -- end, 1)
     return RunCinematics
 end
 
