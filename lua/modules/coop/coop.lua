@@ -155,7 +155,7 @@ end
 ---@param playerIndex number
 ---@return number remainingVotes
 function coop.registerVote(playerIndex)
-    if not CoopStarted then
+    if not IsCoopStarted then
         local playerName = get_var(playerIndex, "$name")
         local requiredVotes = coop.getRequiredVotes()
         VotesList[playerIndex] = true
@@ -163,7 +163,7 @@ function coop.registerVote(playerIndex)
         local remainingVotes = requiredVotes - votesCount
         say_all(playerName .. " is ready for coop! (" .. votesCount .. " / " .. requiredVotes .. ")")
         if votesCount >= requiredVotess then
-            CoopStarted = true
+            IsCoopStarted = true
             coop.enableSpawn(true)
             timer(3000, "StartCoop")
         end

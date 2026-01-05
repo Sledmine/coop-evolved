@@ -84,6 +84,11 @@ end
 ---@param ... function | function[]
 ---@return any
 function hsc.begin(...)
+    local functions = {...}
+    if type(functions[1]) == "table" then
+        -- If the first argument is a table, treat it as a list of functions
+        functions = functions[1]
+    end
     for i, func in ipairs(functions) do
         if type(func) == "function" then
             -- Return last evaluated function
@@ -161,15 +166,15 @@ function hsc.cinematic_skip_stop_internal()
 end
 
 function hsc.game_save()
-    hsc.print("game_save not Lua implemented!")
+    logger:debug("game_save not Lua implemented!")
 end
 
 function hsc.game_save_totally_unsafe()
-    hsc.print("game_save_totally_unsafe not Lua implemented!")
+    logger:debug("game_save_totally_unsafe not Lua implemented!")
 end
 
 function hsc.game_save_no_timeout()
-    hsc.print("game_save_no_timeout not Lua implemented!")
+    logger:debug("game_save_no_timeout not Lua implemented!")
 end
 
 function hsc.game_is_cooperative()
@@ -183,16 +188,24 @@ function hsc.game_revert()
     elseif engine.netgame.getServerType() == "local" then
         native("game_revert")()
     end
-
 end
 
 function hsc.game_won()
     -- Execute depending of server type
-    if engine.netgame.getServerType() == "sapp" or engine.netgame.getServerType() == "local" then
+    if engine.netgame.getServerType() == "sapp" then
         hscExecuteScript("sv_map_next")
+    elseif engine.netgame.getServerType() == "local" then
+        hscExecuteScript("sv_end_game")
     elseif engine.netgame.getServerType() == "none" then
         native("game_won")()
     end
+end
+
+function hsc.game_skip_ticks(ticks)
+    if engine.netgame.getServerType() == "none" then
+        return native("game_skip_ticks", ticks)
+    end
+    logger:debug("game_skip_ticks not supported on networked games")
 end
 
 function hsc.pin(value, min, max)

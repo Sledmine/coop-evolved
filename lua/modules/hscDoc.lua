@@ -411,7 +411,7 @@ hscDoc.functions = { {
   funcName = "object_set_facing",
   hash = "194FA",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "object", "real" },
@@ -425,7 +425,7 @@ hscDoc.functions = { {
   funcName = "object_set_permutation",
   hash = "0042F",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "object_name" },
@@ -677,7 +677,8 @@ hscDoc.functions = { {
   funcName = "recording_play_and_delete",
   hash = "3B446",
   isNative = true,
-  isSynchronizable = true,
+  -- FIXME Check if syncing functions that erase units is secure
+  isSynchronizable = false,
   returnType = "boolean"
 }, {
   args = { "vehicle", "cutscene_recording" },
@@ -691,7 +692,8 @@ hscDoc.functions = { {
   funcName = "recording_kill",
   hash = "09318",
   isNative = true,
-  isSynchronizable = true,
+  -- FIXME Check if syncing functions that kills units is secure
+  isSynchronizable = false,
   returnType = "void"
 }, {
   args = { "unit" },
@@ -845,7 +847,7 @@ hscDoc.functions = { {
   funcName = "scenery_animation_start_at_frame",
   hash = "D2DD8",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "boolean" },
@@ -859,7 +861,7 @@ hscDoc.functions = { {
   funcName = "unit_can_blink",
   hash = "E6340",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "unit" },
@@ -978,7 +980,7 @@ hscDoc.functions = { {
   funcName = "unit_set_emotion_animation",
   hash = "93B95",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "unit" },
@@ -1244,7 +1246,7 @@ hscDoc.functions = { {
   funcName = "breakable_surfaces_reset",
   hash = "EB22C",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = {},
@@ -2644,7 +2646,7 @@ hscDoc.functions = { {
   funcName = "vehicle_hover",
   hash = "F88E1",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = {},

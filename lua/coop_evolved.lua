@@ -14,13 +14,18 @@ local ether = require "ui.react"
 local script = require "script"
 local utils = require "coop.utils"
 inspect = require "inspect"
+local hscExecuteScript = engine.hsc.executeScript
+local hsc = require "hsc"
+require "coop.gameplay.utils"
+
+-- Settings
+DebugMode = false
 
 -- Global state
 local lastBipedTagHandle
 AvailableBipeds = {}
 CoopState = {remainingVotes = 0, difficulty = coop.difficulties[4]}
-
-DebugMode = true
+RunCinematics = true
 
 local loadWhenIn = {
     "a10_coop_evolved",
@@ -138,7 +143,8 @@ function PluginLoad()
                 -- But preventing running the actual logic of the level script...
                 -- Allowing the server to just handle networking and player management
                 if serverType == "dedicated" then
-                    logger:warning("Dedicated server detected, disabling startup and continuous scripts")
+                    logger:warning(
+                        "Dedicated server detected, disabling startup and continuous scripts")
                     ---@diagnostic disable-next-line: duplicate-set-field
                     script.startup = function()
                     end
@@ -181,6 +187,7 @@ function PluginLoad()
     local function main()
         logger:info("Loading main")
         constants.get()
+        -- hscExecuteScript("fade_in", 0, 0, 0, 0)
     end
 
     balltze.event.mapLoad.subscribe(function(event)
@@ -195,11 +202,13 @@ function PluginLoad()
     balltze.event.frame.subscribe(function(event)
         if event.time == "before" and DebugMode then
             -- Draw current script memory usage
-            local memoryUsage = collectgarbage("count") / 1024
-            local memoryText = string.format("Coop Evolved script memory usage: %.2f MB",
-                                             memoryUsage)
-            draw_text(memoryText, 0, generalBounds.top - 32, generalBounds.right - 10,
-                      generalBounds.bottom, "console", "right", table.unpack(textColor))
+            if DebugMode then
+                local memoryUsage = collectgarbage("count") / 1024
+                local memoryText = string.format("Coop Evolved script memory usage: %.2f MB",
+                                                 memoryUsage)
+                draw_text(memoryText, 0, generalBounds.top - 32, generalBounds.right - 10,
+                          generalBounds.bottom, "console", "right", table.unpack(textColor))
+            end
         end
     end)
 
