@@ -1904,3 +1904,10 @@
 
 (script static "void" test
 (object_teleport monitor monitor_index_base )(custom_animation monitor "cinematics\animations\monitor\level_specific\c20\c20" "c20grabindex" false ))
+
+(script dormant jugger_easter_egg
+    (sound_looping_start "coop_evolved\levels\c20\music\boss\juggernaut_trap" none 1)
+    (sound_impulse_start "sound\music\cstrng\cstrng1" none 1)
+    (sound_impulse_start "sound\music\cstrng\cstrng2" none 1)
+    (sound_impulse_start "sound\music\cstrng\cstrng3" none 1)
+)
