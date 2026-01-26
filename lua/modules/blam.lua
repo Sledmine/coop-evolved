@@ -15,8 +15,13 @@ local sqrt = math.sqrt
 local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
+local round = math.round or function(num)
+    return math.floor(num + 0.5)
+end
 
-local blam = {_VERSION = "1.16.0"}
+local blam = {_VERSION = "1.17.0"}
+
+blam.MAXIMUM_OBJECTS = 2048
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -850,7 +855,7 @@ end
 ---@return number[]
 function blam.getObjects()
     local objects = {}
-    for objectIndex = 0, 2047 do
+    for objectIndex = 0, blam.MAXIMUM_OBJECTS - 1 do
         local object, objectId = blam.getObject(objectIndex)
         if object and objectId then
             objects[objectId] = objectIndex
@@ -1330,6 +1335,8 @@ local deviceGroupsTableStructure = {
 ---@field isCollideable boolean Enable/disable object collision, does not work with bipeds or vehicles
 ---@field isBeingPickedUp boolean Is the object being picked up
 ---@field hasNoCollision boolean Enable/disable object collision, causes animation problems
+---@field isGarbage boolean Is the object marked as garbage for cleanup
+---@field existenceTime number Time in ticks since the object was spawned
 ---@field model number Gbxmodel tag ID
 ---@field scale number Object scale factor
 ---@field health number Current health of the object
@@ -1404,7 +1411,7 @@ local objectStructure = {
     tagId = {type = "dword", offset = 0x0},
     networkRoleClass = {type = "dword", offset = 0x4},
     isNotMoving = {type = "bit", offset = 0x8, bitLevel = 0},
-    existanceTime = {type = "dword", offset = 0xC},
+    existenceTime = {type = "dword", offset = 0xC},
     isGhost = {type = "bit", offset = 0x10, bitLevel = 0},
     isOnGround = {type = "bit", offset = 0x10, bitLevel = 1},
     ---@deprecated
@@ -1414,6 +1421,7 @@ local objectStructure = {
     isStationary = {type = "bit", offset = 0x10, bitLevel = 5},
     hasNoCollision = {type = "bit", offset = 0x10, bitLevel = 7},
     dynamicShading = {type = "bit", offset = 0x10, bitLevel = 14},
+    isGarbage = {type = "bit", offset = 0x10, bitLevel = 16},
     isNotCastingShadow = {type = "bit", offset = 0x10, bitLevel = 18},
     isFrozen = {type = "bit", offset = 0x10, bitLevel = 20},
     -- FIXME Deprecated property, should be erased at a major release later
@@ -2279,23 +2287,34 @@ local modelAnimationsStructure = {
     }
 }
 
----@class weapon : blamObject
+---@class item : blamObject
+---@field isInInventory boolean Is weapon in inventory
+---@field ticksUntilDetonation number Ticks until weapon detonates
+---@field droppedByUnit number Object Handle of the unit that dropped the weapon
+---@field lastUpdateTick number Last update tick of the item
+
+local itemStructure = extendStructure(objectStructure, {
+    isInInventory = {type = "bit", offset = 0x1F4, bitLevel = 0},
+    ticksUntilDetonation = {type = "short", offset = 0x1F8},
+    droppedByUnit = {type = "dword", offset = 0x200},
+    lastUpdateTick = {type = "int", offset = 0x204}
+})
+
+---@class weapon : item
 ---@field pressedReloadKey boolean Is weapon trying to reload
 ---@field isWeaponPunching boolean Is weapon playing melee or grenade animation
 ---@field ownerObjectId number Object ID of the weapon owner
 ---@field carrierObjectId number Object ID of the weapon owner
----@field isInInventory boolean Is weapon in inventory
 ---@field primaryTriggerState number Primary trigger state of the weapon
 ---@field totalAmmo number Total ammo of the weapon
 ---@field loadedAmmo number Loaded ammo of the weapon   
 ---@field reloadTicksRemainingFirstMagazine number Remaining ticks for weapon to finish reload (1st magazine)
 
-local weaponStructure = extendStructure(objectStructure, {
-    pressedReloadKey = {type = "bit", offset = 0x230, bitLevel = 3},
-    isWeaponPunching = {type = "bit", offset = 0x230, bitLevel = 4},
+local weaponStructure = extendStructure(itemStructure, {
     ownerObjectId = {type = "dword", offset = 0x11C}, -- deprecated
     carrierObjectId = {type = "dword", offset = 0x11C},
-    isInInventory = {type = "bit", offset = 0x1F4, bitLevel = 0},
+    pressedReloadKey = {type = "bit", offset = 0x230, bitLevel = 3},
+    isWeaponPunching = {type = "bit", offset = 0x230, bitLevel = 4},
     primaryTriggerState = {type = "byte", offset = 0x261},
     totalAmmo = {type = "word", offset = 0x2B6},
     loadedAmmo = {type = "word", offset = 0x2B8},
@@ -2991,6 +3010,16 @@ function blam.modelAnimations(tag)
     return nil
 end
 
+---Create an Item object from a given address
+---@param address? number
+---@return item?
+function blam.item(address)
+    if address and isValid(address) then
+        return createBindTable(address, itemStructure)
+    end
+    return nil
+end
+
 --- Create a Weapon object from the given object address
 ---@param address? number
 ---@return weapon?
@@ -3082,14 +3111,14 @@ function blam.getObject(idOrIndex)
     local objectAddress
 
     -- Get object address
-    if (idOrIndex) then
+    if idOrIndex then
         -- Get object ID
-        if (idOrIndex < 0xFFFF) then
+        if idOrIndex < 0xFFFF then
             local index = idOrIndex
 
             -- Get objects table
             local table = createBindTable(addressList.objectTable, dataTableStructure)
-            if (index > table.capacity) then
+            if index > table.capacity then
                 return nil
             end
 
@@ -3588,6 +3617,18 @@ function blam.objectNameHandle(objectName, handle)
         -- Get the object handle from the global object name list
         return read_dword(objectNameListAddress + (nameIndex * 4))
     end
+end
+
+--- Converts ticks to seconds (30 ticks per second)
+---@param ticks number
+function blam.ticksToSeconds(ticks)
+    return round(ticks / 30)
+end
+
+--- Converts seconds to ticks (30 ticks per second)
+--- @param seconds number
+function blam.secondsToTicks(seconds)
+    return 30 * seconds
 end
 
 return blam
