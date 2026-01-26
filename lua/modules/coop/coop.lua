@@ -6,6 +6,9 @@ local getIndexById = blam.getIndexById
 local balltze = Balltze
 local engine = Engine
 local findTags = engine.tag.findTags
+local objectClasses = blam.objectClasses
+local objectNetworkRoleClasses = blam.objectNetworkRoleClasses
+
 local hsc = require "hsc"
 
 local coop = {}
@@ -225,6 +228,35 @@ function coop.changeBiped(desiredBipedIndex)
         logger:debug("Replacing biped with " .. desiredBiped.name)
         globals.multiplayerInformation = mpInfo
         delete_object(player.objectId)
+    end
+end
+
+---Dynamically control networked items to prevent them from despawning
+function coop.dynamicallyControlNetworkItems()
+    local scenario = blam.scenario(0)
+    assert(scenario, "Failed to load scenario")
+    for objectIndex = 0, blam.MAXIMUM_OBJECTS - 1 do
+        local object, objectHandle = blam.getObject(objectIndex)
+        if object and objectHandle then
+            local isItem = object.class == objectClasses.equipment or object.class ==
+                               objectClasses.weapon
+            local isPlayerOwned = not isNull(object.playerId)
+            local isWeapon = object.class == objectClasses.weapon
+            local isEquipment = object.class == objectClasses.equipment
+            local isLocal = object.networkRoleClass == objectNetworkRoleClasses.localOnly
+            local isNetworked = object.networkRoleClass == objectNetworkRoleClasses.puppet
+            local isNamedObject = not isNull(object.nameIndex)
+            if isItem then
+                local item = blam.item(get_object(objectHandle))
+                assert(item, "Failed to load item object")
+                if not isLocal then
+                    -- Prevent collection of items that are not player owned and might be named
+                    if not isPlayerOwned or isNamedObject then
+                        item.lastUpdateTick = engine.core.getTickCount()
+                    end
+                end
+            end
+        end
     end
 end
 

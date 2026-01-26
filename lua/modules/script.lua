@@ -299,4 +299,10 @@ function script.create(func)
     script.thread(func)()
 end
 
+---Clean up all call traces
+function script.cleanup()
+    callTrace = {}
+    collectgarbage("collect")
+end
+
 return script

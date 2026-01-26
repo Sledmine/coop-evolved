@@ -155,9 +155,9 @@ function PluginLoad()
 
                 if serverType ~= "sapp" then
                     local mapName = engine.map.getCurrentMapHeader().name
-                    logger:info("Current map name: \"{}\"", mapName)
+                    logger:debug("Current map name: \"{}\"", mapName)
                     local levelName = mapName:split("_coop")[1]
-                    logger:info("Loading level script for \"{}\"", levelName)
+                    logger:debug("Loading level script for \"{}\"", levelName)
                     local ok, result = pcall(require, "levels." .. levelName)
                     if not ok then
                         logger:warning("Error loading level script: {}", result)
@@ -185,7 +185,6 @@ function PluginLoad()
     end
 
     local function main()
-        logger:info("Loading main")
         constants.get()
         -- hscExecuteScript("fade_in", 0, 0, 0, 0)
     end

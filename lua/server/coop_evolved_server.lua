@@ -325,14 +325,14 @@ function StartCoop()
                 end
                 return spawnedPlayers >= getPlayerCount()
             end)
-            logger:info("Starting Coop Evolved!")
+            hsc.print("Starting Coop Evolved!")
             IsCoopStarted = true
             local levelName = map:split("_coop")[1]
             local ok, result = pcall(require, "levels." .. levelName)
             if not ok then
                 logger:warning("Error loading level script: {}", result)
             else
-                logger:info("Loaded level script for \"{}\"", levelName)
+                logger:debug("Loaded level script for \"{}\"", levelName)
             end
             sleep(utils.secondsToTicks(3))
             isStarterWeaponsEnabled = false
@@ -487,8 +487,15 @@ function OnMapLoad()
         forcedBipedTeams[tag.id] = blam.unitTeamClasses.covenant
     end
     AvailableBipeds = coop.getAvailableBipeds()
-    -- TODO Remove this, just for testing purposes!
-    --StartCoop()
+
+    -- Clean up script threads from previous map
+    script.cleanup()
+
+    -- Prevent singleplayer items from despawning
+    script.continuous(function (_, sleep)
+        sleep(1)
+        coop.dynamicallyControlNetworkItems()
+    end)
 end
 
 function OnScriptLoad()
