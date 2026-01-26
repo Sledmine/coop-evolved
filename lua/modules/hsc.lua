@@ -185,7 +185,7 @@ function hsc.game_revert()
     -- Execute depending of server type
     if engine.netgame.getServerType() == "sapp" then
         hscExecuteScript("sv_map_next")
-    elseif engine.netgame.getServerType() == "local" then
+    elseif engine.netgame.getServerType() == "none" or engine.netgame.getServerType() == "local" then
         native("game_revert")()
     end
 end
@@ -403,6 +403,70 @@ function hsc.unit_enter_vehicle(...)
 
     -- Invoke the original HSC function
     return native("unit_enter_vehicle", ...)
+end
+
+function hsc.activate_team_nav_point_flag(navpoint, team, cutscene_flag, real)
+    if engine.netgame.getServerType() ~= "none" then
+        -- Workaround for navpoints not working as expected in multiplayer due to team indexes
+        if team and team:lower() == "player" then
+            local playerCount = hsc.list_count(hsc.players())
+            for i = 0, playerCount - 1 do
+                local player = hsc.unit(hsc.list_get(hsc.players(), i))
+                -- Activate nav point flag for each player unit
+                native("activate_nav_point_flag", navpoint, player, cutscene_flag, real)
+            end
+            return
+        end
+    end
+    return native("activate_team_nav_point_flag", navpoint, team, cutscene_flag, real)
+end
+
+function hsc.deactivate_team_nav_point_flag(team, cutscene_flag)
+    if engine.netgame.getServerType() ~= "none" then
+        -- Workaround for navpoints not working as expected in multiplayer due to team indexes
+        if team and team:lower() == "player" then
+            local playerCount = hsc.list_count(hsc.players())
+            for i = 0, playerCount - 1 do
+                local player = hsc.unit(hsc.list_get(hsc.players(), i))
+                -- Deactivate nav point flag for each player unit
+                native("deactivate_nav_point_flag", player, cutscene_flag)
+            end
+            return
+        end
+    end
+    return native("deactivate_team_nav_point_flag", team, cutscene_flag)
+end
+
+function hsc.activate_team_nav_point_object(navpoint, team, object, real)
+    if engine.netgame.getServerType() ~= "none" then
+        -- Workaround for navpoints not working as expected in multiplayer due to team indexes
+        if team and team:lower() == "player" then
+            local playerCount = hsc.list_count(hsc.players())
+            for i = 0, playerCount - 1 do
+                local player = hsc.unit(hsc.list_get(hsc.players(), i))
+                -- Activate nav point for each player unit
+                native("activate_nav_point_object", navpoint, player, object, real)
+            end
+            return
+        end
+    end
+    return native("activate_team_nav_point_object", navpoint, team, object, real)
+end
+
+function hsc.deactivate_team_nav_point_object(team, object)
+    if engine.netgame.getServerType() ~= "none" then
+        -- Workaround for navpoints not working as expected in multiplayer due to team indexes
+        if team and team:lower() == "player" then
+            local playerCount = hsc.list_count(hsc.players())
+            for i = 0, playerCount - 1 do
+                local player = hsc.unit(hsc.list_get(hsc.players(), i))
+                -- Deactivate nav point for each player unit
+                native("deactivate_nav_point_object", player, object)
+            end
+            return
+        end
+    end
+    return native("deactivate_team_nav_point_object", team, object)
 end
 
 -- Bind existing in game HSC functions to Lua

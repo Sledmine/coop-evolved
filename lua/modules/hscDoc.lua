@@ -2814,56 +2814,56 @@ hscDoc.functions = { {
   funcName = "activate_nav_point_flag",
   hash = "289AC",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "navpoint", "unit", "object", "real" },
   funcName = "activate_nav_point_object",
   hash = "B098D",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "navpoint", "team", "cutscene_flag", "real" },
   funcName = "activate_team_nav_point_flag",
   hash = "565A2",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "navpoint", "team", "object", "real" },
   funcName = "activate_team_nav_point_object",
   hash = "551B4",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "unit", "cutscene_flag" },
   funcName = "deactivate_nav_point_flag",
   hash = "931E0",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "unit", "object" },
   funcName = "deactivate_nav_point_object",
   hash = "2D9E0",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "team", "cutscene_flag" },
   funcName = "deactivate_team_nav_point_flag",
   hash = "DFFE9",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "team", "object" },
   funcName = "deactivate_team_nav_point_object",
   hash = "C23E2",
   isNative = true,
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = {},
