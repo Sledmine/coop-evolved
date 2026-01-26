@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
 local wake = require"script".wake
@@ -7,6 +8,7 @@ local easy = "easy"
 local normal = "normal"
 local hard = "hard"
 local impossible = "impossible"
+local constants = require "coop.constants"
 
 -- Terminology list (add as we figure it out):
 -- lz = landing zone
@@ -110,25 +112,10 @@ local play_music_b30_031_alt = false
 local play_music_b30_032 = false
 local play_music_b30_032_alt = false
 
-local pelicanSeats = {
-    -- "P-driver",
-    "P-riderLF",
-    "P-riderLM",
-    "P-riderLB",
-    "P-riderRF",
-    "P-riderRM",
-    "P-riderRB",
-    -- "cargo",
-    "P-riderRB01",
-    "P-riderRB02",
-    "P-riderLB02",
-    "P-riderLB"
-}
-
 local function isUnitInsidePelican(unit, vehicle)
     local isInside = false
     -- Loop trough all pelican seats
-    for _, seat in ipairs(pelicanSeats) do
+    for _, seat in ipairs(constants.seats.pelican) do
         if hsc.vehicle_test_seat(vehicle, seat, unit) then
             isInside = true
             break
@@ -1368,10 +1355,9 @@ function b30.obj_shafta_goal(call, sleep)
     sleep(hsc.recording_time("extraction_pelican"))
     -- TODO This might break if there are more players than seats in the pelican, add new pelican
     local allPlayersMustBeInPelican = hsc.game_is_cooperative()
-    if not allPlayersMustBeInPelican then
-        ticksForPelicanPlayerWait = nil
-    end
-    if ticksForPelicanPlayerWait then
+
+    -- Show timer only if all players must be in pelican at extraction
+    if allPlayersMustBeInPelican then
         hsc.hud_set_timer_position(0, 5, "bottom_right")
         hsc.hud_set_timer_time(0, secondsForWaitingPlayersInPelican)
         hsc.hud_set_timer_warning_time(1, 0)
@@ -1395,7 +1381,8 @@ function b30.obj_shafta_goal(call, sleep)
             end
         end
         return result
-    end, 1, ticksForPelicanPlayerWait)
+    end, 1, not allPlayersMustBeInPelican and 0 or ticksForPelicanPlayerWait)
+    
     sleep(30)
     hsc.show_hud_timer(false)
     play_music_b30_06 = false
@@ -1722,13 +1709,13 @@ function b30.playersEnterPelican()
         local playerUnit = getPlayerUnit(playerIndex)
         -- Alternate between the two Pelicans
         local targetVehicleName = pelicans[math.mod(playerIndex, #pelicans) + 1]
-        local seatName = pelicanSeats[currentSeatIndex]
+        local seatName = constants.seats.pelican[currentSeatIndex]
         logger:debug("Player {} entering vehicle {} at seat {}", playerIndex, targetVehicleName,
                      seatName)
         hsc.unit_enter_vehicle(playerUnit, targetVehicleName, seatName)
         -- Move to the next seat for the next player
         currentSeatIndex = currentSeatIndex + 1
-        if currentSeatIndex > #pelicanSeats then
+        if currentSeatIndex > #constants.seats.pelican then
             currentSeatIndex = 1
         end
     end
@@ -1752,7 +1739,7 @@ function b30.cutscene_insertion(call, sleep)
     hsc.ai_place("beach_lz")
 
     -- Only place marines and load pelicans in non-coop mode
-    --if not hsc.game_is_cooperative() then
+    -- if not hsc.game_is_cooperative() then
     if false then
         hsc.ai_place("beach_lz_marine")
         hsc.objects_predict(hsc.ai_actors("beach_lz_marine"))
@@ -1764,7 +1751,7 @@ function b30.cutscene_insertion(call, sleep)
 
     hsc.object_teleport("insertion_pelican_1", "insertion_pelican_flag_1")
     hsc.recording_play_and_hover("insertion_pelican_1", "insertion_pelican_1_in")
-    
+
     hsc.object_teleport("insertion_pelican_2", "insertion_pelican_flag_2")
     hsc.recording_play_and_hover("insertion_pelican_2", "insertion_pelican_2_in")
 
@@ -1811,7 +1798,9 @@ function b30.cutscene_insertion(call, sleep)
     hsc.sound_class_set_gain("vehicle", 1, 2)
     sleep(60)
     hsc.vehicle_unload("insertion_pelican_2", "rider")
-    if not hsc.game_is_cooperative() then
+    -- Only place marines and load pelicans in non-coop mode
+    --if not hsc.game_is_cooperative() then
+    if false then
         hsc.sound_impulse_start("sound\\dialog\\b30\\b30_insert_050_sarge2", "none", 1)
     end
     sleep(30)

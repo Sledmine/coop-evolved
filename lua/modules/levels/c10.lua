@@ -1,7 +1,9 @@
+---@diagnostic disable: undefined-field
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
 local wake = require"script".wake
 local hsc = require "hsc"
+local constants = require "coop.constants"
 local easy = "easy"
 local normal = "normal"
 local hard = "hard"
@@ -1136,8 +1138,9 @@ function c10.x50(call, sleep)
     hsc.sound_class_set_gain("ambient", 0.5, 0)
     sleep(30)
     hsc.switch_bsp(2)
-    hsc.object_teleport(call(c10.player0), "player0_int_base")
-    hsc.object_teleport(call(c10.player1), "player1_int_base")
+    --hsc.object_teleport(call(c10.player0), "player0_int_base")
+    --hsc.object_teleport(call(c10.player1), "player1_int_base")
+    teleportPlayersTo("player0_int_base")
     hsc.unit_suspended(call(c10.player0), true)
     hsc.unit_suspended(call(c10.player1), true)
     hsc.camera_control(true)
@@ -1146,8 +1149,9 @@ function c10.x50(call, sleep)
     call(c10.intro)
     hsc.fade_out(0, 0, 0, 0)
     hsc.switch_bsp(0)
-    hsc.object_teleport(call(c10.player0), "player0_ext_base")
-    hsc.object_teleport(call(c10.player1), "player1_ext_base")
+    --hsc.object_teleport(call(c10.player0), "player0_ext_base")
+    --hsc.object_teleport(call(c10.player1), "player1_ext_base")
+    teleportPlayersTo("player0_ext_base")
     hsc.cinematic_screen_effect_stop()
     hsc.cinematic_screen_effect_start(true)
     hsc.cinematic_screen_effect_set_video(2, 2)
@@ -1164,8 +1168,9 @@ function c10.x50(call, sleep)
     hsc.sound_class_set_gain("device_door", 1, 0)
     call(c10.door)
     hsc.switch_bsp(2)
-    hsc.object_teleport(call(c10.player0), "player0_int_base")
-    hsc.object_teleport(call(c10.player1), "player1_int_base")
+    --hsc.object_teleport(call(c10.player0), "player0_int_base")
+    --hsc.object_teleport(call(c10.player1), "player1_int_base")
+    teleportPlayersTo("player0_int_base")
     test_play_flash = false
     test_ffw_flash = true
     hsc.sound_impulse_start("sound\\sinomatixx_foley\\x50_ffw_play", "none", 1)
@@ -1230,8 +1235,9 @@ function c10.cutscene_extraction(call, sleep)
     hsc.camera_control(true)
     hsc.cinematic_start()
     hsc.switch_bsp(5)
-    hsc.object_teleport(call(c10.player0), "player0_extract_base")
-    hsc.object_teleport(call(c10.player1), "player1_extract_base")
+    --hsc.object_teleport(call(c10.player0), "player0_extract_base")
+    --hsc.object_teleport(call(c10.player1), "player1_extract_base")
+    teleportPlayersTo("player0_extract_base")
     hsc.unit_suspended(call(c10.player0), true)
     hsc.unit_suspended(call(c10.player1), true)
     sleep(15)
@@ -1732,26 +1738,44 @@ function c10.clean(call, sleep)
     hsc.garbage_collect_now()
 end
 
+local insertionPelican = "insertion_pelican"
+
+function c10.playersEnterPelican()
+    local currentSeatIndex = 1
+    for playerIndex = 0, getPlayerCount() - 1 do
+        local playerUnit = getPlayerUnit(playerIndex)
+        local targetSeatName = constants.seats.pelican[currentSeatIndex]
+        hsc.unit_enter_vehicle(playerUnit, insertionPelican, targetSeatName)
+        currentSeatIndex = currentSeatIndex + 1
+        if currentSeatIndex > #constants.seats.pelican then
+            logger:warning("All pelican seats are occupied.")
+            break
+        end
+    end
+end 
+
 function c10.insertion(call, sleep)
     hsc.fade_out(0, 0, 0, 0)
     hsc.cinematic_start()
     hsc.show_hud(false)
     hsc.camera_control(true)
-    hsc.object_destroy("insertion_pelican")
-    hsc.object_create("insertion_pelican")
-    hsc.object_teleport("insertion_pelican", "insertion_flag")
+    hsc.object_destroy(insertionPelican)
+    hsc.object_create(insertionPelican)
+    hsc.object_teleport(insertionPelican, "insertion_flag")
     sleep(1)
-    hsc.unit_enter_vehicle(call(c10.player0), "insertion_pelican", "p-riderlf")
-    hsc.unit_enter_vehicle(call(c10.player1), "insertion_pelican", "p-riderrf")
-    hsc.unit_set_enterable_by_player("insertion_pelican", false)
-    hsc.objects_predict("insertion_pelican")
+    
+    -- Make all players enter the pelican
+    c10.playersEnterPelican()
+
+    hsc.unit_set_enterable_by_player(insertionPelican, false)
+    hsc.objects_predict(insertionPelican)
     hsc.ai_place("swamp_a_covenant/grunts_insertion")
     hsc.ai_place("swamp_a_covenant/jackals_insertion")
     hsc.objects_predict(hsc.ai_actors("swamp_a_covenant"))
     hsc.ai_disregard(hsc.players(), true)
     hsc.camera_set("insertion_1", 0)
     sleep(5)
-    hsc.recording_play_and_hover("insertion_pelican", "insertion_pelican_in")
+    hsc.recording_play_and_hover(insertionPelican, "insertion_pelican_in")
     hsc.sound_looping_start("sound\\sinomatixx_music\\c10_insertion_music", "none", 1)
     hsc.fade_in(0, 0, 0, 60)
     hsc.camera_set("insertion_2", 400)
@@ -1772,9 +1796,8 @@ function c10.insertion(call, sleep)
     sleep(15)
     hsc.cinematic_stop()
     hsc.show_hud(true)
-    sleep(hsc.recording_time("insertion_pelican"))
-    hsc.unit_exit_vehicle(call(c10.player0))
-    hsc.unit_exit_vehicle(call(c10.player1))
+    sleep(hsc.recording_time(insertionPelican))
+    allPlayersExitVehicle()
     hsc.ai_disregard(hsc.players(), false)
     hsc.game_save_totally_unsafe()
     sleep(function()
@@ -1782,8 +1805,8 @@ function c10.insertion(call, sleep)
     end, 12, 30 * 12)
     sleep(30)
     hsc.object_create("pelican_radio")
-    hsc.vehicle_hover("insertion_pelican", false)
-    hsc.recording_play_and_delete("insertion_pelican", "insertion_pelican_out")
+    hsc.vehicle_hover(insertionPelican, false)
+    hsc.recording_play_and_delete(insertionPelican, "insertion_pelican_out")
 end
 
 function c10.swamp_b_save(call, sleep)
@@ -3327,8 +3350,9 @@ function c10.mission_control(call, sleep)
     tracker_x50 = false
     hsc.object_create_anew_containing("blood")
     hsc.object_create("post_x50_marine")
-    hsc.object_teleport(call(c10.player0), "player0_playon_c10")
-    hsc.object_teleport(call(c10.player1), "player1_playon_c10")
+    --hsc.object_teleport(call(c10.player0), "player0_playon_c10")
+    --hsc.object_teleport(call(c10.player1), "player1_playon_c10")
+    teleportPlayersTo("player0_playon_c10")
     hsc.cinematic_stop()
     wake(c10.chapter_flood)
     hsc.switch_bsp(2)

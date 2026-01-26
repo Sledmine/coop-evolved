@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
 local wake = require"script".wake
@@ -1551,8 +1552,9 @@ function d40.x70_finale(call, sleep)
     hsc.cinematic_start()
     hsc.camera_control(true)
     hsc.switch_bsp(7)
-    hsc.object_teleport(call(d40.player0), "player0_finale_pause")
-    hsc.object_teleport(call(d40.player1), "player1_finale_pause")
+    --hsc.object_teleport(call(d40.player0), "player0_finale_pause")
+    --hsc.object_teleport(call(d40.player1), "player1_finale_pause")
+    teleportPlayersTo("player0_finale_pause")
     hsc.object_teleport(hsc.player2(), "player1_finale_pause")
     hsc.object_teleport(hsc.player3(), "player1_finale_pause")
     hsc.object_teleport(hsc.player4(), "player1_finale_pause")
@@ -1866,8 +1868,9 @@ function d40.x70_bridge(call, sleep)
     hsc.cinematic_start()
     hsc.camera_control(true)
     hsc.switch_bsp(1)
-    hsc.object_teleport(call(d40.player0), "player0_bridge_pause")
-    hsc.object_teleport(call(d40.player1), "player1_bridge_pause")
+    --hsc.object_teleport(call(d40.player0), "player0_bridge_pause")
+    --hsc.object_teleport(call(d40.player1), "player1_bridge_pause")
+    teleportPlayersTo("player0_bridge_pause")
     hsc.object_teleport(hsc.player2(), "player1_bridge_pause")
     hsc.object_teleport(hsc.player3(), "player1_bridge_pause")
     hsc.object_teleport(hsc.player4(), "player1_bridge_pause")
@@ -1908,8 +1911,9 @@ function d40.x70_bridge(call, sleep)
     call(d40.bridge_2)
     hsc.cinematic_screen_effect_stop()
     hsc.cinematic_set_near_clip_distance(0.0625)
-    hsc.object_teleport(call(d40.player0), "player0_playon_base")
-    hsc.object_teleport(call(d40.player1), "player1_playon_base")
+    --hsc.object_teleport(call(d40.player0), "player0_playon_base")
+    --hsc.object_teleport(call(d40.player1), "player1_playon_base")
+    teleportPlayersTo("player0_playon_base")
     hsc.object_teleport(hsc.player2(), "player1_playon_base")
     hsc.object_teleport(hsc.player3(), "player1_playon_base")
     hsc.object_teleport(hsc.player4(), "player1_playon_base")
@@ -1955,8 +1959,9 @@ function d40.cutscene_insertion(call, sleep)
     hsc.fade_out(0, 0, 0, 0)
     hsc.camera_control(true)
     hsc.cinematic_start()
-    hsc.object_teleport(call(d40.player0), "player0_intro_base")
-    hsc.object_teleport(call(d40.player1), "player1_intro_base")
+    --hsc.object_teleport(call(d40.player0), "player0_intro_base")
+    --hsc.object_teleport(call(d40.player1), "player1_intro_base")
+    teleportPlayersTo("player0_intro_base")
     hsc.object_teleport(hsc.player2(), "player1_intro_base")
     hsc.object_teleport(hsc.player3(), "player1_intro_base")
     hsc.object_teleport(hsc.player4(), "player1_intro_base")
@@ -2010,8 +2015,9 @@ function d40.cutscene_insertion(call, sleep)
     hsc.unit_suspended(hsc.player13(), false)
     hsc.unit_suspended(hsc.player14(), false)
     hsc.unit_suspended(hsc.player15(), false)
-    hsc.object_teleport(call(d40.player0), "player0_intro_done")
-    hsc.object_teleport(call(d40.player1), "player1_intro_done")
+    --hsc.object_teleport(call(d40.player0), "player0_intro_done")
+    --hsc.object_teleport(call(d40.player1), "player1_intro_done")
+    teleportPlayersTo("player0_intro_done")
     hsc.object_teleport(hsc.player2(), "player1_intro_done")
     hsc.object_teleport(hsc.player3(), "player1_intro_done")
     hsc.object_teleport(hsc.player4(), "player1_intro_done")
@@ -2682,6 +2688,8 @@ function d40.enc6_6(call, sleep)
 end
 
 function d40.enc6_5_ambients(call, sleep)
+    -- Add a sleep here to improve performance a bit over network
+    sleep(30)
     hsc.begin_random({
         function()
             hsc.begin({
@@ -5503,18 +5511,16 @@ function d40.section1(call, sleep)
 end
 
 function d40.coop_control(call, sleep)
-    if hsc.list_count(hsc.players()) < 1 then
+    if hsc.game_is_cooperative() then
         hsc.begin({
             function()
                 coop = true
             end,
             function()
                 spawn_scale = spawn_scale * 1.2
-
             end,
             function()
                 min_combat_spawn = min_combat_spawn + 1
-
             end
         })
     end
@@ -5574,8 +5580,9 @@ end
 
 function d40.main_d40(call, sleep)
     hsc.fade_out(0, 0, 0, 0)
-    call(d40.coop_control)
-    call(d40.diff_control)
+    -- Remove these for performance purposes, too much objects for a network game
+    --call(d40.coop_control)
+    --call(d40.diff_control)
     wake(d40.section1)
     wake(d40.section2)
     wake(d40.section3)

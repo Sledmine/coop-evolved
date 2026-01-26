@@ -1,5 +1,5 @@
 local blam = require "blam"
-local utils= require "coop.utils"
+local utils = require "coop.utils"
 local tagClasses = blam.tagClasses
 local findTag = blam.findTag
 
@@ -14,10 +14,25 @@ if Engine.netgame.getServerType() == "sapp" then
     constants.lastPlayerIndex = 16
 end
 
-function constants.get()
-    constants.widgets = {
-        coopMenu = findTag("coop_menu_screen", tagClasses.uiWidgetDefinition)
+constants.seats = {
+    pelican = {
+        -- "P-driver",
+        "P-riderLF",
+        "P-riderLM",
+        "P-riderLB",
+        "P-riderRF",
+        "P-riderRM",
+        "P-riderRB",
+        -- "cargo",
+        "P-riderRB01",
+        "P-riderRB02",
+        "P-riderLB02",
+        "P-riderLB"
     }
+}
+
+function constants.get()
+    constants.widgets = {coopMenu = findTag("coop_menu_screen", tagClasses.uiWidgetDefinition)}
 end
 
 return constants

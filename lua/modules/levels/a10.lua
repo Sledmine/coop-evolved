@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
 local wake = require"script".wake
@@ -5208,7 +5209,6 @@ function a10.fast_setup(call, sleep)
     hsc.ai_command_list("cryo_tech/tech", "introduction_2")
 
     -- Create cryotubes for all players
-    logger:info("Creating cryotubes for all players")
     a10.prepareCryotubes()
     a10.enterCryotubes(true)
 

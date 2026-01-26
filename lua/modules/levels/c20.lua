@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
 local wake = require"script".wake
@@ -135,8 +136,9 @@ function c20.cutscene_insertion(call, sleep)
     hsc.camera_control(true)
     hsc.cinematic_start()
     hsc.switch_bsp(0)
-    hsc.object_teleport(call(c20.player0), "player0_pause_base")
-    hsc.object_teleport(call(c20.player1), "player1_pause_base")
+    --hsc.object_teleport(call(c20.player0), "player0_pause_base")
+    --hsc.object_teleport(call(c20.player1), "player1_pause_base")
+    teleportPlayersTo("player0_pause_base")
     hsc.object_create_anew("index")
     hsc.object_create_anew("chief")
     hsc.object_create_anew("monitor")
@@ -194,8 +196,9 @@ function c20.cutscene_insertion(call, sleep)
     hsc.object_destroy("chief")
     hsc.object_destroy("monitor")
     hsc.object_destroy("rifle")
-    hsc.object_teleport(call(c20.player0), "chief_teleport_base")
-    hsc.object_teleport(call(c20.player1), "player1_start_base")
+    --hsc.object_teleport(call(c20.player0), "chief_teleport_base")
+    --hsc.object_teleport(call(c20.player1), "player1_start_base")
+    teleportPlayersTo("chief_teleport_base")
     hsc.camera_control(false)
     hsc.cinematic_stop()
     hsc.device_set_position_immediate("spooky_door", 0)
@@ -221,8 +224,9 @@ function c20.cutscene_extraction(call, sleep)
     hsc.object_create_anew("index")
     hsc.object_pvs_activate("monitor")
     hsc.objects_predict("chief")
-    hsc.object_teleport(call(c20.player0), "player0_pause_base")
-    hsc.object_teleport(call(c20.player1), "player1_pause_base")
+    --hsc.object_teleport(call(c20.player0), "player0_pause_base")
+    --hsc.object_teleport(call(c20.player1), "player1_pause_base")
+    teleportPlayersTo("player0_pause_base")
     hsc.ai_attach_free("monitor", "characters\\monitor\\monitor")
     hsc.object_teleport("monitor", "monitor_index_fly_base")
     hsc.camera_set("platform_drop_1c", 0)
@@ -3251,7 +3255,7 @@ function c20.diff_control(call, sleep)
         end
         spawn_scale = spawn_scale * 0.75
 
-        hsc.player_add_equipment(call(c20.player0), "easy_start", true)
+        --hsc.player_add_equipment(call(c20.player0), "easy_start", true)
     end
     if hard == hsc.game_difficulty_get() then
         if debug then
@@ -3300,7 +3304,7 @@ function c20.mission(call, sleep)
     wake(c20.stun_spawn_waves)
     wake(c20.stun_door_counters)
     call(c20.coop_control)
-    call(c20.diff_control)
+    --call(c20.diff_control)
     hsc.ai_allegiance("sentinel", "player")
     if call(c20.cinematic_skip_start) then
         cinematic_ran = true
@@ -3324,5 +3328,20 @@ function c20.test(call, sleep)
     hsc.custom_animation("monitor", "cinematics\\animations\\monitor\\level_specific\\c20\\c20",
                          "c20grabindex", false)
 end
+
+function c20.juggernautEasterEgg(_, sleep)
+    -- Just for testing purposes
+    --hsc.ai_erase_all
+    --hsc.switch_bsp(1)
+    --teleportPlayersTo("juggernaut_trap_event")
+    sleep(function()
+        return hsc.volume_test_objects("juggernaut_trap_trigger", hsc.players())
+    end)
+    hsc.ai_place("enc_jugger_trap")
+    hsc.ai_berserk("enc_jugger_trap", true)
+    local soundIndex = math.random(1, 3)
+    hsc.sound_impulse_start("sound\\music\\cstrng\\cstrng" .. soundIndex, "none", 1)
+end
+script.startup(c20.juggernautEasterEgg)
 
 return c20
