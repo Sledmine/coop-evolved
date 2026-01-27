@@ -159,10 +159,16 @@ function hsc.print(message)
     engine.core.consolePrint("{}", tostring(message))
 end
 
+local skipInternal = false
+local actuallySkip = false
+
 function hsc.cinematic_skip_start_internal()
+    skipInternal = true
 end
 
 function hsc.cinematic_skip_stop_internal()
+    skipInternal = false
+    actuallySkip = false
 end
 
 function hsc.game_save()
@@ -469,9 +475,31 @@ function hsc.deactivate_team_nav_point_object(team, object)
     return native("deactivate_team_nav_point_object", team, object)
 end
 
+local keyboardInputAddress = 0x64C550
+
+script.continuous(function()
+    if skipInternal and not actuallySkip then
+        local eKey = read_byte(keyboardInputAddress + 33)
+        logger:debug("Cinematic skip internal active, key code: {}", eKey)
+        if eKey > 0 then
+            logger:debug("Cinematic skip detected, activating skip")
+            actuallySkip = true
+        end
+    end
+end)
+
 -- Bind existing in game HSC functions to Lua
 setmetatable(hsc, {
     __index = function(_, key)
+        if actuallySkip then
+            script.skip(true)
+            return function()
+                -- Skip execution
+                logger:debug("Skipping HSC function {} due to cinematic skip", key)
+                return true
+            end
+        end
+        script.skip(false)
         local hscFunction = table.find(hscDoc.functions, function(doc)
             return doc.funcName:trim() == key
         end)
