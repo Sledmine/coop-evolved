@@ -22,8 +22,6 @@ local useLocalThreadArgs = true
 ---@type ScriptThread[]
 local callTrace = {}
 
-local skipSleeps = false
-
 ---@param scriptThread ScriptThread
 local function addThreadToTrace(scriptThread)
     table.insert(callTrace, scriptThread)
@@ -72,9 +70,6 @@ local function sleepThreadFor(ticks)
     else
         -- logger:debug("Sleeping for " .. ticks .. " ticks")
     end
-    if skipSleeps then
-        return
-    end
     local currentTicks = getTickCount()
     while ticks == -1 or getTickCount() - currentTicks < ticks do
         coroutine.yield()
@@ -86,9 +81,6 @@ end
 ---@param maximumTicks? number
 local function sleepThreadUntil(evaluateCondition, everyNTicks, maximumTicks)
     -- logger:debug("Sleeping until condition is true")
-    if skipSleeps then
-        return
-    end
     local currentTicks = getTickCount()
     while not evaluateCondition() and
         (not maximumTicks or getTickCount() - currentTicks < maximumTicks) do
@@ -311,10 +303,6 @@ end
 function script.cleanup()
     callTrace = {}
     collectgarbage("collect")
-end
-
-function script.skip(skip)
-    skipSleeps = skip or false
 end
 
 return script

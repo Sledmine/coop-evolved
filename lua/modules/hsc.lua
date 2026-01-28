@@ -22,22 +22,6 @@ local cacheHscGlobals = {
     unit = "lua_unit"
 }
 
----@enum ai_default_state
-hsc.aiDefaultState = {
-    none = 0,
-    sleeping = 1,
-    alert = 2,
-    repeatSamePosition = 3,
-    loop = 4,
-    loopBackAndForth = 5,
-    loopRandomly = 6,
-    randomly = 7,
-    guarding = 8,
-    guardingAtGuardPosition = 9,
-    searching = 10,
-    fleeing = 11
-}
-
 local function getScriptArgs(args)
     return table.map(args, function(v, k)
         if type(v) == "string" then
@@ -80,7 +64,9 @@ local function native(name, ...)
     return getmetatable(hsc).__index(hsc, name)(...)
 end
 
----Reimplement HSC functions with LuaBlam
+-- Reimplement HSC functions in Lua
+
+---Execute functions in sequence and return last evaluated function result
 ---@param ... function | function[]
 ---@return any
 function hsc.begin(...)
@@ -103,22 +89,31 @@ function hsc.begin(...)
     end
 end
 
-function hsc.begin_random(functions)
-    local functions = table.copy(functions)
+---Execute functions in random order
+---@param ... function | function[]
+---@return any
+function hsc.begin_random(...)
+    local functions = {...}
+    if type(functions[1]) == "table" then
+        -- If the first argument is a table, treat it as a list of functions
+        functions = functions[1]
+    end
+    local functionsToRandomize = table.copy(functions)
     local result
     local function random()
-        local index = math.random(1, #functions)
-        local func = functions[index]
-        table.remove(functions, index)
+        local index = math.random(1, #functionsToRandomize)
+        local func = functionsToRandomize[index]
+        table.remove(functionsToRandomize, index)
         return func
     end
-    while #functions > 0 do
+    while #functionsToRandomize > 0 do
         -- Store result of randomly selected function
         result = random()()
     end
     return result
 end
 
+---Execute functions until one returns true
 ---@param ... function | function[]
 ---@return boolean
 function hsc.cond(...)
@@ -155,6 +150,8 @@ function hsc.game_difficulty_get()
 end
 hsc.game_difficulty_get_real = hsc.game_difficulty_get
 
+---Print a message to the in-game console
+---@param message any
 function hsc.print(message)
     engine.core.consolePrint("{}", tostring(message))
 end
@@ -204,6 +201,15 @@ function hsc.game_won()
         hscExecuteScript("sv_end_game")
     elseif engine.netgame.getServerType() == "none" then
         native("game_won")()
+    end
+end
+
+function hsc.game_saving()
+    -- Execute depending of server type
+    if engine.netgame.getServerType() == "none" then
+        return native("game_saving")()
+    else
+        return false
     end
 end
 
@@ -312,18 +318,18 @@ function hsc.objects_distance_to_flag(object_list, cutscene_flag)
 end
 
 function hsc.physics_constants_reset()
-    -- unimplemented
-    error("physics_constants_reset not implemented")
+    blam2.restoreGlobalGravity()
 end
 
 function hsc.physics_set_gravity(value)
-    -- unimplemented
-    error("physics_set_gravity not implemented")
+    blam2.restoreGlobalGravity()
+    local currentGravity = blam2.globalGravity()
+    local newGravity = currentGravity * value
+    blam2.globalGravity(newGravity)
 end
 
 function hsc.physics_get_gravity()
-    -- unimplemented
-    error("physics_get_gravity not implemented")
+    return blam2.globalGravity()
 end
 
 function hsc.debug_camera_save_name(name)
@@ -475,31 +481,9 @@ function hsc.deactivate_team_nav_point_object(team, object)
     return native("deactivate_team_nav_point_object", team, object)
 end
 
-local keyboardInputAddress = 0x64C550
-
-script.continuous(function()
-    if skipInternal and not actuallySkip then
-        local eKey = read_byte(keyboardInputAddress + 33)
-        logger:debug("Cinematic skip internal active, key code: {}", eKey)
-        if eKey > 0 then
-            logger:debug("Cinematic skip detected, activating skip")
-            actuallySkip = true
-        end
-    end
-end)
-
 -- Bind existing in game HSC functions to Lua
 setmetatable(hsc, {
     __index = function(_, key)
-        if actuallySkip then
-            script.skip(true)
-            return function()
-                -- Skip execution
-                logger:debug("Skipping HSC function {} due to cinematic skip", key)
-                return true
-            end
-        end
-        script.skip(false)
         local hscFunction = table.find(hscDoc.functions, function(doc)
             return doc.funcName:trim() == key
         end)

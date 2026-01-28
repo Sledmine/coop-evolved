@@ -18,6 +18,10 @@ local deg = math.deg
 
 local blam = {_VERSION = "2.0.0-dev", debug = false}
 
+
+---Physics gravity default constant
+blam.PHYSICS_GRAVITY_DEFAULT = 996779464
+
 local printdebug = function(...)
     if blam.debug then
         local args = {...}
@@ -2049,6 +2053,13 @@ function blam.globalGravity(gravity)
     else
         return read_float(gravityAddress)
     end
+end
+
+---Restore global gravity to default value
+---@return boolean
+function blam.restoreGlobalGravity()
+    local gravityAddress = addressList.globalGravity
+    write_dword(gravityAddress, blam.PHYSICS_GRAVITY_DEFAULT)
 end
 
 return blam
