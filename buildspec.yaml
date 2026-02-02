@@ -13,6 +13,7 @@ scenarios:
   - coop_evolved/levels/c40/c40_coop_evolved_dev
   - coop_evolved/levels/d20/d20_coop_evolved_dev
   - coop_evolved/levels/d40/d40_coop_evolved_dev
+  #- levels/research/research_ai
 commands:
   package:
     - rm -f dist/coop_evolved.lua
