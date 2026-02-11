@@ -1,23 +1,18 @@
-local utils = require "coop.utils"
 api_version = "1.12.0.0"
 DebugMode = false
 IsLevelDebugMode = false
-
 require "luna"
 
--- Bring compatibility with Lua 5.3
+-- Bring compatibility modules (Lua 5.3 and Balltze API)
 require "compat53"
-print("Compatibility with Lua 5.3 has been loaded!")
+require "balltzeCompat"
 
 local blam = require "blam"
 local tagClasses = blam.tagClasses
 local objectClasses = blam.objectClasses
 console_out = cprint
 
--- Bring compatibility with Balltze
-require "balltzeCompat"
--- Pre require structures for blam2
--- This helps the bundler to include modules properly
+-- Pre require structures for blam2 (This helps the bundler to include modules properly)
 require "structures.vehicle"
 
 local isNull = blam.isNull
@@ -26,6 +21,7 @@ local inspect = require "inspect"
 local coop = require "coop.coop"
 local constants = require "coop.constants"
 local events = require "coop.network.events"
+local utils = require "coop.utils"
 require "coop.gameplay.utils"
 
 local script = require "script"
@@ -53,17 +49,13 @@ local starterWeapons = {
 local isStarterWeaponsEnabled = true
 local forcedBipedTeams = {}
 local introCameras = {
-    a10 = "a10_start",
-    a30 = "a30_start",
     a50 = "insertion_3",
     b30 = "insertion_1a",
-    b40 = "b40_start",
-    c10 = "c10_start",
     c20 = "insertion_1",
     d40 = "chief_climb_2c"
 }
 
-function Broadcast(message)
+function broadcastMessage(message)
     for playerIndex = 1, 16 do
         if player_present(playerIndex) then
             rprint(playerIndex, message)
@@ -72,7 +64,7 @@ function Broadcast(message)
     return false
 end
 
-function Send(playerIndex, message)
+function monocastMessage(playerIndex, message)
     rprint(playerIndex, message)
     return false
 end
@@ -279,7 +271,7 @@ hsc.addMiddleWare(function(functionName, args)
         local hscPacket = createHscPacket(functionName, args)
         if hscPacket then
             -- logger:debug("HSC Packet: {}", hscPacket)
-            Broadcast(hscPacket)
+            broadcastMessage(hscPacket)
         end
     end
 end)
@@ -288,12 +280,21 @@ end)
 ---@param playerIndex number
 function GetReadyForCoop(playerIndex)
     if not IsCoopStarted then
+        local isStaticCameraAvailable = false
         for mapPattern, camera in pairs(introCameras) do
             if map:includes(mapPattern) then
-                rprint(playerIndex, "sync_camera_control 1")
-                rprint(playerIndex, "sync_camera_set " .. camera .. " 0")
+                monocastMessage(playerIndex, "sync_camera_control 1")
+                monocastMessage(playerIndex, "sync_camera_set " .. camera .. " 0")
+                isStaticCameraAvailable = true
                 break
             end
+        end
+        if not isStaticCameraAvailable then
+            local mapPrefix = map:split("_")[1]
+            local customCameraName = mapPrefix .. "_start"
+            logger:warning("Using custom camera name: {}", customCameraName)
+            monocastMessage(playerIndex, "sync_camera_control 1")
+            monocastMessage(playerIndex, "sync_camera_set " .. customCameraName .. " 0")
         end
         -- Dispatch coop menu event
         -- TODO Conditionally send to players if coop menu tag is available
@@ -490,12 +491,6 @@ function OnMapLoad()
 
     -- Clean up script threads from previous map
     script.cleanup()
-
-    -- Prevent singleplayer items from despawning
-    script.continuous(function (_, sleep)
-        sleep(1)
-        coop.dynamicallyControlNetworkItems()
-    end)
 end
 
 function OnScriptLoad()

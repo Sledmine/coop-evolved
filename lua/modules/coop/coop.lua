@@ -8,6 +8,7 @@ local engine = Engine
 local findTags = engine.tag.findTags
 local objectClasses = blam.objectClasses
 local objectNetworkRoleClasses = blam.objectNetworkRoleClasses
+local blam2 = require "blam2"
 
 local hsc = require "hsc"
 
@@ -165,7 +166,7 @@ function coop.registerVote(playerIndex)
         local votesCount = #table.keys(VotesList)
         local remainingVotes = requiredVotes - votesCount
         say_all(playerName .. " is ready for coop! (" .. votesCount .. " / " .. requiredVotes .. ")")
-        if votesCount >= requiredVotess then
+        if votesCount >= requiredVotes then
             IsCoopStarted = true
             coop.enableSpawn(true)
             timer(3000, "StartCoop")
@@ -175,40 +176,26 @@ function coop.registerVote(playerIndex)
     return 0
 end
 
---- Activate a HUD timer on every player screen
----@param minutes number
----@param seconds number
-function coop.activateHUDTimer(minutes, seconds)
-    Broadcast("sync_show_hud_timer 1")
-    Broadcast("sync_hud_set_timer_position 0 200 center")
-    Broadcast(("sync_hud_set_timer_time %s %s"):format(minutes, seconds))
-end
-
 function coop.swapFirstPerson()
     local player = blam.player(get_player())
     assert(player, "Failed to load player")
     local playerObject = blam.object(get_object(player.objectId))
     local globals = blam.globalsTag()
     if player and playerObject and globals then
-        local bipedTag = blam.getTag(playerObject.tagId)
-        if bipedTag then
-            local tagPathSplit = bipedTag.path:split "\\"
-            local bipedName = tagPathSplit[#tagPathSplit]
-            local defaultFpTag = blam.getTag([[[shm]\halo_1\characters\cyborg\fp\fp]],
-                                             tagClasses.gbxmodel)
-            if defaultFpTag then
-                local fpModelTagId = defaultFpTag.id
-
-                local fpTag = blam.findTag(bipedName .. "_fp", tagClasses.gbxmodel)
-                if fpTag then
-                    fpModelTagId = fpTag.id
-                end
-                if fpModelTagId then
-                    -- Save default first person hands model
-                    local newFirstPersonInterface = globals.firstPersonInterface
-                    newFirstPersonInterface[1].firstPersonHands = fpModelTagId
-                    globals.firstPersonInterface = newFirstPersonInterface
-                end
+        local bipedTagEntry = blam.getTag(playerObject.tagId)
+        if bipedTagEntry then
+            local pathData = bipedTagEntry.path:split "\\"
+            local bipedName = pathData[#pathData]
+            local finalModelEntry = constants.gbxmodels.defaultFp
+            local customFpEntry = blam.findTag(bipedName .. "_fp", tagClasses.gbxmodel)
+            if customFpEntry then
+                finalModelEntry = customFpEntry
+            end
+            if finalModelEntry then
+                -- Update first person interface globals to use the new model
+                local newFirstPersonInterface = globals.firstPersonInterface
+                newFirstPersonInterface[1].firstPersonHands = finalModelEntry.id
+                globals.firstPersonInterface = newFirstPersonInterface
             end
         end
     end
@@ -228,35 +215,6 @@ function coop.changeBiped(desiredBipedIndex)
         logger:debug("Replacing biped with " .. desiredBiped.name)
         globals.multiplayerInformation = mpInfo
         delete_object(player.objectId)
-    end
-end
-
----Dynamically control networked items to prevent them from despawning
-function coop.dynamicallyControlNetworkItems()
-    local scenario = blam.scenario(0)
-    assert(scenario, "Failed to load scenario")
-    for objectIndex = 0, blam.MAXIMUM_OBJECTS - 1 do
-        local object, objectHandle = blam.getObject(objectIndex)
-        if object and objectHandle then
-            local isItem = object.class == objectClasses.equipment or object.class ==
-                               objectClasses.weapon
-            local isPlayerOwned = not isNull(object.playerId)
-            local isWeapon = object.class == objectClasses.weapon
-            local isEquipment = object.class == objectClasses.equipment
-            local isLocal = object.networkRoleClass == objectNetworkRoleClasses.localOnly
-            local isNetworked = object.networkRoleClass == objectNetworkRoleClasses.puppet
-            local isNamedObject = not isNull(object.nameIndex)
-            if isItem then
-                local item = blam.item(get_object(objectHandle))
-                assert(item, "Failed to load item object")
-                if not isLocal then
-                    -- Prevent collection of items that are not player owned and might be named
-                    if not isPlayerOwned or isNamedObject then
-                        item.lastUpdateTick = engine.core.getTickCount()
-                    end
-                end
-            end
-        end
     end
 end
 

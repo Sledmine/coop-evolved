@@ -3,6 +3,7 @@
 local script = require "script"
 local wake = require"script".wake
 local hsc = require "hsc"
+local utils = require "coop.utils"
 local easy = "easy"
 local normal = "normal"
 local hard = "hard"
@@ -1412,8 +1413,8 @@ function d20.banshee_safety_net(call, sleep)
         return not (hsc.volume_test_objects("enc7_6c", "ending_banshee1")) and
                    not (hsc.volume_test_objects("enc7_6c", "ending_banshee2"))
     end)
-    -- Sleep here to avoid perfomance issue until we figure out why we need this
-    sleep(30)
+    -- Sleep here to avoid performance issue until we figure out why we need this
+    sleep(utils.secondsToTicks(10))
     hsc.object_teleport("ending_banshee1", "safety_banshee1")
     hsc.object_teleport("ending_banshee2", "safety_banshee2")
 end

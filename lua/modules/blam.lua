@@ -19,9 +19,10 @@ local round = math.round or function(num)
     return math.floor(num + 0.5)
 end
 
-local blam = {_VERSION = "1.17.0"}
+local blam = {_VERSION = "1.17.2"}
 
 blam.MAXIMUM_OBJECTS = 2048
+blam.MAXIMUM_NETWORK_OBJECTS = 512 - 3
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -374,8 +375,6 @@ local dPadValues = {
     down = 769,
     up = 765
 }
-
-local engineConstants = {defaultNetworkObjectsCount = 509}
 
 -- Global variables
 
@@ -3182,11 +3181,13 @@ end
 function blam.getMaximumNetworkObjects()
     local syncedObjectsTable = getSyncedObjectsTable()
     if not syncedObjectsTable then
-        return engineConstants.defaultNetworkObjectsCount
+        return blam.MAXIMUM_NETWORK_OBJECTS
     end
 
     -- For some reason fist element entry is always used, so we need to substract 1
-    return syncedObjectsTable.maximumObjectsCount - 1
+    local logicCount = syncedObjectsTable.maximumObjectsCount - 1
+    -- Return less to prevent saturation issues (reading latest objects cause problems)
+    return logicCount - 2
 end
 
 --- Return an element from the synced objects table
@@ -3553,9 +3554,10 @@ function blam.getAbsoluteObjectCoordinates(object)
     if not isNull(object.parentObjectId) then
         local parentObject = blam.object(get_object(object.parentObjectId))
         if parentObject then
-            coordinates.x = coordinates.x + parentObject.x
-            coordinates.y = coordinates.y + parentObject.y
-            coordinates.z = coordinates.z + parentObject.z
+           local parentCoordinates = blam.getAbsoluteObjectCoordinates(parentObject)
+           coordinates.x = coordinates.x + parentCoordinates.x
+           coordinates.y = coordinates.y + parentCoordinates.y
+           coordinates.z = coordinates.z + parentCoordinates.z
         end
     end
     return coordinates

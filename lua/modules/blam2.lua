@@ -1501,6 +1501,9 @@ local function createTag(address)
 
         local success, struct = pcall(require, "structures." .. tagStructureModuleName)
         if success and struct then
+            if type(struct) ~= "table" then
+                error("Tag structure is not a table for tag: " .. tag.primaryGroup)
+            end
             tag.data = createBindStruct(tag.data --[[@as number]] , struct)
         else
             tag.data = nil
