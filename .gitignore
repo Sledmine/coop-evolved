@@ -67,3 +67,6 @@ Desktop.ini
 
 # Generated files
 global_scripts.hsc
+
+# Testing files
+frpc.ini
