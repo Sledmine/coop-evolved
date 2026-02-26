@@ -20,7 +20,9 @@ local imagePath = args.imagePath
 local ammoCount = args.ammoCount
 local direction = args.direction
 local levels = args.levels
-local meterPath = args.output
+local meterPath = "meter_diffuse.png"
+local maskPath = "meter_mask.png"
+local outputPath = args.output
 local debug = args.debug
 
 -- Use image magick to get data from the image and generate meter
@@ -91,7 +93,6 @@ print("Weapon meter generated at:", meterPath)
 
 
 -- Now lets generate the alpha mask for the meter
-local maskPath = "meter_mask.png"
 magick("convert", "-size", meterWidth .. "x" .. meterHeight, "xc:black", maskPath)
 
 local maskArgs = {"convert", maskPath}
@@ -121,6 +122,5 @@ table.insert(maskArgs, maskPath)
 magick(table.unpack(maskArgs))
 
 -- Mix into one final image with alpha channel, make sure it is set as RGBA
-local finalPath = "weapon_meter.png"
-magick("convert", meterPath, maskPath, "-alpha", "off", "-compose", "copy_opacity", "-composite", finalPath)
-print("Weapon meter with alpha mask generated at:", finalPath)
+magick("convert", meterPath, maskPath, "-alpha", "off", "-compose", "copy_opacity", "-composite", outputPath)
+print("Weapon meter with alpha mask generated at:", outputPath)
