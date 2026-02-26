@@ -24,6 +24,10 @@ local meterPath = "meter.png"
 local function magick(...)
     local args = {...}
     local command = "magick " .. table.concat(args, " ")
+    if jit.os == "Windows" then
+        --command = command:gsub("/", "\\")
+        command = command:gsub("'", "\"")
+    end
     local handle = io.popen(command)
     local result = handle:read("*a")
     -- print("Executed command:", command)
