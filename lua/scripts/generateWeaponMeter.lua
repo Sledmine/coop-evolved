@@ -6,9 +6,9 @@ parser:argument("imagePath", "Path to the output image file.")
 parser:argument("ammoCount", "Number of ammo units to display."):convert(tonumber)
 parser:argument("direction", "Direction of the meter (horizontal or vertical)."):choices{
     "horizontal",
-    "-horizontal",
+    "+horizontal",
     "vertical",
-    "-vertical"
+    "+vertical"
 }
 parser:argument("levels", "Number of levels in the meter."):default(1):convert(tonumber)
 
@@ -39,6 +39,7 @@ width, height = tonumber(width), tonumber(height)
 print("Image dimensions:", width, height)
 
 local meterWidth, meterHeight
+local isInverted = direction:sub(1, 1) == "+"
 local rows, cols
 if direction:find("horizontal") then
     rows = math.max(levels, 1)
@@ -95,7 +96,8 @@ for i = 0, ammoCount - 1 do
     offsetX = col * width
     offsetY = row * height
 
-    local value = math.min(i + 1, 255)
+    local indexValue = isInverted and (ammoCount - i) or (i + 1)
+    local value = math.min(indexValue, 255)
     local color = "'rgb(" .. value .. "," .. value .. "," .. value .. ")'"
     local rect = "'rectangle " .. offsetX .. "," .. offsetY .. " " .. (offsetX + width - 1) .. "," .. (offsetY + height - 1) .. "'"
     magick("convert", maskPath, "-fill", color, "-draw", rect, maskPath)
