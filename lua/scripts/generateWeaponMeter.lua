@@ -10,7 +10,7 @@ parser:argument("direction", "Direction of the meter (horizontal or vertical).")
     "vertical",
     "-vertical"
 }
-parser:option("levels", "Number of levels in the meter."):default(1):convert(tonumber)
+parser:argument("levels", "Number of levels in the meter."):default(1):convert(tonumber)
 
 local args = parser:parse()
 
@@ -39,13 +39,16 @@ width, height = tonumber(width), tonumber(height)
 print("Image dimensions:", width, height)
 
 local meterWidth, meterHeight
-if args.direction:find("horizontal") then
-    meterWidth = width * args.ammoCount
-    meterHeight = height
+local rows, cols
+if direction:find("horizontal") then
+    rows = math.max(levels, 1)
+    cols = math.ceil(ammoCount / rows)
 else
-    meterWidth = width
-    meterHeight = height * args.ammoCount
+    cols = math.max(levels, 1)
+    rows = math.ceil(ammoCount / cols)
 end
+meterWidth = width * cols
+meterHeight = height * rows
 
 -- Create a new image for the meter, make sure color is RGB
 magick("convert", "-size", meterWidth .. "x" .. meterHeight, "xc:none", meterPath)
@@ -54,12 +57,18 @@ magick("convert", "-size", meterWidth .. "x" .. meterHeight, "xc:none", meterPat
 for i = 0, ammoCount - 1 do
     local offsetX = 0
     local offsetY = 0
-    if args.direction:find("horizontal") then
-        offsetX = i * width
+    local row
+    local col
+    if direction:find("horizontal") then
+        row = math.floor(i / cols)
+        col = i % cols
     else
-        offsetY = i * height
+        col = math.floor(i / rows)
+        row = i % rows
     end
-    magick("composite", "-geometry", "+0+0", args.imagePath, "-geometry",
+    offsetX = col * width
+    offsetY = row * height
+    magick("composite", "-geometry", "+0+0", imagePath, "-geometry",
            "+" .. offsetX .. "+" .. offsetY, meterPath, meterPath)
 end
 
@@ -74,11 +83,17 @@ magick("convert", "-size", meterWidth .. "x" .. meterHeight, "xc:black", maskPat
 for i = 0, ammoCount - 1 do
     local offsetX = 0
     local offsetY = 0
-    if args.direction:find("horizontal") then
-        offsetX = i * width
+    local row
+    local col
+    if direction:find("horizontal") then
+        row = math.floor(i / cols)
+        col = i % cols
     else
-        offsetY = i * height
+        col = math.floor(i / rows)
+        row = i % rows
     end
+    offsetX = col * width
+    offsetY = row * height
 
     local value = math.min(i + 1, 255)
     local color = "'rgb(" .. value .. "," .. value .. "," .. value .. ")'"
