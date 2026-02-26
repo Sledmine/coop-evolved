@@ -11,6 +11,8 @@ parser:argument("direction", "Direction of the meter (horizontal or vertical).")
     "+vertical"
 }
 parser:argument("levels", "Number of levels in the meter."):default(1):convert(tonumber)
+parser:option("-o --output", "Path to the output image file."):default("weapon_meter.png")
+parser:flag("-d --debug", "Enable debug output."):default(false)
 
 local args = parser:parse()
 
@@ -18,7 +20,8 @@ local imagePath = args.imagePath
 local ammoCount = args.ammoCount
 local direction = args.direction
 local levels = args.levels
-local meterPath = "meter.png"
+local meterPath = args.output
+local debug = args.debug
 
 -- Use image magick to get data from the image and generate meter
 local function magick(...)
@@ -30,7 +33,10 @@ local function magick(...)
     end
     local handle = io.popen(command)
     local result = handle:read("*a")
-    -- print("Executed command:", command)
+    if debug then
+        print("Executed command:", command)
+        print("Result:", result)
+    end
     -- print("Result:", result)
     handle:close()
     return result
@@ -58,10 +64,9 @@ meterHeight = height * rows
 -- Create a new image for the meter, make sure color is RGB
 magick("convert", "-size", meterWidth .. "x" .. meterHeight, "xc:none", meterPath)
 
--- Composite the ammo units onto the meter image
+-- Composite the ammo units onto the meter image in a single command
+local compositeArgs = {"convert", meterPath}
 for i = 0, ammoCount - 1 do
-    local offsetX = 0
-    local offsetY = 0
     local row
     local col
     if direction:find("horizontal") then
@@ -71,11 +76,15 @@ for i = 0, ammoCount - 1 do
         col = math.floor(i / rows)
         row = i % rows
     end
-    offsetX = col * width
-    offsetY = row * height
-    magick("composite", "-geometry", "+0+0", imagePath, "-geometry",
-           "+" .. offsetX .. "+" .. offsetY, meterPath, meterPath)
+    local offsetX = col * width
+    local offsetY = row * height
+    table.insert(compositeArgs, imagePath)
+    table.insert(compositeArgs, "-geometry")
+    table.insert(compositeArgs, "+" .. offsetX .. "+" .. offsetY)
+    table.insert(compositeArgs, "-composite")
 end
+table.insert(compositeArgs, meterPath)
+magick(table.unpack(compositeArgs))
 
 -- Final diffuse meter image
 print("Weapon meter generated at:", meterPath)
@@ -85,9 +94,8 @@ print("Weapon meter generated at:", meterPath)
 local maskPath = "meter_mask.png"
 magick("convert", "-size", meterWidth .. "x" .. meterHeight, "xc:black", maskPath)
 
+local maskArgs = {"convert", maskPath}
 for i = 0, ammoCount - 1 do
-    local offsetX = 0
-    local offsetY = 0
     local row
     local col
     if direction:find("horizontal") then
@@ -97,15 +105,20 @@ for i = 0, ammoCount - 1 do
         col = math.floor(i / rows)
         row = i % rows
     end
-    offsetX = col * width
-    offsetY = row * height
+    local offsetX = col * width
+    local offsetY = row * height
 
     local indexValue = isInverted and (ammoCount - i) or (i + 1)
     local value = math.min(indexValue, 255)
     local color = "'rgb(" .. value .. "," .. value .. "," .. value .. ")'"
     local rect = "'rectangle " .. offsetX .. "," .. offsetY .. " " .. (offsetX + width - 1) .. "," .. (offsetY + height - 1) .. "'"
-    magick("convert", maskPath, "-fill", color, "-draw", rect, maskPath)
+    table.insert(maskArgs, "-fill")
+    table.insert(maskArgs, color)
+    table.insert(maskArgs, "-draw")
+    table.insert(maskArgs, rect)
 end
+table.insert(maskArgs, maskPath)
+magick(table.unpack(maskArgs))
 
 -- Mix into one final image with alpha channel, make sure it is set as RGBA
 local finalPath = "weapon_meter.png"
