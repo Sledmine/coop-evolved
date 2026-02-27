@@ -71,7 +71,7 @@ local function sleepThreadFor(ticks)
         -- logger:debug("Sleeping for " .. ticks .. " ticks")
     end
     local currentTicks = getTickCount()
-    while ticks == -1 or getTickCount() - currentTicks < ticks do
+    while ticks == -1 or (getTickCount() - currentTicks < ticks) do
         coroutine.yield()
     end
 end
