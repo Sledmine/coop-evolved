@@ -9,6 +9,7 @@ local findTags = engine.tag.findTags
 local objectClasses = blam.objectClasses
 local objectNetworkRoleClasses = blam.objectNetworkRoleClasses
 local blam2 = require "blam2"
+local core =  require "coop.core"
 
 local hsc = require "hsc"
 
@@ -74,6 +75,18 @@ end
 ---@param exceptionPlayerIndex? number
 ---@return boolean isCandidate
 function coop.isRespawnCandidate(playerBiped, exceptionPlayerIndex)
+    for objectIndex = 0, blam.MAXIMUM_OBJECTS - 1 do
+        local object, objectHandle = blam.getObject(objectIndex)
+        if object and objectHandle then
+            -- Check if  playere is near any vehicle, if it is do not consider it a respawn
+            if object.class == objectClasses.vehicle then
+                -- TODO Consider bounding radius as well
+                if core.isObjectNearToObject(playerBiped, object, 1) then
+                    return false
+                end
+            end
+        end
+    end
     return not playerBiped.isOutSideMap and playerBiped.isOnGround
 end
 
