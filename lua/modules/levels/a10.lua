@@ -2474,18 +2474,28 @@ end
 script.continuous(a10.flavor_rumble)
 
 function a10.mission_bsp(call, sleep)
-    -- TODO Check for a volume trigger instead of bsp index
-    sleep(function()
-        return 0 < hsc.structure_bsp_index()
+    -- Prepare first hallway door after finishing setup!
+    local setupHallwayDoor = "bsp0_door"
+    hsc.device_set_power(setupHallwayDoor, 1)
+    hsc.device_set_position(setupHallwayDoor, 1)
 
-    end, 1)
+    logger:debug("Waiting for a player to cross into bsp1")
+    -- local hallwayTrigger = "coop_bsp0_trigger"
+    local hallwayTrigger = "bsp0,1"
+    sleep(function()
+        return hsc.volume_test_objects(hallwayTrigger, hsc.players())
+    end)
+    -- Wait a few as some players might be outside the bsp for a short time after crossing the
+    -- trigger, which would cause them to be teleported back in and get stuck in a paradox state...
+    sleep(3)
+    logger:debug("A player has entered bsp1, teleporting all others and closing doors")
+    hsc.volume_teleport_players_not_inside(hallwayTrigger, "teleport_bsp0_door")
     hsc.ai_free("first_contact")
-    hsc.device_set_position("bsp0_door", 0)
+    hsc.device_set_position(setupHallwayDoor, 0)
     sleep(function()
-        return 0 == hsc.device_get_position("bsp0_door")
-
-    end, 1)
-    hsc.device_set_power("bsp0_door", 0)
+        return 0 == hsc.device_get_position(setupHallwayDoor)
+    end)
+    hsc.device_set_power(setupHallwayDoor, 0)
     mark_bsp0 = true
     sleep(function()
         return 1 < hsc.structure_bsp_index()
@@ -2494,9 +2504,10 @@ function a10.mission_bsp(call, sleep)
     hsc.device_set_position_immediate("bsp1_door", 0)
     hsc.device_set_power("bsp1_door", 0)
     mark_bsp1 = true
+
+    -- Wait for next mission section
     sleep(function()
         return 2 < hsc.structure_bsp_index()
-
     end, 1)
     hsc.device_set_position_immediate("bsp2_door", 0)
     hsc.device_set_power("bsp2_door", 0)
@@ -5368,8 +5379,8 @@ function a10.mission_a10(call, sleep)
     call(a10.cinematic_skip_stop)
     hsc.fade_out(1, 1, 1, 0)
     wake(a10.x10_post)
-    hsc.object_set_facing(call(a10.player0), "facing_flag_1")
-    hsc.object_set_facing(call(a10.player1), "facing_flag_1")
+    allPlayersSetFacingFlag("facing_flag_1")
+
     -- Always pass trough fast setup due to player0 specific actions not working in multiplayer
     -- if hsc.game_is_cooperative() or not (normal == hsc.game_difficulty_get()) then
     wake(a10.fast_setup)

@@ -51,3 +51,12 @@ function allPlayersExitVehicle()
         hsc.unit_exit_vehicle(getPlayerUnit(i))
     end
 end
+
+---Make all players look at given flag
+---@param flag string
+function allPlayersSetFacingFlag(flag)
+    for i = 0, getPlayerCount() - 1 do
+        hsc.object_set_facing(getPlayerUnit(i), flag)
+    end
+end
+
