@@ -48,12 +48,7 @@ local starterWeapons = {
 }
 local isStarterWeaponsEnabled = true
 local forcedBipedTeams = {}
-local introCameras = {
-    a50 = "insertion_3",
-    b30 = "insertion_1a",
-    c20 = "insertion_1",
-    d40 = "chief_climb_2c"
-}
+local introCameras = {}
 
 function broadcastMessage(message)
     for playerIndex = 1, 16 do
@@ -281,11 +276,12 @@ end)
 function GetReadyForCoop(playerIndex)
     if not IsCoopStarted then
         local isStaticCameraAvailable = false
+        local cameraName
         for mapPattern, camera in pairs(introCameras) do
             if map:includes(mapPattern) then
-                monocastMessage(playerIndex, "sync_camera_control 1")
-                monocastMessage(playerIndex, "sync_camera_set " .. camera .. " 0")
                 isStaticCameraAvailable = true
+                logger:warning("Using static camera: {}", camera)
+                cameraName = camera
                 break
             end
         end
@@ -293,9 +289,17 @@ function GetReadyForCoop(playerIndex)
             local mapPrefix = map:split("_")[1]
             local customCameraName = mapPrefix .. "_start"
             logger:warning("Using custom camera name: {}", customCameraName)
-            monocastMessage(playerIndex, "sync_camera_control 1")
-            monocastMessage(playerIndex, "sync_camera_set " .. customCameraName .. " 0")
+            cameraName = customCameraName
         end
+
+        if cameraName then
+            logger:debug("Setting starting camera to: {}", cameraName)
+            monocastMessage(playerIndex, "sync_camera_control 1")
+            monocastMessage(playerIndex, "sync_camera_set " .. cameraName .. " 0")
+        else
+            logger:warning("No starting camera found for this map")
+        end
+
         -- Dispatch coop menu event
         -- TODO Conditionally send to players if coop menu tag is available
         blam.rcon.dispatch("CoopMenu", playerIndex)

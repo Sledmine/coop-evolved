@@ -33,10 +33,24 @@ end
 function Engine.gameState.createObject(tagHandle, parentObjectHandle, position)
     if type(tagHandle) == "number" then
         local handleValue = spawn_object(tagHandle, position.x, position.y, position.z)
-        return {value = handleValue}
+        return {
+            value = handleValue,
+            index = blam.getIndexById(handleValue),
+            id = handleValue,
+            isNull = function()
+                return blam.isNull(handleValue)
+            end
+        }
     end
     local handleValue = spawn_object(tagHandle.value, position.x, position.y, position.z)
-    return {value = handleValue}
+    return {
+        value = handleValue,
+        index = blam.getIndexById(handleValue),
+        id = handleValue,
+        isNull = function()
+            return blam.isNull(handleValue)
+        end
+    }
 end
 
 -- Get a player
@@ -76,7 +90,7 @@ function Balltze.logger.createLogger(name)
                     index = index + 1
                     return tostring(arg)
                 end)
-                cprint("[DEBUG][" .. name .. "] " .. formattedMessage, color.debug)
+                cprint((os.date("%H:%M:%S") .. " [" .. name .. "] DEBUG - " .. formattedMessage), color.debug)
             end
         end,
         info = function(self, message, ...)
@@ -87,7 +101,7 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            cprint("[INFO][" .. name .. "] " .. formattedMessage, color.info)
+            cprint((os.date("%H:%M:%S") .. " [" .. name .. "]  INFO - " .. formattedMessage), color.info)
         end,
         warning = function(self, message, ...)
             local args = {...}
@@ -97,7 +111,7 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            cprint("[WARNING][" .. name .. "] " .. formattedMessage, color.warning)
+            cprint((os.date("%H:%M:%S") .. " [" .. name .. "]  WARN - " .. formattedMessage), color.warning)
         end,
         error = function(self, message, ...)
             local args = {...}
@@ -107,7 +121,7 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            cprint("[ERROR][" .. name .. "] " .. formattedMessage, color.error)
+            cprint((os.date("%H:%M:%S") .. " [" .. name .. "] ERROR - " .. formattedMessage), color.error)
         end,
         muteDebug = function(self, value)
             mute = value == true
@@ -124,7 +138,7 @@ function Engine.core.consolePrint(format, ...)
         index = index + 1
         return tostring(arg)
     end)
-    console_out(formattedMessage)
+    cprint(formattedMessage)
 end
 
 function Engine.hsc.executeScript(script)
@@ -141,5 +155,5 @@ function Engine.netgame.getServerType()
 end
 
 function Engine.userInterface.playSound(soundPath)
-    console_out("Should be playing sound: " .. soundPath)
+    cprint("Should be playing sound: " .. soundPath)
 end

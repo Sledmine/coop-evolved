@@ -31,7 +31,7 @@ constants.seats = {
         "P-riderRB01",
         "P-riderRB02",
         "P-riderLB02",
-        "P-riderLB"
+        "P-riderLB01"
     }
 }
 

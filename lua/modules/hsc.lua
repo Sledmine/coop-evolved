@@ -361,8 +361,6 @@ function hsc.unit_enter_vehicle(...)
     local params = {...}
     if engine.netgame.getServerType() == "sapp" then
         local unitName = params[1]
-        logger:warning("unit_enter_vehicle called on dedicated server with params: {}",
-                       table.concat(params, ", "))
         local unitIsPlayer = unitName:includes("player")
         if unitIsPlayer then
             -- Attempt to find anything that looks like a number
@@ -373,11 +371,9 @@ function hsc.unit_enter_vehicle(...)
             end
             playerIndex = playerIndex + 1 -- Convert to 1-based index
 
-            logger:debug("unit_enter_vehicle called for player unit: {} with index: {}", unitName,
-                         playerIndex)
             local objectName = params[2]
             local targetSeatName = params[3]
-
+            --logger:debug("unit_enter_vehicle( playerIndex: {}, objectName: {}, targetSeatName: {})", playerIndex, objectName, targetSeatName)
             -- Attempt to find the vehicle object id by name
             local scenario = blam.scenario(0)
             assert(scenario, "Scenario not found")
