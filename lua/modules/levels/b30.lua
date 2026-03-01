@@ -1382,7 +1382,6 @@ function b30.obj_shafta_goal(call, sleep)
         end
         return result
     end, 1, not allPlayersMustBeInPelican and 0 or ticksForPelicanPlayerWait)
-    
     sleep(30)
     hsc.show_hud_timer(false)
     play_music_b30_06 = false
@@ -1712,6 +1711,8 @@ function b30.playersEnterPelican()
         local seatName = constants.seats.pelican[currentSeatIndex]
         logger:debug("Player {} entering vehicle {} at seat {}", playerIndex, targetVehicleName,
                      seatName)
+        -- TODO Check seats available in all pelicans to avoiding a unit already occupying a seat
+        -- So we can keep the marines inside pelicans in general instead of being removed
         hsc.unit_enter_vehicle(playerUnit, targetVehicleName, seatName)
         -- Move to the next seat for the next player
         currentSeatIndex = currentSeatIndex + 1

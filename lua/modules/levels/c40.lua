@@ -2960,17 +2960,5 @@ function c40.mission_c40(call, sleep)
     -- Some objects like the fly away banshee do not appear by default because multiplayer
     hsc.object_create("fly_away_1")
 end
---script.startup(c40.mission_c40)
-
-script.startup(function(call, sleep)
-    -- Make everything happen so we can test freely
-    hsc.switch_bsp(2)
-    hsc.volume_teleport_players_not_inside("null_volume", "s1")
-    hsc.device_set_power("door_c1", 1)
-    hsc.device_set_position_immediate("control_door_a", 1)
-    hsc.device_set_position_immediate("control_door_b", 1)
-    hsc.device_set_position_immediate("control_door_c", 1)
-    hsc.device_set_position_immediate("control_door_d", 1)
-end)
-
+script.startup(c40.mission_c40)
 return c40

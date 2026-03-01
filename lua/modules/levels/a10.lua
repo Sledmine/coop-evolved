@@ -2511,6 +2511,8 @@ function a10.mission_bsp(call, sleep)
     end, 1)
     hsc.device_set_position_immediate("bsp2_door", 0)
     hsc.device_set_power("bsp2_door", 0)
+
+    -- TODO Do the same treatment from setup hallway door to bsp_3
     mark_bsp2 = true
     sleep(function()
         return 3 < hsc.structure_bsp_index()
