@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-field
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
 local wake = require"script".wake
@@ -61,7 +60,7 @@ local manifold_all_destroyed = false
 local player_is_on_floor = 0
 local current_damage_level = destroyed_count
 local current_explosion_seperation = 150
-local current_explosion = "explosion_small"
+local current_explosion = explosion_small
 local enc5_1_s12_limiter = 0
 local enc5_1_s23_limiter = 0
 local enc5_1_n12_limiter = 0
@@ -170,8 +169,6 @@ function d40.bridge_1(call, sleep)
     sleep(30)
     hsc.object_destroy("cortana")
     hsc.object_create("cortana")
-    hsc.object_create_anew("chief_armed_weapon")
-    hsc.objects_attach("chief_armed", "right hand", "chief_armed_weapon", "")
     hsc.unit_set_emotion("cortana", 6)
     hsc.custom_animation("cortana", "cinematics\\animations\\cortana\\x70\\x70", "x70_1_0-409", true)
     hsc.sound_impulse_start("sound\\dialog\\x70\\cor_01", "cortana", 1)
@@ -455,9 +452,7 @@ function d40.bridge_2(call, sleep)
     hsc.cinematic_screen_effect_set_convolution(3, 2, 1, 10, 1)
     hsc.fade_out(1, 1, 1, 15)
     sleep(15)
-    hsc.objects_detach("chief_armed", "chief_armed_weapon")
     hsc.object_destroy("chief_armed")
-    hsc.object_destroy("chief_armed_weapon")
     hsc.object_destroy("monitor")
     hsc.object_destroy("grenade")
     hsc.object_destroy_containing("bridge_sentinel")
@@ -1195,66 +1190,28 @@ function d40.trench_attack_pelican(call, sleep)
     hsc.object_teleport("v_trench_pelican", "v_trench_pelican_flag")
     hsc.recording_play("v_trench_pelican", "v_rec_trench_pelican_crash")
     if trench_scene_allow_continue then
-        hsc.begin({
-            function()
-                return sleep(295)
-            end,
-            function()
-                return hsc.effect_new("effects\\explosions\\large explosion no objects",
-                                      "pelican_bang_1")
-            end,
-            function()
-                return sleep(30)
-            end,
-            function()
-                if trench_scene_allow_continue then
-                    hsc.sound_impulse_start("sound\\dialog\\d40\\d40_411_pilot", "none", 1)
-                end
-            end,
-            function()
-                return sleep(15)
-            end,
-            function()
-                if trench_scene_allow_continue then
-                    hsc.sound_impulse_stop("sound\\dialog\\d40\\d40_400_cortana")
-                end
-            end,
-            function()
-                return sleep(81)
-            end,
-            function()
-                return hsc.effect_new("effects\\explosions\\large explosion no objects",
-                                      "pelican_bang_2")
-            end,
-            function()
-                return sleep(139)
-            end,
-            function()
-                return hsc.effect_new("effects\\explosions\\large explosion no objects",
-                                      "pelican_bang_3")
-            end,
-            function()
-                return sleep(20)
-            end,
-            function()
-                if trench_scene_allow_continue then
-                    hsc.sound_impulse_stop("sound\\dialog\\d40\\d40_420_pilot")
-                end
-            end,
-            function()
-                return sleep(hsc.max(0, hsc.recording_time("v_trench_pelican") - 15))
-            end,
-            function()
-                return hsc.sound_impulse_start("sound\\sfx\\ambience\\d40\\burn_pel_out",
-                                               "v_trench_pelican", 1)
-            end,
-            function()
-                return sleep(15)
-            end,
-            function()
-                return hsc.object_destroy("v_trench_pelican")
-            end
-        })
+        sleep(295)
+        hsc.effect_new("effects\\explosions\\large explosion no objects", "pelican_bang_1")
+        sleep(30)
+        if trench_scene_allow_continue then
+            hsc.sound_impulse_start("sound\\dialog\\d40\\d40_411_pilot", "none", 1)
+        end
+        sleep(15)
+        if trench_scene_allow_continue then
+            hsc.sound_impulse_stop("sound\\dialog\\d40\\d40_400_cortana")
+        end
+        sleep(81)
+        hsc.effect_new("effects\\explosions\\large explosion no objects", "pelican_bang_2")
+        sleep(139)
+        hsc.effect_new("effects\\explosions\\large explosion no objects", "pelican_bang_3")
+        sleep(20)
+        if trench_scene_allow_continue then
+            hsc.sound_impulse_stop("sound\\dialog\\d40\\d40_420_pilot")
+        end
+        sleep(hsc.max(0, hsc.recording_time("v_trench_pelican") - 15))
+        hsc.sound_impulse_start("sound\\sfx\\ambience\\d40\\burn_pel_out", "v_trench_pelican", 1)
+        sleep(15)
+        hsc.object_destroy("v_trench_pelican")
     end
 end
 
@@ -1513,10 +1470,19 @@ function d40.cutscene_lose(call, sleep)
     hsc.sound_looping_start("sound\\sinomatixx_foley\\d40_lose_foley", "none", 1)
     hsc.fade_out(1, 1, 1, 15)
     sleep(15)
+    hsc.camera_control(true)
+    hsc.cinematic_start()
+    --hsc.unit_suspended(call(d40.player0), true)
+    --hsc.unit_suspended(call(d40.player1), true)
+    suspendPlayers(true)
+    -- FIX ME This might crash the game due to bsp switching engine stuff
+    hsc.switch_bsp(8)
+    hsc.camera_set("game_lose_1a", 0)
+    hsc.camera_set("game_lose_1c", 300)
     hsc.fade_in(1, 1, 1, 15)
     sleep(30)
     hsc.object_destroy("poa_explosion")
-    hsc.object_create_anew("poa_explosion")
+    hsc.object_create("poa_explosion")
     hsc.object_pvs_activate("poa_explosion")
     sleep(120)
     hsc.player_effect_set_max_rotation(0, 0.5, 0.5)
@@ -1552,39 +1518,8 @@ function d40.x70_finale(call, sleep)
     hsc.cinematic_start()
     hsc.camera_control(true)
     hsc.switch_bsp(7)
-    --hsc.object_teleport(call(d40.player0), "player0_finale_pause")
-    --hsc.object_teleport(call(d40.player1), "player1_finale_pause")
     teleportPlayersTo("player0_finale_pause")
-    hsc.object_teleport(hsc.player2(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player3(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player4(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player5(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player6(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player7(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player8(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player9(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player10(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player11(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player12(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player13(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player14(), "player1_finale_pause")
-    hsc.object_teleport(hsc.player15(), "player1_finale_pause")
-    hsc.unit_suspended(call(d40.player0), true)
-    hsc.unit_suspended(call(d40.player1), true)
-    hsc.unit_suspended(hsc.player2(), true)
-    hsc.unit_suspended(hsc.player3(), true)
-    hsc.unit_suspended(hsc.player4(), true)
-    hsc.unit_suspended(hsc.player5(), true)
-    hsc.unit_suspended(hsc.player6(), true)
-    hsc.unit_suspended(hsc.player7(), true)
-    hsc.unit_suspended(hsc.player8(), true)
-    hsc.unit_suspended(hsc.player9(), true)
-    hsc.unit_suspended(hsc.player10(), true)
-    hsc.unit_suspended(hsc.player11(), true)
-    hsc.unit_suspended(hsc.player12(), true)
-    hsc.unit_suspended(hsc.player13(), true)
-    hsc.unit_suspended(hsc.player14(), true)
-    hsc.unit_suspended(hsc.player15(), true)
+    suspendPlayers(true)
     call(d40.hangar_1)
     call(d40.hangar_2)
     hsc.sound_class_set_gain("weapon_fire", 0, 0)
@@ -1593,266 +1528,94 @@ function d40.x70_finale(call, sleep)
     hsc.sound_class_set_gain("unit_dialog", 0, 0)
     call(d40.hangar_3)
     if easy == hsc.game_difficulty_get_real() then
-        hsc.begin({
-            function()
-                return hsc.switch_bsp(8)
-            end,
-            function()
-                return call(d40.launch_1)
-            end,
-            function()
-                return hsc.sound_class_set_gain("unit_footsteps", 0, 0)
-            end,
-            function()
-                return call(d40.launch_2)
-            end,
-            function()
-                return hsc.fade_out(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.switch_bsp(9)
-            end,
-            function()
-                return hsc.fade_in(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.rasterizer_model_ambient_reflection_tint(1, 1, 1, 1)
-            end,
-            function()
-                return call(d40.int_1)
-            end,
-            function()
-                return call(d40.space_1)
-            end,
-            function()
-                return hsc.fade_in(1, 1, 1, 15)
-            end,
-            function()
-                return call(d40.int_2)
-            end,
-            function()
-                return call(d40.space_2)
-            end,
-            function()
-                return call(d40.int_3)
-            end,
-            function()
-                return call(d40.space_3)
-            end,
-            function()
-                return call(d40.int_4)
-            end,
-            function()
-                return hsc.fade_out(0, 0, 0, 120)
-            end,
-            function()
-                return sleep(520)
-            end,
-            function()
-                return hsc.cinematic_screen_effect_stop()
-            end,
-            function()
-                return hsc.rasterizer_model_ambient_reflection_tint(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.print("cue credits")
-            end
-        })
+        hsc.switch_bsp(8)
+        call(d40.launch_1)
+        hsc.sound_class_set_gain("unit_footsteps", 0, 0)
+        call(d40.launch_2)
+        hsc.fade_out(0, 0, 0, 0)
+        hsc.switch_bsp(9)
+        hsc.fade_in(0, 0, 0, 0)
+        hsc.rasterizer_model_ambient_reflection_tint(1, 1, 1, 1)
+        call(d40.int_1)
+        call(d40.space_1)
+        hsc.fade_in(1, 1, 1, 15)
+        call(d40.int_2)
+        call(d40.space_2)
+        call(d40.int_3)
+        call(d40.space_3)
+        call(d40.int_4)
+        hsc.fade_out(0, 0, 0, 120)
+        sleep(520)
+        hsc.cinematic_screen_effect_stop()
+        hsc.rasterizer_model_ambient_reflection_tint(0, 0, 0, 0)
+        hsc.print("cue credits")
     end
     if normal == hsc.game_difficulty_get_real() then
-        hsc.begin({
-            function()
-                return hsc.switch_bsp(8)
-            end,
-            function()
-                return call(d40.launch_1)
-            end,
-            function()
-                return hsc.sound_class_set_gain("unit_footsteps", 0, 0)
-            end,
-            function()
-                return call(d40.launch_2)
-            end,
-            function()
-                return hsc.fade_out(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.switch_bsp(9)
-            end,
-            function()
-                return hsc.fade_in(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.rasterizer_model_ambient_reflection_tint(1, 1, 1, 1)
-            end,
-            function()
-                return call(d40.int_1)
-            end,
-            function()
-                return call(d40.space_1)
-            end,
-            function()
-                return hsc.fade_in(1, 1, 1, 15)
-            end,
-            function()
-                return call(d40.int_2)
-            end,
-            function()
-                return call(d40.space_2)
-            end,
-            function()
-                return call(d40.int_3)
-            end,
-            function()
-                return call(d40.space_3)
-            end,
-            function()
-                return call(d40.int_4)
-            end,
-            function()
-                return hsc.fade_out(0, 0, 0, 120)
-            end,
-            function()
-                return sleep(520)
-            end,
-            function()
-                return hsc.cinematic_screen_effect_stop()
-            end,
-            function()
-                return hsc.rasterizer_model_ambient_reflection_tint(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.print("cue credits")
-            end
-        })
+        hsc.switch_bsp(8)
+        call(d40.launch_1)
+        hsc.sound_class_set_gain("unit_footsteps", 0, 0)
+        call(d40.launch_2)
+        hsc.fade_out(0, 0, 0, 0)
+        hsc.switch_bsp(9)
+        hsc.fade_in(0, 0, 0, 0)
+        hsc.rasterizer_model_ambient_reflection_tint(1, 1, 1, 1)
+        call(d40.int_1)
+        call(d40.space_1)
+        hsc.fade_in(1, 1, 1, 15)
+        call(d40.int_2)
+        call(d40.space_2)
+        call(d40.int_3)
+        call(d40.space_3)
+        call(d40.int_4)
+        hsc.fade_out(0, 0, 0, 120)
+        sleep(520)
+        hsc.cinematic_screen_effect_stop()
+        hsc.rasterizer_model_ambient_reflection_tint(0, 0, 0, 0)
+        hsc.print("cue credits")
     end
     if hard == hsc.game_difficulty_get_real() then
-        hsc.begin({
-            function()
-                return hsc.switch_bsp(8)
-            end,
-            function()
-                return call(d40.launch_1)
-            end,
-            function()
-                return hsc.sound_class_set_gain("unit_footsteps", 0, 0)
-            end,
-            function()
-                return call(d40.launch_2)
-            end,
-            function()
-                return hsc.fade_out(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.switch_bsp(9)
-            end,
-            function()
-                return hsc.fade_in(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.rasterizer_model_ambient_reflection_tint(1, 1, 1, 1)
-            end,
-            function()
-                return call(d40.int_1)
-            end,
-            function()
-                return call(d40.space_1)
-            end,
-            function()
-                return hsc.fade_in(1, 1, 1, 15)
-            end,
-            function()
-                return call(d40.int_2)
-            end,
-            function()
-                return call(d40.space_2)
-            end,
-            function()
-                return call(d40.int_3)
-            end,
-            function()
-                return call(d40.space_3)
-            end,
-            function()
-                return call(d40.int_4)
-            end,
-            function()
-                return hsc.fade_out(0, 0, 0, 120)
-            end,
-            function()
-                return sleep(520)
-            end,
-            function()
-                return hsc.cinematic_screen_effect_stop()
-            end,
-            function()
-                return hsc.rasterizer_model_ambient_reflection_tint(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.print("cue credits")
-            end
-        })
+        hsc.switch_bsp(8)
+        call(d40.launch_1)
+        hsc.sound_class_set_gain("unit_footsteps", 0, 0)
+        call(d40.launch_2)
+        hsc.fade_out(0, 0, 0, 0)
+        hsc.switch_bsp(9)
+        hsc.fade_in(0, 0, 0, 0)
+        hsc.rasterizer_model_ambient_reflection_tint(1, 1, 1, 1)
+        call(d40.int_1)
+        call(d40.space_1)
+        hsc.fade_in(1, 1, 1, 15)
+        call(d40.int_2)
+        call(d40.space_2)
+        call(d40.int_3)
+        call(d40.space_3)
+        call(d40.int_4)
+        hsc.fade_out(0, 0, 0, 120)
+        sleep(520)
+        hsc.cinematic_screen_effect_stop()
+        hsc.rasterizer_model_ambient_reflection_tint(0, 0, 0, 0)
+        hsc.print("cue credits")
     end
     if impossible == hsc.game_difficulty_get_real() then
-        hsc.begin({
-            function()
-                return hsc.print("happy easter")
-            end,
-            function()
-                return hsc.switch_bsp(8)
-            end,
-            function()
-                return call(d40.happy_easter)
-            end,
-            function()
-                return hsc.switch_bsp(9)
-            end,
-            function()
-                return hsc.fade_in(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.rasterizer_model_ambient_reflection_tint(1, 1, 1, 1)
-            end,
-            function()
-                return call(d40.int_1)
-            end,
-            function()
-                return call(d40.space_1)
-            end,
-            function()
-                return hsc.fade_in(1, 1, 1, 15)
-            end,
-            function()
-                return call(d40.int_2)
-            end,
-            function()
-                return call(d40.space_2)
-            end,
-            function()
-                return call(d40.int_3)
-            end,
-            function()
-                return call(d40.space_3)
-            end,
-            function()
-                return call(d40.int_4)
-            end,
-            function()
-                return hsc.fade_out(0, 0, 0, 120)
-            end,
-            function()
-                return sleep(520)
-            end,
-            function()
-                return hsc.cinematic_screen_effect_stop()
-            end,
-            function()
-                return hsc.rasterizer_model_ambient_reflection_tint(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.print("cue credits")
-            end
-        })
+        hsc.print("happy easter")
+        hsc.switch_bsp(8)
+        call(d40.happy_easter)
+        hsc.switch_bsp(9)
+        hsc.fade_in(0, 0, 0, 0)
+        hsc.rasterizer_model_ambient_reflection_tint(1, 1, 1, 1)
+        call(d40.int_1)
+        call(d40.space_1)
+        hsc.fade_in(1, 1, 1, 15)
+        call(d40.int_2)
+        call(d40.space_2)
+        call(d40.int_3)
+        call(d40.space_3)
+        call(d40.int_4)
+        hsc.fade_out(0, 0, 0, 120)
+        sleep(520)
+        hsc.cinematic_screen_effect_stop()
+        hsc.rasterizer_model_ambient_reflection_tint(0, 0, 0, 0)
+        hsc.print("cue credits")
     end
 end
 
@@ -1868,39 +1631,8 @@ function d40.x70_bridge(call, sleep)
     hsc.cinematic_start()
     hsc.camera_control(true)
     hsc.switch_bsp(1)
-    --hsc.object_teleport(call(d40.player0), "player0_bridge_pause")
-    --hsc.object_teleport(call(d40.player1), "player1_bridge_pause")
     teleportPlayersTo("player0_bridge_pause")
-    hsc.object_teleport(hsc.player2(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player3(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player4(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player5(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player6(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player7(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player8(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player9(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player10(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player11(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player12(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player13(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player14(), "player1_bridge_pause")
-    hsc.object_teleport(hsc.player15(), "player1_bridge_pause")
-    hsc.unit_suspended(call(d40.player0), true)
-    hsc.unit_suspended(call(d40.player1), true)
-    hsc.unit_suspended(hsc.player2(), true)
-    hsc.unit_suspended(hsc.player3(), true)
-    hsc.unit_suspended(hsc.player4(), true)
-    hsc.unit_suspended(hsc.player5(), true)
-    hsc.unit_suspended(hsc.player6(), true)
-    hsc.unit_suspended(hsc.player7(), true)
-    hsc.unit_suspended(hsc.player8(), true)
-    hsc.unit_suspended(hsc.player9(), true)
-    hsc.unit_suspended(hsc.player10(), true)
-    hsc.unit_suspended(hsc.player11(), true)
-    hsc.unit_suspended(hsc.player12(), true)
-    hsc.unit_suspended(hsc.player13(), true)
-    hsc.unit_suspended(hsc.player14(), true)
-    hsc.unit_suspended(hsc.player15(), true)
+    suspendPlayers(true)
     hsc.cinematic_set_near_clip_distance(0.01)
     call(d40.bridge_1)
     hsc.switch_bsp(4)
@@ -1911,39 +1643,8 @@ function d40.x70_bridge(call, sleep)
     call(d40.bridge_2)
     hsc.cinematic_screen_effect_stop()
     hsc.cinematic_set_near_clip_distance(0.0625)
-    --hsc.object_teleport(call(d40.player0), "player0_playon_base")
-    --hsc.object_teleport(call(d40.player1), "player1_playon_base")
     teleportPlayersTo("player0_playon_base")
-    hsc.object_teleport(hsc.player2(), "player1_playon_base")
-    hsc.object_teleport(hsc.player3(), "player1_playon_base")
-    hsc.object_teleport(hsc.player4(), "player1_playon_base")
-    hsc.object_teleport(hsc.player5(), "player1_playon_base")
-    hsc.object_teleport(hsc.player6(), "player1_playon_base")
-    hsc.object_teleport(hsc.player7(), "player1_playon_base")
-    hsc.object_teleport(hsc.player8(), "player1_playon_base")
-    hsc.object_teleport(hsc.player9(), "player1_playon_base")
-    hsc.object_teleport(hsc.player10(), "player1_playon_base")
-    hsc.object_teleport(hsc.player11(), "player1_playon_base")
-    hsc.object_teleport(hsc.player12(), "player1_playon_base")
-    hsc.object_teleport(hsc.player13(), "player1_playon_base")
-    hsc.object_teleport(hsc.player14(), "player1_playon_base")
-    hsc.object_teleport(hsc.player15(), "player1_playon_base")
-    hsc.unit_suspended(call(d40.player0), false)
-    hsc.unit_suspended(call(d40.player1), false)
-    hsc.unit_suspended(hsc.player2(), false)
-    hsc.unit_suspended(hsc.player3(), false)
-    hsc.unit_suspended(hsc.player4(), false)
-    hsc.unit_suspended(hsc.player5(), false)
-    hsc.unit_suspended(hsc.player6(), false)
-    hsc.unit_suspended(hsc.player7(), false)
-    hsc.unit_suspended(hsc.player8(), false)
-    hsc.unit_suspended(hsc.player9(), false)
-    hsc.unit_suspended(hsc.player10(), false)
-    hsc.unit_suspended(hsc.player11(), false)
-    hsc.unit_suspended(hsc.player12(), false)
-    hsc.unit_suspended(hsc.player13(), false)
-    hsc.unit_suspended(hsc.player14(), false)
-    hsc.unit_suspended(hsc.player15(), false)
+    suspendPlayers(false)
     hsc.camera_control(false)
     hsc.cinematic_stop()
     sleep(15)
@@ -1959,39 +1660,8 @@ function d40.cutscene_insertion(call, sleep)
     hsc.fade_out(0, 0, 0, 0)
     hsc.camera_control(true)
     hsc.cinematic_start()
-    --hsc.object_teleport(call(d40.player0), "player0_intro_base")
-    --hsc.object_teleport(call(d40.player1), "player1_intro_base")
     teleportPlayersTo("player0_intro_base")
-    hsc.object_teleport(hsc.player2(), "player1_intro_base")
-    hsc.object_teleport(hsc.player3(), "player1_intro_base")
-    hsc.object_teleport(hsc.player4(), "player1_intro_base")
-    hsc.object_teleport(hsc.player5(), "player1_intro_base")
-    hsc.object_teleport(hsc.player6(), "player1_intro_base")
-    hsc.object_teleport(hsc.player7(), "player1_intro_base")
-    hsc.object_teleport(hsc.player8(), "player1_intro_base")
-    hsc.object_teleport(hsc.player9(), "player1_intro_base")
-    hsc.object_teleport(hsc.player10(), "player1_intro_base")
-    hsc.object_teleport(hsc.player11(), "player1_intro_base")
-    hsc.object_teleport(hsc.player12(), "player1_intro_base")
-    hsc.object_teleport(hsc.player13(), "player1_intro_base")
-    hsc.object_teleport(hsc.player14(), "player1_intro_base")
-    hsc.object_teleport(hsc.player15(), "player1_intro_base")
-    hsc.unit_suspended(call(d40.player0), true)
-    hsc.unit_suspended(call(d40.player1), true)
-    hsc.unit_suspended(hsc.player2(), true)
-    hsc.unit_suspended(hsc.player3(), true)
-    hsc.unit_suspended(hsc.player4(), true)
-    hsc.unit_suspended(hsc.player5(), true)
-    hsc.unit_suspended(hsc.player6(), true)
-    hsc.unit_suspended(hsc.player7(), true)
-    hsc.unit_suspended(hsc.player8(), true)
-    hsc.unit_suspended(hsc.player9(), true)
-    hsc.unit_suspended(hsc.player10(), true)
-    hsc.unit_suspended(hsc.player11(), true)
-    hsc.unit_suspended(hsc.player12(), true)
-    hsc.unit_suspended(hsc.player13(), true)
-    hsc.unit_suspended(hsc.player14(), true)
-    hsc.unit_suspended(hsc.player15(), true)
+    suspendPlayers(true)
     hsc.switch_bsp(8)
     wake(d40.insertion_music)
     call(d40.insertion_1)
@@ -2001,37 +1671,7 @@ function d40.cutscene_insertion(call, sleep)
     sleep(15)
     hsc.unit_suspended(call(d40.player0), false)
     hsc.unit_suspended(call(d40.player1), false)
-    hsc.unit_suspended(hsc.player2(), false)
-    hsc.unit_suspended(hsc.player3(), false)
-    hsc.unit_suspended(hsc.player4(), false)
-    hsc.unit_suspended(hsc.player5(), false)
-    hsc.unit_suspended(hsc.player6(), false)
-    hsc.unit_suspended(hsc.player7(), false)
-    hsc.unit_suspended(hsc.player8(), false)
-    hsc.unit_suspended(hsc.player9(), false)
-    hsc.unit_suspended(hsc.player10(), false)
-    hsc.unit_suspended(hsc.player11(), false)
-    hsc.unit_suspended(hsc.player12(), false)
-    hsc.unit_suspended(hsc.player13(), false)
-    hsc.unit_suspended(hsc.player14(), false)
-    hsc.unit_suspended(hsc.player15(), false)
-    --hsc.object_teleport(call(d40.player0), "player0_intro_done")
-    --hsc.object_teleport(call(d40.player1), "player1_intro_done")
     teleportPlayersTo("player0_intro_done")
-    hsc.object_teleport(hsc.player2(), "player1_intro_done")
-    hsc.object_teleport(hsc.player3(), "player1_intro_done")
-    hsc.object_teleport(hsc.player4(), "player1_intro_done")
-    hsc.object_teleport(hsc.player5(), "player1_intro_done")
-    hsc.object_teleport(hsc.player6(), "player1_intro_done")
-    hsc.object_teleport(hsc.player7(), "player1_intro_done")
-    hsc.object_teleport(hsc.player8(), "player1_intro_done")
-    hsc.object_teleport(hsc.player9(), "player1_intro_done")
-    hsc.object_teleport(hsc.player10(), "player1_intro_done")
-    hsc.object_teleport(hsc.player11(), "player1_intro_done")
-    hsc.object_teleport(hsc.player12(), "player1_intro_done")
-    hsc.object_teleport(hsc.player13(), "player1_intro_done")
-    hsc.object_teleport(hsc.player14(), "player1_intro_done")
-    hsc.object_teleport(hsc.player15(), "player1_intro_done")
     hsc.object_destroy("chief_insertion")
     hsc.object_destroy("intro_banshee")
     hsc.camera_control(false)
@@ -2122,6 +1762,16 @@ function d40.obj_escape(call, sleep)
     hsc.show_hud_help_text(false)
 end
 
+function d40.save_loop(call, sleep)
+    sleep(function()
+        return save_now
+    end, testing_save)
+    hsc.game_save_no_timeout()
+    save_now = false
+end
+-- We don't need this for multiplayer purposes
+--script.continuous(d40.save_loop)
+
 function d40.certain_save(call, sleep)
     save_now = true
 end
@@ -2137,79 +1787,40 @@ end
 
 function d40.endgame_cinematics(call, sleep)
     if hsc.hud_get_timer_ticks() <= 0 then
-        hsc.begin({
-            function()
-                return hsc.show_hud_timer(false)
-            end,
-            function()
-                timer_active = false
-            end,
-            function()
-                return hsc.pause_hud_timer(true)
-            end,
-            function()
-                return call(d40.cinematic_time_up)
-            end
-        })
+        hsc.show_hud_timer(false)
+        timer_active = false
+        hsc.pause_hud_timer(true)
+        call(d40.cinematic_time_up)
     else
-        hsc.begin({
-            function()
-                return hsc.show_hud_timer(false)
-            end,
-            function()
-                timer_active = false
-            end,
-            function()
-                return hsc.pause_hud_timer(true)
-            end,
-            function()
-                return call(d40.cinematic_finale)
-            end,
-            function()
-                return hsc.game_won()
-            end
-        })
+        hsc.show_hud_timer(false)
+        timer_active = false
+        hsc.pause_hud_timer(true)
+        call(d40.cinematic_finale)
+        hsc.game_won()
     end
 end
 
 function d40.trench_jeep_test(call, sleep)
-    if is_host == true then
-        hsc.begin({
-            function()
-                return sleep(function()
-                    return not trench_jeep_test_paused
-                end)
-            end,
-            function()
-                if hsc.vehicle_test_seat_list("trench_jeep1", "w-driver", hsc.players()) or
-                    hsc.vehicle_test_seat_list("trench_jeep2", "w-driver", hsc.players()) or
-                    hsc.vehicle_test_seat_list("trench_jeep3", "w-driver", hsc.players()) or
-                    hsc.vehicle_test_seat_list("trench_jeep4", "w-driver", hsc.players()) or
-                    hsc.vehicle_test_seat_list("asspain_1", "w-driver", hsc.players()) or
-                    hsc.vehicle_test_seat_list("asspain_2", "w-driver", hsc.players()) or
-                    hsc.vehicle_test_seat_list("asspain_3", "w-driver", hsc.players()) then
-                    time_out_of_jeep = 0
-                else
-                    time_out_of_jeep = time_out_of_jeep + 1
+    sleep(function()
+        return not trench_jeep_test_paused
+    end)
+    if hsc.vehicle_test_seat_list("trench_jeep1", "w-driver", hsc.players()) or
+        hsc.vehicle_test_seat_list("trench_jeep2", "w-driver", hsc.players()) or
+        hsc.vehicle_test_seat_list("trench_jeep3", "w-driver", hsc.players()) or
+        hsc.vehicle_test_seat_list("trench_jeep4", "w-driver", hsc.players()) or
+        hsc.vehicle_test_seat_list("asspain_1", "w-driver", hsc.players()) or
+        hsc.vehicle_test_seat_list("asspain_2", "w-driver", hsc.players()) or
+        hsc.vehicle_test_seat_list("asspain_3", "w-driver", hsc.players()) then
+        time_out_of_jeep = 0
+    else
+        time_out_of_jeep = time_out_of_jeep + 1
 
-                end
-            end,
-            function()
-                return sleep(30)
-            end,
-            function()
-                if time_out_of_jeep >= 15 then
-                    hsc.begin({
-                        function()
-                            time_out_of_jeep = 0
-                        end,
-                        function()
-                            return call(d40.d40_360_cortana)
-                        end
-                    })
-                end
-            end
-        })
+    end
+    sleep(30)
+    if time_out_of_jeep >= 15 then
+        time_out_of_jeep = 0
+        -- TODO Remove this until we figure out why it is broken
+        --call(d40.d40_360_cortana)
     end
 end
 script.continuous(d40.trench_jeep_test)
@@ -2355,124 +1966,52 @@ end
 function d40.enc6_8_ambients(call, sleep)
     hsc.begin_random({
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_8_blast12")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_8_blast12")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_8_blast13")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_8_blast13")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium_no, "enc6_8_blast14")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium_no, "enc6_8_blast14")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_8_blast15")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_8_blast15")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_8_blast16")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_8_blast16")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium_no, "enc6_8_blast17")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium_no, "enc6_8_blast17")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_8_blast18")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_8_blast18")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium_no, "enc6_8_blast19")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium_no, "enc6_8_blast19")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium, "enc6_8_blast20")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium, "enc6_8_blast20")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_8_blast21")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_8_blast21")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium_no, "enc6_8_blast22")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium_no, "enc6_8_blast22")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium, "enc6_8_blast23")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium, "enc6_8_blast23")
+            sleep(explosion_seperation)
         end
     })
     sleep(15)
@@ -2599,14 +2138,8 @@ function d40.trench_scene_continue(call, sleep)
     hsc.pause_hud_timer(false)
     hsc.show_hud_timer(true)
     if hsc.hud_get_timer_ticks() >= trench_safe_save_time then
-        hsc.begin({
-            function()
-                return hsc.game_save_cancel()
-            end,
-            function()
-                return hsc.game_save()
-            end
-        })
+        hsc.game_save_cancel()
+        hsc.game_save()
     end
     hsc.activate_team_nav_point_flag("default_red", "player", "nav_endpoint", 0)
 end
@@ -2688,68 +2221,30 @@ function d40.enc6_6(call, sleep)
 end
 
 function d40.enc6_5_ambients(call, sleep)
-    -- Add a sleep here to improve performance a bit over network
-    sleep(30)
     hsc.begin_random({
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_steam_no, "enc6_5_blast3")
-                end,
-                function()
-                    return sleep(45)
-                end
-            })
+            hsc.effect_new(explosion_steam_no, "enc6_5_blast3")
+            sleep(45)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_steam_no, "enc6_5_blast4")
-                end,
-                function()
-                    return sleep(45)
-                end
-            })
+            hsc.effect_new(explosion_steam_no, "enc6_5_blast4")
+            sleep(45)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_steam_no, "enc6_5_blast5")
-                end,
-                function()
-                    return sleep(45)
-                end
-            })
+            hsc.effect_new(explosion_steam_no, "enc6_5_blast5")
+            sleep(45)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_steam_no, "enc6_5_blast6")
-                end,
-                function()
-                    return sleep(45)
-                end
-            })
+            hsc.effect_new(explosion_steam_no, "enc6_5_blast6")
+            sleep(45)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_steam_no, "enc6_5_blast7")
-                end,
-                function()
-                    return sleep(45)
-                end
-            })
+            hsc.effect_new(explosion_steam_no, "enc6_5_blast7")
+            sleep(45)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_steam_no, "enc6_5_blast8")
-                end,
-                function()
-                    return sleep(45)
-                end
-            })
+            hsc.effect_new(explosion_steam_no, "enc6_5_blast8")
+            sleep(45)
         end
     })
 end
@@ -2857,17 +2352,9 @@ function d40.enc6_4_8(call, sleep)
     hsc.ai_place("enc6_5_cov/grunts_advance")
     hsc.ai_place("enc6_5_flood/infsa")
     if coop or hard == hsc.game_difficulty_get() or impossible == hsc.game_difficulty_get() then
-        hsc.begin({
-            function()
-                return hsc.ai_place("enc6_5_cov/fuel_rod_grunts")
-            end,
-            function()
-                return hsc.ai_magically_see_players("enc6_5_cov/fuel_rod_grunts")
-            end,
-            function()
-                return hsc.ai_try_to_fight_player("enc6_5_cov/fuel_rod_grunts")
-            end
-        })
+        hsc.ai_place("enc6_5_cov/fuel_rod_grunts")
+        hsc.ai_magically_see_players("enc6_5_cov/fuel_rod_grunts")
+        hsc.ai_try_to_fight_player("enc6_5_cov/fuel_rod_grunts")
     end
     hsc.objects_predict("enc6_5_dropship")
 end
@@ -3214,144 +2701,60 @@ end
 function d40.enc6_1_ambients(call, sleep)
     hsc.begin_random({
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_1_amb_blast1")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_1_amb_blast1")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium_no, "enc6_1_amb_blast2")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium_no, "enc6_1_amb_blast2")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_steam_no, "enc6_1_amb_blast3")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_steam_no, "enc6_1_amb_blast3")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_1_amb_blast4")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_1_amb_blast4")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_grenade, "enc6_1_amb_blast5")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_grenade, "enc6_1_amb_blast5")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium_no, "enc6_1_amb_blast6")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium_no, "enc6_1_amb_blast6")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_1_amb_blast7")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_1_amb_blast7")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_steam_no, "enc6_1_amb_blast8")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_steam_no, "enc6_1_amb_blast8")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_grenade, "enc6_1_amb_blast9")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_grenade, "enc6_1_amb_blast9")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_1_amb_blast10")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_1_amb_blast10")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium_no, "enc6_1_amb_blast11")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium_no, "enc6_1_amb_blast11")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_small, "enc6_1_amb_blast12")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_small, "enc6_1_amb_blast12")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_grenade, "enc6_1_amb_blast13")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_grenade, "enc6_1_amb_blast13")
+            sleep(explosion_seperation)
         end,
         function()
-            hsc.begin({
-                function()
-                    return hsc.effect_new(explosion_medium_no, "enc6_1_amb_blast14")
-                end,
-                function()
-                    return sleep(explosion_seperation)
-                end
-            })
+            hsc.effect_new(explosion_medium_no, "enc6_1_amb_blast14")
+            sleep(explosion_seperation)
         end
     })
 end
@@ -3464,61 +2867,37 @@ end
 
 function d40.close_manifold_n1(call, sleep)
     if not manifold_n1_destroyed then
-        hsc.begin({
-            function()
-                return hsc.device_set_position("enc5_1_pistonn1", 0)
-            end,
-            function()
-                if hsc.device_get_position("enc5_1_pistonn1") ~= 0 then
-                    hsc.print("placeholder: alarm sound close_n1")
-                end
-            end
-        })
+        hsc.device_set_position("enc5_1_pistonn1", 0)
+        if hsc.device_get_position("enc5_1_pistonn1") ~= 0 then
+            hsc.print("placeholder: alarm sound close_n1")
+        end
     end
 end
 
 function d40.close_manifold_n3(call, sleep)
     if not manifold_n3_destroyed then
-        hsc.begin({
-            function()
-                return hsc.device_set_position("enc5_1_pistonn3", 0)
-            end,
-            function()
-                if hsc.device_get_position("enc5_1_pistonn3") ~= 0 then
-                    hsc.print("placeholder: alarm sound close_n3")
-                end
-            end
-        })
+        hsc.device_set_position("enc5_1_pistonn3", 0)
+        if hsc.device_get_position("enc5_1_pistonn3") ~= 0 then
+            hsc.print("placeholder: alarm sound close_n3")
+        end
     end
 end
 
 function d40.close_manifold_s1(call, sleep)
     if not manifold_s1_destroyed then
-        hsc.begin({
-            function()
-                return hsc.device_set_position("enc5_1_pistons1", 0)
-            end,
-            function()
-                if hsc.device_get_position("enc5_1_pistons1") ~= 0 then
-                    hsc.print("placeholder: alarm sound close_s1")
-                end
-            end
-        })
+        hsc.device_set_position("enc5_1_pistons1", 0)
+        if hsc.device_get_position("enc5_1_pistons1") ~= 0 then
+            hsc.print("placeholder: alarm sound close_s1")
+        end
     end
 end
 
 function d40.close_manifold_s3(call, sleep)
     if not manifold_s3_destroyed then
-        hsc.begin({
-            function()
-                return hsc.device_set_position("enc5_1_pistons3", 0)
-            end,
-            function()
-                if hsc.device_get_position("enc5_1_pistons3") ~= 0 then
-                    hsc.print("placeholder: alarm sound close_s3")
-                end
-            end
-        })
+        hsc.device_set_position("enc5_1_pistons3", 0)
+        if hsc.device_get_position("enc5_1_pistons3") ~= 0 then
+            hsc.print("placeholder: alarm sound close_s3")
+        end
     end
 end
 
@@ -3629,124 +3008,60 @@ function d40.enc5_1_waypoint_control(call, sleep)
         0 or hsc.device_get_position("enc5_1_pistons1") > 0 or
         hsc.device_get_position("enc5_1_pistons3") > 0 or hsc.device_get_position("enc5_1_pistonn2") >
         0 then
-        hsc.begin({
-            function()
-                if controls_marked then
-                    call(d40.obj_frogblast)
-                end
-            end,
-            function()
-                return call(d40.enc5_1_mark_manifolds)
-            end,
-            function()
-                controls_marked = false
-            end
-        })
+        if controls_marked then
+            call(d40.obj_frogblast)
+        end
+        call(d40.enc5_1_mark_manifolds)
+        controls_marked = false
     else
-        hsc.begin({
-            function()
-                if not controls_marked then
-                    call(d40.obj_retract)
-                end
-            end,
-            function()
-                return call(d40.enc5_1_mark_controls)
-            end,
-            function()
-                controls_marked = true
-            end
-        })
+        if not controls_marked then
+            call(d40.obj_retract)
+        end
+        call(d40.enc5_1_mark_controls)
+        controls_marked = true
     end
 end
 
 function d40.enc5_1_control_poll(call, sleep)
     if not manifold_n1_destroyed and hsc.device_get_position("enc5_1_pistonn1") == 0 then
-        hsc.begin({
-            function()
-                return hsc.device_set_power("enc5_1_controln1", 1)
-            end,
-            function()
-                return hsc.device_set_power("enc5_1_siglight_n11", 0)
-            end,
-            function()
-                return hsc.device_set_power("enc5_1_siglight_n12", 0)
-            end,
-            function()
-                return hsc.device_set_position_immediate("enc5_1_siglight_n11", 1)
-            end,
-            function()
-                return hsc.device_set_position_immediate("enc5_1_siglight_n12", 1)
-            end
-        })
+        hsc.device_set_power("enc5_1_controln1", 1)
+        hsc.device_set_power("enc5_1_siglight_n11", 0)
+        hsc.device_set_power("enc5_1_siglight_n12", 0)
+        hsc.device_set_position_immediate("enc5_1_siglight_n11", 1)
+        hsc.device_set_position_immediate("enc5_1_siglight_n12", 1)
     else
         if not manifold_n1_destroyed and hsc.device_get_power("enc5_1_controln1") == 1 then
             call(d40.open_manifold_n1)
         end
     end
     if not manifold_n3_destroyed and hsc.device_get_position("enc5_1_pistonn3") == 0 then
-        hsc.begin({
-            function()
-                return hsc.device_set_power("enc5_1_controln3", 1)
-            end,
-            function()
-                return hsc.device_set_power("enc5_1_siglight_n31", 0)
-            end,
-            function()
-                return hsc.device_set_power("enc5_1_siglight_n32", 0)
-            end,
-            function()
-                return hsc.device_set_position_immediate("enc5_1_siglight_n31", 1)
-            end,
-            function()
-                return hsc.device_set_position_immediate("enc5_1_siglight_n32", 1)
-            end
-        })
+        hsc.device_set_power("enc5_1_controln3", 1)
+        hsc.device_set_power("enc5_1_siglight_n31", 0)
+        hsc.device_set_power("enc5_1_siglight_n32", 0)
+        hsc.device_set_position_immediate("enc5_1_siglight_n31", 1)
+        hsc.device_set_position_immediate("enc5_1_siglight_n32", 1)
     else
         if not manifold_n3_destroyed and hsc.device_get_power("enc5_1_controln3") == 1 then
             call(d40.open_manifold_n3)
         end
     end
     if not manifold_s1_destroyed and hsc.device_get_position("enc5_1_pistons1") == 0 then
-        hsc.begin({
-            function()
-                return hsc.device_set_power("enc5_1_controls1", 1)
-            end,
-            function()
-                return hsc.device_set_power("enc5_1_siglight_s11", 0)
-            end,
-            function()
-                return hsc.device_set_power("enc5_1_siglight_s12", 0)
-            end,
-            function()
-                return hsc.device_set_position_immediate("enc5_1_siglight_s11", 1)
-            end,
-            function()
-                return hsc.device_set_position_immediate("enc5_1_siglight_s12", 1)
-            end
-        })
+        hsc.device_set_power("enc5_1_controls1", 1)
+        hsc.device_set_power("enc5_1_siglight_s11", 0)
+        hsc.device_set_power("enc5_1_siglight_s12", 0)
+        hsc.device_set_position_immediate("enc5_1_siglight_s11", 1)
+        hsc.device_set_position_immediate("enc5_1_siglight_s12", 1)
     else
         if not manifold_s1_destroyed and hsc.device_get_power("enc5_1_controls1") == 1 then
             call(d40.open_manifold_s1)
         end
     end
     if not manifold_s3_destroyed and hsc.device_get_position("enc5_1_pistons3") == 0 then
-        hsc.begin({
-            function()
-                return hsc.device_set_power("enc5_1_controls3", 1)
-            end,
-            function()
-                return hsc.device_set_power("enc5_1_siglight_s31", 0)
-            end,
-            function()
-                return hsc.device_set_power("enc5_1_siglight_s32", 0)
-            end,
-            function()
-                return hsc.device_set_position_immediate("enc5_1_siglight_s31", 1)
-            end,
-            function()
-                return hsc.device_set_position_immediate("enc5_1_siglight_s32", 1)
-            end
-        })
+        hsc.device_set_power("enc5_1_controls3", 1)
+        hsc.device_set_power("enc5_1_siglight_s31", 0)
+        hsc.device_set_power("enc5_1_siglight_s32", 0)
+        hsc.device_set_position_immediate("enc5_1_siglight_s31", 1)
+        hsc.device_set_position_immediate("enc5_1_siglight_s32", 1)
     else
         if not manifold_s3_destroyed and hsc.device_get_power("enc5_1_controls3") == 1 then
             call(d40.open_manifold_s3)
@@ -4027,333 +3342,167 @@ end
 
 function d40.enc5_1_manifold_ovens(call, sleep)
     if 0 == hsc.device_get_position("enc5_1_pistonn1") then
-        hsc.begin({
-            function()
-                if hsc.volume_test_objects("enc5_1_oven_n1", hsc.list_get(hsc.players(), 0)) then
-                    hsc.damage_object("effects\\damage effects\\oven heat",
-                                      hsc.list_get(hsc.players(), 0))
-                end
-            end,
-            function()
-                if coop and
-                    hsc.volume_test_objects("enc5_1_oven_n1", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object("effects\\damage effects\\oven heat",
-                                      hsc.list_get(hsc.players(), 1))
-                end
-            end
-        })
+        if hsc.volume_test_objects("enc5_1_oven_n1", hsc.list_get(hsc.players(), 0)) then
+            hsc.damage_object("effects\\damage effects\\oven heat", hsc.list_get(hsc.players(), 0))
+        end
+        if coop and hsc.volume_test_objects("enc5_1_oven_n1", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\oven heat", hsc.list_get(hsc.players(), 1))
+        end
     end
     if 0 == hsc.device_get_position("enc5_1_pistonn3") then
-        hsc.begin({
-            function()
-                if hsc.volume_test_objects("enc5_1_oven_n3", hsc.list_get(hsc.players(), 0)) then
-                    hsc.damage_object("effects\\damage effects\\oven heat",
-                                      hsc.list_get(hsc.players(), 0))
-                end
-            end,
-            function()
-                if coop and
-                    hsc.volume_test_objects("enc5_1_oven_n3", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object("effects\\damage effects\\oven heat",
-                                      hsc.list_get(hsc.players(), 1))
-                end
-            end
-        })
+        if hsc.volume_test_objects("enc5_1_oven_n3", hsc.list_get(hsc.players(), 0)) then
+            hsc.damage_object("effects\\damage effects\\oven heat", hsc.list_get(hsc.players(), 0))
+        end
+        if coop and hsc.volume_test_objects("enc5_1_oven_n3", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\oven heat", hsc.list_get(hsc.players(), 1))
+        end
     end
     if 0 == hsc.device_get_position("enc5_1_pistons1") then
-        hsc.begin({
-            function()
-                if hsc.volume_test_objects("enc5_1_oven_s1", hsc.list_get(hsc.players(), 0)) then
-                    hsc.damage_object("effects\\damage effects\\oven heat",
-                                      hsc.list_get(hsc.players(), 0))
-                end
-            end,
-            function()
-                if coop and
-                    hsc.volume_test_objects("enc5_1_oven_s1", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object("effects\\damage effects\\oven heat",
-                                      hsc.list_get(hsc.players(), 1))
-                end
-            end
-        })
+        if hsc.volume_test_objects("enc5_1_oven_s1", hsc.list_get(hsc.players(), 0)) then
+            hsc.damage_object("effects\\damage effects\\oven heat", hsc.list_get(hsc.players(), 0))
+        end
+        if coop and hsc.volume_test_objects("enc5_1_oven_s1", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\oven heat", hsc.list_get(hsc.players(), 1))
+        end
     end
     if 0 == hsc.device_get_position("enc5_1_pistons3") then
-        hsc.begin({
-            function()
-                if hsc.volume_test_objects("enc5_1_oven_s3", hsc.list_get(hsc.players(), 0)) then
-                    hsc.damage_object("effects\\damage effects\\oven heat",
-                                      hsc.list_get(hsc.players(), 0))
-                end
-            end,
-            function()
-                if coop and
-                    hsc.volume_test_objects("enc5_1_oven_s3", hsc.list_get(hsc.players(), 1)) then
-                    hsc.damage_object("effects\\damage effects\\oven heat",
-                                      hsc.list_get(hsc.players(), 1))
-                end
-            end
-        })
+        if hsc.volume_test_objects("enc5_1_oven_s3", hsc.list_get(hsc.players(), 0)) then
+            hsc.damage_object("effects\\damage effects\\oven heat", hsc.list_get(hsc.players(), 0))
+        end
+        if coop and hsc.volume_test_objects("enc5_1_oven_s3", hsc.list_get(hsc.players(), 1)) then
+            hsc.damage_object("effects\\damage effects\\oven heat", hsc.list_get(hsc.players(), 1))
+        end
     end
 end
 
 function d40.enc5_1_floor_control(call, sleep)
     if not (hsc.volume_test_objects("enc5_1_main", hsc.players())) then
-        hsc.begin({
-            function()
-                return hsc.ai_kill("enc5_1_sents/north")
-            end,
-            function()
-                return hsc.ai_kill("enc5_1_sents/south")
-            end
-        })
+        hsc.ai_kill("enc5_1_sents/north")
+        hsc.ai_kill("enc5_1_sents/south")
     end
     if player_is_on_floor ~= 0 and hsc.volume_test_objects("enc5_1_floor0", hsc.players()) then
-        hsc.begin({
-            function()
-                player_is_on_floor = 0
-            end
-        })
+        player_is_on_floor = 0
     end
     if player_is_on_floor ~= 1 and hsc.volume_test_objects("enc5_1_floor1", hsc.players()) then
-        hsc.begin({
-            function()
-                player_is_on_floor = 1
-            end
-        })
+        player_is_on_floor = 1
     end
     if player_is_on_floor ~= 2 and hsc.volume_test_objects("enc5_1_floor2", hsc.players()) then
-        hsc.begin({
-            function()
-                player_is_on_floor = 2
-            end
-        })
+        player_is_on_floor = 2
     end
     if player_is_on_floor ~= 3 and hsc.volume_test_objects("enc5_1_floor3", hsc.players()) then
-        hsc.begin({
-            function()
-                player_is_on_floor = 3
-            end
-        })
+        player_is_on_floor = 3
     end
 end
 
 function d40.enc5_1_monitor_control(call, sleep)
     if 3 ~= hsc.ai_command_list_status(hsc.ai_actors("enc5_1_monitor")) then
-        hsc.begin({
-            function()
-                if hsc.volume_test_objects("enc5_1_north", hsc.ai_actors("enc5_1_monitor")) then
-                    if player_is_on_floor >= 2 then
-                        hsc.ai_command_list("enc5_1_monitor", "monitor_n2")
-                    else
-                        hsc.ai_command_list("enc5_1_monitor", "monitor_n1")
-                    end
-                end
-            end,
-            function()
-                if hsc.volume_test_objects("enc5_1_south", hsc.ai_actors("enc5_1_monitor")) then
-                    if player_is_on_floor >= 2 then
-                        hsc.ai_command_list("enc5_1_monitor", "monitor_s2")
-                    else
-                        hsc.ai_command_list("enc5_1_monitor", "monitor_s1")
-                    end
-                end
-            end,
-            function()
-                if hsc.volume_test_objects_all("enc5_1_north", hsc.players()) and
-                    hsc.volume_test_objects("enc5_1_south", hsc.ai_actors("enc5_1_monitor")) then
-                    hsc.ai_command_list("enc5_1_monitor", "monitor_ston")
-                end
-            end,
-            function()
-                if hsc.volume_test_objects_all("enc5_1_south", hsc.players()) and
-                    hsc.volume_test_objects("enc5_1_north", hsc.ai_actors("enc5_1_monitor")) then
-                    hsc.ai_command_list("enc5_1_monitor", "monitor_ntos")
-                end
+        if hsc.volume_test_objects("enc5_1_north", hsc.ai_actors("enc5_1_monitor")) then
+            if player_is_on_floor >= 2 then
+                hsc.ai_command_list("enc5_1_monitor", "monitor_n2")
+            else
+                hsc.ai_command_list("enc5_1_monitor", "monitor_n1")
             end
-        })
+        end
+        if hsc.volume_test_objects("enc5_1_south", hsc.ai_actors("enc5_1_monitor")) then
+            if player_is_on_floor >= 2 then
+                hsc.ai_command_list("enc5_1_monitor", "monitor_s2")
+            else
+                hsc.ai_command_list("enc5_1_monitor", "monitor_s1")
+            end
+        end
+        if hsc.volume_test_objects_all("enc5_1_north", hsc.players()) and
+            hsc.volume_test_objects("enc5_1_south", hsc.ai_actors("enc5_1_monitor")) then
+            hsc.ai_command_list("enc5_1_monitor", "monitor_ston")
+        end
+        if hsc.volume_test_objects_all("enc5_1_south", hsc.players()) and
+            hsc.volume_test_objects("enc5_1_north", hsc.ai_actors("enc5_1_monitor")) then
+            hsc.ai_command_list("enc5_1_monitor", "monitor_ntos")
+        end
     end
 end
 
 function d40.enc5_1_explosion(call, sleep)
     if current_damage_level > 0 and hsc.volume_test_objects("enc5_1_main", hsc.players()) then
-        hsc.begin({
-            function()
-                if hsc.volume_test_objects("enc5_1_north", hsc.players()) then
-                    if player_is_on_floor >= 2 then
-                        hsc.begin_random({
-                            function()
-                                hsc.begin({
-                                    function()
-                                        return
-                                            hsc.effect_new(current_explosion, "enc5_1_ceiling_n1")
-                                    end,
-                                    function()
-                                        return sleep(current_explosion_seperation)
-                                    end
-                                })
-                            end,
-                            function()
-                                hsc.begin({
-                                    function()
-                                        return
-                                            hsc.effect_new(current_explosion, "enc5_1_ceiling_n2")
-                                    end,
-                                    function()
-                                        return sleep(current_explosion_seperation)
-                                    end
-                                })
-                            end,
-                            function()
-                                hsc.begin({
-                                    function()
-                                        return
-                                            hsc.effect_new(current_explosion, "enc5_1_ceiling_n3")
-                                    end,
-                                    function()
-                                        return sleep(current_explosion_seperation)
-                                    end
-                                })
-                            end
-                        })
-                    else
-                        hsc.begin_random({
-                            function()
-                                hsc.begin({
-                                    function()
-                                        return hsc.effect_new(current_explosion, "enc5_1_stub_n1")
-                                    end,
-                                    function()
-                                        return sleep(current_explosion_seperation)
-                                    end
-                                })
-                            end,
-                            function()
-                                hsc.begin({
-                                    function()
-                                        return hsc.effect_new(current_explosion, "enc5_1_stub_n2")
-                                    end,
-                                    function()
-                                        return sleep(current_explosion_seperation)
-                                    end
-                                })
-                            end,
-                            function()
-                                hsc.begin({
-                                    function()
-                                        return hsc.effect_new(current_explosion, "enc5_1_stub_n3")
-                                    end,
-                                    function()
-                                        return sleep(current_explosion_seperation)
-                                    end
-                                })
-                            end,
-                            function()
-                                hsc.begin({
-                                    function()
-                                        return hsc.effect_new(current_explosion, "enc5_1_stub_n4")
-                                    end,
-                                    function()
-                                        return sleep(current_explosion_seperation)
-                                    end
-                                })
-                            end
-                        })
+        if hsc.volume_test_objects("enc5_1_north", hsc.players()) then
+            if player_is_on_floor >= 2 then
+                hsc.begin_random({
+                    function()
+                        hsc.effect_new(current_explosion, "enc5_1_ceiling_n1")
+                        sleep(current_explosion_seperation)
+                    end,
+                    function()
+                        hsc.effect_new(current_explosion, "enc5_1_ceiling_n2")
+                        sleep(current_explosion_seperation)
+                    end,
+                    function()
+                        hsc.effect_new(current_explosion, "enc5_1_ceiling_n3")
+                        sleep(current_explosion_seperation)
                     end
-                else
-                    if hsc.volume_test_objects("enc5_1_south", hsc.players()) then
-                        if player_is_on_floor >= 2 then
-                            hsc.begin_random({
-                                function()
-                                    hsc.begin({
-                                        function()
-                                            return
-                                                hsc.effect_new(current_explosion,
-                                                               "enc5_1_ceiling_s1")
-                                        end,
-                                        function()
-                                            return sleep(current_explosion_seperation)
-                                        end
-                                    })
-                                end,
-                                function()
-                                    hsc.begin({
-                                        function()
-                                            return
-                                                hsc.effect_new(current_explosion,
-                                                               "enc5_1_ceiling_s2")
-                                        end,
-                                        function()
-                                            return sleep(current_explosion_seperation)
-                                        end
-                                    })
-                                end,
-                                function()
-                                    hsc.begin({
-                                        function()
-                                            return
-                                                hsc.effect_new(current_explosion,
-                                                               "enc5_1_ceiling_s3")
-                                        end,
-                                        function()
-                                            return sleep(current_explosion_seperation)
-                                        end
-                                    })
-                                end
-                            })
-                        else
-                            hsc.begin_random({
-                                function()
-                                    hsc.begin({
-                                        function()
-                                            return
-                                                hsc.effect_new(current_explosion, "enc5_1_stub_s1")
-                                        end,
-                                        function()
-                                            return sleep(current_explosion_seperation)
-                                        end
-                                    })
-                                end,
-                                function()
-                                    hsc.begin({
-                                        function()
-                                            return
-                                                hsc.effect_new(current_explosion, "enc5_1_stub_s2")
-                                        end,
-                                        function()
-                                            return sleep(current_explosion_seperation)
-                                        end
-                                    })
-                                end,
-                                function()
-                                    hsc.begin({
-                                        function()
-                                            return
-                                                hsc.effect_new(current_explosion, "enc5_1_stub_s3")
-                                        end,
-                                        function()
-                                            return sleep(current_explosion_seperation)
-                                        end
-                                    })
-                                end
-                            })
+                })
+            else
+                hsc.begin_random({
+                    function()
+                        hsc.effect_new(current_explosion, "enc5_1_stub_n1")
+                        sleep(current_explosion_seperation)
+                    end,
+                    function()
+                        hsc.effect_new(current_explosion, "enc5_1_stub_n2")
+                        sleep(current_explosion_seperation)
+                    end,
+                    function()
+                        hsc.effect_new(current_explosion, "enc5_1_stub_n3")
+                        sleep(current_explosion_seperation)
+                    end,
+                    function()
+                        hsc.effect_new(current_explosion, "enc5_1_stub_n4")
+                        sleep(current_explosion_seperation)
+                    end
+                })
+            end
+        else
+            if hsc.volume_test_objects("enc5_1_south", hsc.players()) then
+                if player_is_on_floor >= 2 then
+                    hsc.begin_random({
+                        function()
+                            hsc.effect_new(current_explosion, "enc5_1_ceiling_s1")
+                            sleep(current_explosion_seperation)
+                        end,
+                        function()
+                            hsc.effect_new(current_explosion, "enc5_1_ceiling_s2")
+                            sleep(current_explosion_seperation)
+                        end,
+                        function()
+                            hsc.effect_new(current_explosion, "enc5_1_ceiling_s3")
+                            sleep(current_explosion_seperation)
                         end
-                    end
+                    })
+                else
+                    hsc.begin_random({
+                        function()
+                            hsc.effect_new(current_explosion, "enc5_1_stub_s1")
+                            sleep(current_explosion_seperation)
+                        end,
+                        function()
+                            hsc.effect_new(current_explosion, "enc5_1_stub_s2")
+                            sleep(current_explosion_seperation)
+                        end,
+                        function()
+                            hsc.effect_new(current_explosion, "enc5_1_stub_s3")
+                            sleep(current_explosion_seperation)
+                        end
+                    })
                 end
             end
-        })
+        end
     end
     if current_damage_level >= 4 and hsc.volume_test_objects("enc5_1_main", hsc.players()) then
-        hsc.begin({
-            function()
-                if hsc.volume_test_objects("enc5_1_north", hsc.players()) then
-                    hsc.effect_new(current_explosion, "enc5_1_manifold_n2")
-                else
-                    if hsc.volume_test_objects("enc5_1_south", hsc.players()) then
-                        hsc.effect_new(current_explosion, "enc5_1_manifold_s2")
-                    end
-                end
+        if hsc.volume_test_objects("enc5_1_north", hsc.players()) then
+            hsc.effect_new(current_explosion, "enc5_1_manifold_n2")
+        else
+            if hsc.volume_test_objects("enc5_1_south", hsc.players()) then
+                hsc.effect_new(current_explosion, "enc5_1_manifold_s2")
             end
-        })
+        end
     end
 end
 
@@ -4362,54 +3511,24 @@ function d40.enc5_1_explosions(call, sleep)
         return hsc.volume_test_objects("enc5_1_main", hsc.players())
     end)
     if current_damage_level < destroyed_count then
-        hsc.begin({
-            function()
-                current_damage_level = 1 + current_damage_level
+        current_damage_level = 1 + current_damage_level
 
-            end,
-            function()
-                if 2 == current_damage_level then
-                    hsc.begin({
-                        function()
-                            current_explosion = explosion_medium_no
-                        end,
-                        function()
-                            current_explosion_seperation = current_explosion_seperation - 20
+        if 2 == current_damage_level then
+            current_explosion = explosion_medium_no
+            current_explosion_seperation = current_explosion_seperation - 20
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if 3 == current_damage_level then
-                    hsc.begin({
-                        function()
-                            current_explosion = explosion_large_no
-                        end,
-                        function()
-                            current_explosion_seperation = current_explosion_seperation - 20
+        end
+        if 3 == current_damage_level then
+            current_explosion = explosion_large_no
+            current_explosion_seperation = current_explosion_seperation - 20
 
-                        end,
-                        function()
-                            return hsc.device_group_set_immediate("engine_destroyed_lights", 1)
-                        end
-                    })
-                end
-            end,
-            function()
-                if 4 == current_damage_level then
-                    hsc.begin({
-                        function()
-                            current_explosion = explosion_large_no
-                        end,
-                        function()
-                            current_explosion_seperation = current_explosion_seperation - 20
+            hsc.device_group_set_immediate("engine_destroyed_lights", 1)
+        end
+        if 4 == current_damage_level then
+            current_explosion = explosion_large_no
+            current_explosion_seperation = current_explosion_seperation - 20
 
-                        end
-                    })
-                end
-            end
-        })
+        end
     end
     call(d40.enc5_1_explosion)
 end
@@ -4424,15 +3543,9 @@ end
 
 function d40.enc5_1_s12_spawn(call, sleep)
     if hsc.ai_living_count("enc5_1_flood/s12") <= min_combat_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc5_1_flood/s12")
-            end,
-            function()
-                enc5_1_s12_limiter = enc5_1_s12_limiter + 1
+        hsc.ai_spawn_actor("enc5_1_flood/s12")
+        enc5_1_s12_limiter = enc5_1_s12_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc5_1_infs/s12") <= min_infection_spawn then
         hsc.ai_place("enc5_1_infs/s12")
@@ -4441,15 +3554,9 @@ end
 
 function d40.enc5_1_s23_spawn(call, sleep)
     if hsc.ai_living_count("enc5_1_flood/s23") <= min_combat_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc5_1_flood/s23")
-            end,
-            function()
-                enc5_1_s23_limiter = enc5_1_s23_limiter + 1
+        hsc.ai_spawn_actor("enc5_1_flood/s23")
+        enc5_1_s23_limiter = enc5_1_s23_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc5_1_infs/s23") <= min_infection_spawn then
         hsc.ai_place("enc5_1_infs/s23")
@@ -4458,15 +3565,9 @@ end
 
 function d40.enc5_1_n12_spawn(call, sleep)
     if hsc.ai_living_count("enc5_1_flood/n12") <= min_combat_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc5_1_flood/n12")
-            end,
-            function()
-                enc5_1_n12_limiter = enc5_1_n12_limiter + 1
+        hsc.ai_spawn_actor("enc5_1_flood/n12")
+        enc5_1_n12_limiter = enc5_1_n12_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc5_1_infs/n12") <= min_infection_spawn then
         hsc.ai_place("enc5_1_infs/n12")
@@ -4475,15 +3576,9 @@ end
 
 function d40.enc5_1_n23_spawn(call, sleep)
     if hsc.ai_living_count("enc5_1_flood/n23") <= min_combat_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc5_1_flood/n23")
-            end,
-            function()
-                enc5_1_n23_limiter = enc5_1_n23_limiter + 1
+        hsc.ai_spawn_actor("enc5_1_flood/n23")
+        enc5_1_n23_limiter = enc5_1_n23_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc5_1_infs/n23") <= min_infection_spawn then
         hsc.ai_place("enc5_1_infs/n23")
@@ -4494,56 +3589,32 @@ function d40.enc5_1_side_corridors(call, sleep)
     if current_damage_level > 0 or impossible == hsc.game_difficulty_get() and
         hsc.volume_test_objects_all("enc5_1_s12_upper", hsc.players()) and enc5_1_s12_limiter <= 30 *
         spawn_scale and player_is_on_floor <= 1 then
-        hsc.begin({
-            function()
-                return call(d40.enc5_1_s12_spawn)
-            end,
-            function()
-                inside_s12 = true
-            end
-        })
+        call(d40.enc5_1_s12_spawn)
+        inside_s12 = true
     else
         inside_s12 = false
     end
     if current_damage_level < 1 or impossible == hsc.game_difficulty_get() and
         hsc.volume_test_objects_all("enc5_1_s23_upper", hsc.players()) and enc5_1_s23_limiter <= 20 *
         spawn_scale and player_is_on_floor <= 2 then
-        hsc.begin({
-            function()
-                return call(d40.enc5_1_s23_spawn)
-            end,
-            function()
-                inside_s23 = true
-            end
-        })
+        call(d40.enc5_1_s23_spawn)
+        inside_s23 = true
     else
         inside_s23 = false
     end
     if current_damage_level > 0 or impossible == hsc.game_difficulty_get() and
         hsc.volume_test_objects_all("enc5_1_n12_upper", hsc.players()) and enc5_1_n12_limiter <= 20 *
         spawn_scale and player_is_on_floor <= 1 then
-        hsc.begin({
-            function()
-                return call(d40.enc5_1_n12_spawn)
-            end,
-            function()
-                inside_n12 = true
-            end
-        })
+        call(d40.enc5_1_n12_spawn)
+        inside_n12 = true
     else
         inside_n12 = false
     end
     if current_damage_level < 1 or impossible == hsc.game_difficulty_get() and
         hsc.volume_test_objects_all("enc5_1_n23_upper", hsc.players()) and enc5_1_n23_limiter <= 30 *
         spawn_scale and player_is_on_floor <= 2 then
-        hsc.begin({
-            function()
-                return call(d40.enc5_1_n23_spawn)
-            end,
-            function()
-                inside_n23 = true
-            end
-        })
+        call(d40.enc5_1_n23_spawn)
+        inside_n23 = true
     else
         inside_n23 = false
     end
@@ -4585,18 +3656,12 @@ end
 
 function d40.enc5_1_infs_spawn(call, sleep)
     if hsc.ai_living_count("enc5_1_infs") < min_infection_spawn then
-        hsc.begin({
-            function()
-                if player_is_on_floor == 0 then
-                    call(d40.enc5_1_infs_floor0)
-                end
-            end,
-            function()
-                if player_is_on_floor == 1 then
-                    call(d40.enc5_1_infs_floor1)
-                end
-            end
-        })
+        if player_is_on_floor == 0 then
+            call(d40.enc5_1_infs_floor0)
+        end
+        if player_is_on_floor == 1 then
+            call(d40.enc5_1_infs_floor1)
+        end
     end
 end
 
@@ -4641,72 +3706,36 @@ end
 
 function d40.enc5_1_sents_spawn(call, sleep)
     if hsc.volume_test_objects_all("enc5_1_north", hsc.players()) then
-        hsc.begin({
-            function()
-                return hsc.ai_kill("enc5_1_sents/south")
-            end,
-            function()
-                if hsc.ai_living_count("enc5_1_sents") <= 1 and
-                    hsc.volume_test_objects("enc5_1_main", hsc.players()) then
-                    hsc.begin({
-                        function()
-                            return sleep(150)
-                        end,
-                        function()
-                            if player_is_on_floor >= 2 then
-                                hsc.sound_impulse_start("sound\\dialog\\d40\\d40_monitor_player",
-                                                        hsc.list_get(
-                                                            hsc.ai_actors("enc5_1_monitor"), 0), 1)
-                            else
-                                hsc.sound_impulse_start("sound\\dialog\\d40\\d40_monitor_self",
-                                                        hsc.list_get(
-                                                            hsc.ai_actors("enc5_1_monitor"), 0), 1)
-                            end
-                        end,
-                        function()
-                            return sleep(300)
-                        end,
-                        function()
-                            return hsc.ai_place("enc5_1_sents/north")
-                        end
-                    })
-                end
+        hsc.ai_kill("enc5_1_sents/south")
+        if hsc.ai_living_count("enc5_1_sents") <= 1 and
+            hsc.volume_test_objects("enc5_1_main", hsc.players()) then
+            sleep(150)
+            if player_is_on_floor >= 2 then
+                hsc.sound_impulse_start("sound\\dialog\\d40\\d40_monitor_player",
+                                        hsc.list_get(hsc.ai_actors("enc5_1_monitor"), 0), 1)
+            else
+                hsc.sound_impulse_start("sound\\dialog\\d40\\d40_monitor_self",
+                                        hsc.list_get(hsc.ai_actors("enc5_1_monitor"), 0), 1)
             end
-        })
+            sleep(300)
+            hsc.ai_place("enc5_1_sents/north")
+        end
     end
     if hsc.volume_test_objects_all("enc5_1_south", hsc.players()) then
-        hsc.begin({
-            function()
-                return hsc.ai_kill("enc5_1_sents/north")
-            end,
-            function()
-                if hsc.ai_living_count("enc5_1_sents") <= 1 and
-                    hsc.volume_test_objects("enc5_1_main", hsc.players()) then
-                    hsc.begin({
-                        function()
-                            return sleep(150)
-                        end,
-                        function()
-                            if player_is_on_floor >= 2 then
-                                hsc.sound_impulse_start("sound\\dialog\\d40\\d40_monitor_player",
-                                                        hsc.list_get(
-                                                            hsc.ai_actors("enc5_1_monitor"), 0), 1)
-                            else
-                                hsc.sound_impulse_start("sound\\dialog\\d40\\d40_monitor_self",
-                                                        hsc.list_get(
-                                                            hsc.ai_actors("enc5_1_monitor"), 0), 1)
-                            end
-                        end,
-                        function()
-                            return sleep(300)
-                        end,
-                        function()
-                            return hsc.ai_place("enc5_1_sents/south")
-                        end
-                    })
-                end
+        hsc.ai_kill("enc5_1_sents/north")
+        if hsc.ai_living_count("enc5_1_sents") <= 1 and
+            hsc.volume_test_objects("enc5_1_main", hsc.players()) then
+            sleep(150)
+            if player_is_on_floor >= 2 then
+                hsc.sound_impulse_start("sound\\dialog\\d40\\d40_monitor_player",
+                                        hsc.list_get(hsc.ai_actors("enc5_1_monitor"), 0), 1)
+            else
+                hsc.sound_impulse_start("sound\\dialog\\d40\\d40_monitor_self",
+                                        hsc.list_get(hsc.ai_actors("enc5_1_monitor"), 0), 1)
             end
-        })
+            sleep(300)
+            hsc.ai_place("enc5_1_sents/south")
+        end
     end
 end
 
@@ -4764,18 +3793,12 @@ function d40.enc5_1_manager(call, sleep)
     call(d40.enc5_1_manifold_ovens)
     call(d40.enc5_1_monitor_control)
     if inside_n12 or inside_n23 or inside_s12 or inside_s23 then
-        hsc.begin({
-            function()
-                return hsc.sound_looping_set_alternate("levels\\d40\\music\\d40_03", true)
-            end
-        })
+        hsc.sound_looping_set_alternate("levels\\d40\\music\\d40_03", true)
     else
-        hsc.begin({
-            function()
-                return hsc.sound_looping_set_alternate("levels\\d40\\music\\d40_03", false)
-            end
-        })
+        hsc.sound_looping_set_alternate("levels\\d40\\music\\d40_03", false)
     end
+    -- TODO Try to optimize this function as it hammers network bandwith
+    sleep(3)
 end
 script.continuous(d40.enc5_1_manager)
 
@@ -4944,57 +3967,25 @@ function d40.enc4_2_manager(call, sleep)
     end)
     if enc4_2_limiter <= 7 then
         if hsc.ai_living_count("enc4_2_sents/sents") < 1.5 * min_combat_spawn then
-            hsc.begin({
-                function()
-                    return hsc.ai_spawn_actor("enc4_2_sents/sents")
-                end,
-                function()
-                    enc4_2_limiter = enc4_2_limiter + 1
+            hsc.ai_spawn_actor("enc4_2_sents/sents")
+            enc4_2_limiter = enc4_2_limiter + 1
 
-                end,
-                function()
-                    return sleep(45)
-                end
-            })
+            sleep(45)
         end
     else
-        hsc.begin({
-            function()
-                if hsc.ai_living_count("enc4_2_flood/combats") < 1.5 * min_combat_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4_2_flood/combats")
-                        end,
-                        function()
-                            enc4_2_limiter = enc4_2_limiter + 1
+        if hsc.ai_living_count("enc4_2_flood/combats") < 1.5 * min_combat_spawn then
+            hsc.ai_spawn_actor("enc4_2_flood/combats")
+            enc4_2_limiter = enc4_2_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc4_2_flood/carriers") < min_carrier_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_spawn_actor("enc4_2_flood/carriers")
-                        end,
-                        function()
-                            enc4_2_limiter = enc4_2_limiter + 1
+        end
+        if hsc.ai_living_count("enc4_2_flood/carriers") < min_carrier_spawn then
+            hsc.ai_spawn_actor("enc4_2_flood/carriers")
+            enc4_2_limiter = enc4_2_limiter + 1
 
-                        end
-                    })
-                end
-            end,
-            function()
-                if hsc.ai_living_count("enc4_2_flood/infs") < min_infection_spawn then
-                    hsc.begin({
-                        function()
-                            return hsc.ai_place("enc4_2_flood/infs")
-                        end
-                    })
-                end
-            end
-        })
+        end
+        if hsc.ai_living_count("enc4_2_flood/infs") < min_infection_spawn then
+            hsc.ai_place("enc4_2_flood/infs")
+        end
     end
     sleep(15)
 end
@@ -5053,33 +4044,17 @@ function d40.enc3_6_manager(call, sleep)
         return hsc.volume_test_objects_all("enc3_6", hsc.players())
     end)
     if hsc.ai_living_count("enc3_6_flood/combats") < min_combat_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc3_6_flood/combats")
-            end,
-            function()
-                enc3_6_limiter = enc3_6_limiter + 1
+        hsc.ai_spawn_actor("enc3_6_flood/combats")
+        enc3_6_limiter = enc3_6_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc3_6_flood/carriers") < min_carrier_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc3_6_flood/carriers")
-            end,
-            function()
-                enc3_6_limiter = enc3_6_limiter + 1
+        hsc.ai_spawn_actor("enc3_6_flood/carriers")
+        enc3_6_limiter = enc3_6_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc3_6_flood/infs") < min_infection_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_place("enc3_6_flood/infs")
-            end
-        })
+        hsc.ai_place("enc3_6_flood/infs")
     end
     sleep(15)
 end
@@ -5110,33 +4085,17 @@ function d40.enc3_5_manager(call, sleep)
 
     end)
     if hsc.ai_living_count("enc3_5_flood/combats") < min_combat_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc3_5_flood/combats")
-            end,
-            function()
-                enc3_5_limiter = enc3_5_limiter + 1
+        hsc.ai_spawn_actor("enc3_5_flood/combats")
+        enc3_5_limiter = enc3_5_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc3_5_flood/carriers") < min_carrier_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc3_5_flood/carriers")
-            end,
-            function()
-                enc3_5_limiter = enc3_5_limiter + 1
+        hsc.ai_spawn_actor("enc3_5_flood/carriers")
+        enc3_5_limiter = enc3_5_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc3_5_flood/infs") < min_infection_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_place("enc3_5_flood/infs")
-            end
-        })
+        hsc.ai_place("enc3_5_flood/infs")
     end
     sleep(15)
 end
@@ -5352,26 +4311,12 @@ function d40.enc2_2(call, sleep)
     hsc.ai_place("enc2_2_cov/squad2")
     wake(d40.enc2_5_music)
     if hsc.game_difficulty_get_real() == easy then
-        hsc.begin({
-            function()
-                return hsc.device_set_position("enc2_1_door2", 1)
-            end,
-            function()
-                return hsc.device_set_position("enc2_1_door1", 1)
-            end
-        })
+        hsc.device_set_position("enc2_1_door2", 1)
+        hsc.device_set_position("enc2_1_door1", 1)
     else
-        hsc.begin({
-            function()
-                return call(d40.enc2_2_hunter1)
-            end,
-            function()
-                return sleep(120)
-            end,
-            function()
-                return call(d40.enc2_2_hunter2)
-            end
-        })
+        call(d40.enc2_2_hunter1)
+        sleep(120)
+        call(d40.enc2_2_hunter2)
     end
     hsc.ai_place("enc2_2_flood/infs")
     sleep(function()
@@ -5421,22 +4366,12 @@ function d40.enc1_4_manager(call, sleep)
 
     end)
     if hsc.ai_living_count("enc1_4_flood/combats") < min_combat_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_spawn_actor("enc1_4_flood/combats")
-            end,
-            function()
-                enc1_4_limiter = enc1_4_limiter + 1
+        hsc.ai_spawn_actor("enc1_4_flood/combats")
+        enc1_4_limiter = enc1_4_limiter + 1
 
-            end
-        })
     end
     if hsc.ai_living_count("enc1_4_flood/infs") < min_infection_spawn then
-        hsc.begin({
-            function()
-                return hsc.ai_place("enc1_4_flood/infs")
-            end
-        })
+        hsc.ai_place("enc1_4_flood/infs")
     end
 end
 script.continuous(d40.enc1_4_manager)
@@ -5512,64 +4447,36 @@ end
 
 function d40.coop_control(call, sleep)
     if hsc.game_is_cooperative() then
-        hsc.begin({
-            function()
-                coop = true
-            end,
-            function()
-                spawn_scale = spawn_scale * 1.2
-            end,
-            function()
-                min_combat_spawn = min_combat_spawn + 1
-            end
-        })
+        coop = true
+        spawn_scale = spawn_scale * 1.2
+
+        min_combat_spawn = min_combat_spawn + 1
+
     end
 end
 
 function d40.diff_control(call, sleep)
     if hard == hsc.game_difficulty_get() then
-        hsc.begin({
-            function()
-                spawn_scale = spawn_scale * 1.1
+        spawn_scale = spawn_scale * 1.1
 
-            end,
-            function()
-                min_combat_spawn = min_combat_spawn + 1
+        min_combat_spawn = min_combat_spawn + 1
 
-            end,
-            function()
-                min_carrier_spawn = min_carrier_spawn + 1
+        min_carrier_spawn = min_carrier_spawn + 1
 
-            end,
-            function()
-                min_infection_spawn = min_infection_spawn + 1
+        min_infection_spawn = min_infection_spawn + 1
 
-            end
-        })
     end
     if impossible == hsc.game_difficulty_get() then
-        hsc.begin({
-            function()
-                spawn_scale = spawn_scale * 1.25
+        spawn_scale = spawn_scale * 1.25
 
-            end,
-            function()
-                min_combat_spawn = min_combat_spawn + 1
+        min_combat_spawn = min_combat_spawn + 1
 
-            end,
-            function()
-                min_carrier_spawn = min_carrier_spawn + 1
+        min_carrier_spawn = min_carrier_spawn + 1
 
-            end,
-            function()
-                min_infection_spawn = min_infection_spawn + 2
+        min_infection_spawn = min_infection_spawn + 2
 
-            end,
-            function()
-                timer_minutes = timer_minutes - 1
+        timer_minutes = timer_minutes - 1
 
-            end
-        })
     end
 end
 
@@ -5578,7 +4485,7 @@ function d40.intro_cutscene_aux(call, sleep)
     call(d40.chapter_d40_1)
 end
 
-function d40.main_d40(call, sleep)
+function d40.mission(call, sleep)
     hsc.fade_out(0, 0, 0, 0)
     -- Remove these for performance purposes, too much objects for a network game
     --call(d40.coop_control)
@@ -5591,36 +4498,20 @@ function d40.main_d40(call, sleep)
     wake(d40.section6)
     wake(d40.section7)
     if call(d40.cinematic_skip_start) then
-        hsc.begin({
-            function()
-                cinematic_ran = true
-            end,
-            function()
-                return wake(d40.intro_cutscene_aux)
-            end,
-            function()
-                return call(d40.cinematic_intro)
-            end
-        })
+        cinematic_ran = true
+        wake(d40.intro_cutscene_aux)
+        call(d40.cinematic_intro)
     end
     call(d40.cinematic_skip_stop)
     hsc.sound_looping_start("levels\\d40\\music\\d40_01", "none", 1)
     if not cinematic_ran then
-        hsc.begin({
-            function()
-                return hsc.fade_in(0, 0, 0, 0)
-            end,
-            function()
-                return hsc.breakable_surfaces_reset()
-            end,
-            function()
-                return hsc.breakable_surfaces_enable(false)
-            end
-        })
+        hsc.fade_in(0, 0, 0, 0)
+        hsc.breakable_surfaces_reset()
+        hsc.breakable_surfaces_enable(false)
     end
     hsc.object_create_containing("asspain")
     hsc.object_create_containing("trench_jeep")
 end
-script.startup(d40.main_d40)
+script.startup(d40.mission)
 
 return d40
