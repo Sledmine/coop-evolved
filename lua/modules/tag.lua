@@ -119,6 +119,7 @@ function tag.edit(tagPath, keys)
     if executeCommand(updateTagCmd) then
         return true
     end
+    print(updateTagCmd)
     error("Error at editing: " .. tagPath)
 end
 

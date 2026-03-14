@@ -1,4 +1,4 @@
-local luna = {_VERSION = "2.9.0"}
+local luna = {_VERSION = "2.10.0"}
 
 luna.string = {}
 
@@ -541,6 +541,26 @@ function table.flatten(t)
         end
     end
     return flattened
+end
+
+--- Return a table with only unique values from `t`.
+---@generic K, V
+---@param t table<K, V>
+---@return V[]
+---@nodiscard
+function table.unique(t)
+    assert(t ~= nil, "table.unique: t must not be nil")
+    assert(type(t) == "table" or type(t) == "userdata", "table.unique: t must be a table")
+    local seen = {}
+    local unique = {}
+    ---@diagnostic disable-next-line: param-type-mismatch
+    for _, v in pairs(t) do
+        if not seen[v] then
+            seen[v] = true
+            unique[#unique + 1] = v
+        end
+    end
+    return unique
 end
 
 luna.table.copy = table.copy
