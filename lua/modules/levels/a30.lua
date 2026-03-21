@@ -2090,6 +2090,8 @@ function a30.mission_first(call, sleep)
     sleep(function()
         return not (hsc.volume_test_objects("first_drop", hsc.players()))
     end, 1)
+    -- Open pelican doors for drop-off
+    hsc.unit_open("foehammer_first")
     hsc.unit_exit_vehicle("jeep")
     sleep(15)
     hsc.ai_conversation("first_evac_3")
@@ -2116,6 +2118,8 @@ function a30.mission_first(call, sleep)
         return 0 == hsc.ai_going_to_vehicle("foehammer_first")
 
     end, 45)
+    -- Close pelican doors before departure
+    hsc.unit_close("foehammer_first")
     hsc.vehicle_hover("foehammer_first", false)
     hsc.recording_play_and_delete("foehammer_first", "foehammer_first_exit")
 end
@@ -2458,6 +2462,8 @@ function a30.mission_cliff(call, sleep)
     sleep(210)
     hsc.ai_migrate("cliff_marine", "cliff_marine/waiting_marine")
     sleep(hsc.recording_time("foehammer_cliff"))
+    -- Open pelican doors for drop-off
+    hsc.unit_open("foehammer_cliff")
     hsc.unit_exit_vehicle("jeep")
     hsc.unit_exit_vehicle("jeep2")
     hsc.unit_exit_vehicle("jeep3")
@@ -2502,6 +2508,8 @@ function a30.mission_cliff(call, sleep)
 
     end, 15)
     sleep(60)
+    -- Close pelican doors before departure
+    hsc.unit_close("foehammer_cliff")
     hsc.vehicle_hover("foehammer_cliff", false)
     hsc.recording_play_and_delete("foehammer_cliff", "foehammer_cliff_out")
 end
@@ -3200,6 +3208,8 @@ function a30.mission_rubble(call, sleep)
     sleep(210)
     hsc.ai_migrate("rubble_marine", "rubble_marine/waiting_marine")
     sleep(hsc.recording_time("foehammer_rubble"))
+    -- Open pelican doors for drop-off
+    hsc.unit_open("foehammer_rubble")
     hsc.unit_exit_vehicle("jeep")
     hsc.unit_exit_vehicle("jeep2")
     hsc.unit_exit_vehicle("jeep3")
@@ -3244,6 +3254,8 @@ function a30.mission_rubble(call, sleep)
 
     end, 15)
     sleep(60)
+    -- Close pelican doors before departure
+    hsc.unit_close("foehammer_rubble")
     hsc.vehicle_hover("foehammer_rubble", false)
     hsc.recording_play_and_delete("foehammer_rubble", "foehammer_rubble_out")
 end
@@ -3630,6 +3642,8 @@ function a30.mission_river(call, sleep)
     sleep(210)
     hsc.ai_migrate("river_marine", "river_marine/waiting_marine")
     sleep(hsc.recording_time("foehammer_river"))
+    -- Open pelican doors for drop-off
+    hsc.unit_open("foehammer_river")
     hsc.unit_exit_vehicle("jeep")
     hsc.unit_exit_vehicle("jeep2")
     hsc.unit_exit_vehicle("jeep3")
@@ -3674,6 +3688,8 @@ function a30.mission_river(call, sleep)
 
     end, 15)
     sleep(60)
+    -- Close pelican doors before departure
+    hsc.unit_close("foehammer_river")
     hsc.vehicle_hover("foehammer_river", false)
     hsc.recording_play_and_delete("foehammer_river", "foehammer_river_out")
 end

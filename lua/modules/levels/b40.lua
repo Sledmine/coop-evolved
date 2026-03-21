@@ -8,6 +8,7 @@ local normal = "normal"
 local hard = "hard"
 local impossible = "impossible"
 
+local constants = require "coop.constants"
 local b40 = {}
 
 local global_dialog_on = false
@@ -72,12 +73,12 @@ function b40.player_count(call, sleep)
 end
 
 function b40.cinematic_skip_start(call, sleep)
-    --hsc.cinematic_skip_start_internal()
-    --hsc.game_save_totally_unsafe()
-    --sleep(function()
+    -- hsc.cinematic_skip_start_internal()
+    -- hsc.game_save_totally_unsafe()
+    -- sleep(function()
     --    return not (hsc.game_saving())
-    --end, 1)
-    --return not (hsc.game_reverted())
+    -- end, 1)
+    -- return not (hsc.game_reverted())
     return RunCinematics
 end
 
@@ -127,13 +128,41 @@ function b40.player_effect_vibration(call, sleep)
     hsc.player_effect_start(hsc.real_random_range(0.7, 0.9), 1)
 end
 
+function b40.playersEnterPelican(targetVehicleName)
+    local currentSeatIndex = 1
+    for playerIndex = 0, getPlayerCount() - 1 do
+        local playerUnit = getPlayerUnitIfExists(playerIndex)
+        if playerUnit then
+            -- Alternate between seats
+            local seatName = constants.seats.pelican[currentSeatIndex]
+            if not seatName then
+                logger:warning("Not enough seats in \"{}\" for all players! Player {} will not enter the vehicle.", targetVehicleName, playerIndex)
+                return
+            end
+            seatName = seatName:lower()
+            logger:debug("Player {} entering \"{}\" at seat \"{}\"", playerIndex, targetVehicleName, seatName)
+            hsc.unit_enter_vehicle(playerUnit, targetVehicleName, seatName)
+            -- Move to the next seat for the next player
+            currentSeatIndex = currentSeatIndex + 1
+        end
+    end
+end
+
+
 function b40.pelican_up(call, sleep)
-    hsc.object_destroy("insertion_pelican")
-    hsc.object_create("insertion_pelican")
-    hsc.object_teleport("insertion_pelican", "insertion_pelican_1")
-    hsc.recording_play("insertion_pelican", "insertion_pelican_in")
-    hsc.unit_enter_vehicle(call(b40.player0), "insertion_pelican", "p-riderlf")
-    hsc.unit_enter_vehicle(call(b40.player1), "insertion_pelican", "p-riderrf")
+    local targetVehicleName = "insertion_pelican"
+    hsc.object_destroy(targetVehicleName)
+    hsc.object_create(targetVehicleName)
+    hsc.object_teleport(targetVehicleName, "insertion_pelican_1")
+    hsc.recording_play(targetVehicleName, "insertion_pelican_in")
+
+    -- Sleep here to wait for recording animation to start
+    -- Recorded animation will override the unit closed/open state without it
+    sleep(1)
+    logger:debug("Closing pelican doors for \"{}\" to sell the illusion of being driven by foehammer", targetVehicleName)
+    hsc.unit_close(targetVehicleName)
+
+    b40.playersEnterPelican(targetVehicleName)
 end
 
 function b40.intro_dialogue(call, sleep)
@@ -161,11 +190,9 @@ function b40.pelican(call, sleep)
     hsc.object_teleport("insertion_pelican", "insertion_pelican_1")
     hsc.recording_play("insertion_pelican", "insertion_pelican_in")
     sleep(hsc.recording_time("insertion_pelican"))
-    hsc.unit_enter_vehicle(call(b40.player0), "insertion_pelican", "p-riderlf")
-    hsc.unit_enter_vehicle(call(b40.player1), "insertion_pelican", "p-riderrf")
+    b40.playersEnterPelican("insertion_pelican")
     hsc.vehicle_hover("insertion_pelican", true)
-    hsc.unit_exit_vehicle(call(b40.player0))
-    hsc.unit_exit_vehicle(call(b40.player1))
+    allPlayersExitVehicle()
     hsc.cinematic_stop()
     hsc.show_hud(true)
     sleep(30)
@@ -193,8 +220,7 @@ function b40.cutscene_insertion_a(call, sleep)
     hsc.object_beautify("awake_1", true)
     hsc.fade_out(0, 0, 0, 0)
     hsc.switch_bsp(3)
-    hsc.object_teleport(call(b40.player0), "player0_insertion_safe")
-    hsc.object_teleport(call(b40.player1), "player1_insertion_safe")
+    teleportPlayersTo("player0_insertion_safe")
     hsc.cinematic_start()
     hsc.show_hud(false)
     hsc.camera_control(true)
@@ -237,10 +263,12 @@ function b40.cutscene_insertion_b(call, sleep)
     hsc.fade_in(1, 1, 1, 60)
     hsc.camera_control(false)
     wake(b40.intro_dialogue)
-    sleep(hsc.recording_time("insertion_pelican"))
+    sleep(hsc.recording_time("insertion_pelican") - 30)
+    -- Open pelican as players are being dropped
+    hsc.unit_open("insertion_pelican")
     hsc.vehicle_hover("insertion_pelican", true)
-    hsc.unit_exit_vehicle(call(b40.player0))
-    hsc.unit_exit_vehicle(call(b40.player1))
+    sleep(30)
+    allPlayersExitVehicle()
     hsc.cinematic_stop()
     hsc.show_hud(true)
     sleep(60)
@@ -248,6 +276,8 @@ function b40.cutscene_insertion_b(call, sleep)
     hsc.vehicle_unload("insertion_pelican", "rider")
     sleep(30)
     hsc.vehicle_hover("insertion_pelican", false)
+    -- Pelican is leaving, let's close doors
+    hsc.unit_close("insertion_pelican")
     hsc.recording_play_and_delete("insertion_pelican", "insertion_pelican_out")
 end
 
@@ -3825,6 +3855,8 @@ function b40.mission_b40(call, sleep)
     hsc.switch_bsp(3)
     hsc.ai_allegiance("player", "human")
     hsc.ai_allegiance("human", "player")
+    -- Some objects like the exterior tank do not appear by default because multiplayer
+    hsc.object_create("ext_a_tank")
     wake(b40.mission_insertion_a)
     sleep(1)
     wake(b40.title_intro)
