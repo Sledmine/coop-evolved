@@ -3,7 +3,7 @@ local inspect = require "lua.modules.inspect"
 local tag = require "lua.scripts.modules.tag"
 local hud = require "lua.scripts.modules.hud"
 
-hud.init "[shm]/halo_1/characters/elite/hud/"
+hud.init "[shm]/halo_2/hud/covenant/"
 
 local colors = {
     spartan = {
@@ -185,7 +185,7 @@ local fragHudData = {
 local defaultZoom = {mask = hud.bitmaps .. "weapons/zooms/scope_mask.bitmap"}
 
 local weapons = {
-    {name = "plasma_rifle", iconIndex = 12, zoom = defaultZoom, ammoType = "battery"},
+    {name = "plasma_rifle", icon = {index = 12}, zoom = defaultZoom, ammoType = "battery"},
     {
         name = "sniper_rifle",
         zoom = {
@@ -197,7 +197,16 @@ local weapons = {
             }
         },
         meter = {multiplier = 60, bias = 1},
-        iconIndex = 30
+        icon = {index = 4}
+    },
+    {name = "rocket_launcher", zoom = defaultZoom, icon = {index = 10}},
+    {name = "shotgun", zoom = defaultZoom, icon = {index = 6}},
+    {name = "assault_rifle", zoom = defaultZoom, icon = {index = 1}},
+    {
+        name = "needler",
+        crosshair = {bitmap = "ui/hud/hrx_bitmaps/hrx_crosshairs/hrx_crosshairs.bitmap", index = 6, isSprite = true, scale = 0.25},
+        zoom = defaultZoom,
+        icon = {index = 14}
     }
 }
 
@@ -248,7 +257,7 @@ for _, weapon in ipairs(weapons) do
         default_color = color.foreground,
         flashing_color = color.foreground,
         disabled_color = color.foreground,
-        sequence_index = weapon.iconIndex
+        sequence_index = weapon.icon.index
     }
 
     local weaponMeterBaseInfo = {
@@ -288,13 +297,67 @@ for _, weapon in ipairs(weapons) do
                 anchor_offset = "24, 32",
                 width_scale = 0.8,
                 height_scale = 0.8,
-                meter_bitmap = hud.path .. "weapons/bitmaps/meters/" .. weapon.name .. "_meter.bitmap",
+                meter_bitmap = hud.path .. "weapons/bitmaps/meters/" .. weapon.name ..
+                    "_meter.bitmap",
                 alpha_multiplier = weapon.meter and weapon.meter.multiplier or 1,
                 alpha_bias = weapon.meter and weapon.meter.bias or 0,
                 empty_color = color.empty,
                 flash_color = hud.color "rgba(255, 0, 0, 1)"
             })
         }
+    end
+
+    local crosshairElements = {
+        {
+            crosshair_type = "aim",
+            allowed_view_type = "any",
+            crosshair_bitmap = weapon.crosshair and weapon.crosshair.bitmap or hud.path .. "weapons/bitmaps/crosshairs/" ..
+                weapon.name .. "_crosshair.bitmap",
+            crosshair_overlays = {
+                {
+                    anchor_offset = "0, 0",
+                    width_scale = weapon.crosshair and weapon.crosshair.scale or 0.5,
+                    height_scale = weapon.crosshair and weapon.crosshair.scale or 0.5,
+                    scaling_flags = {use_high_res_scale = true},
+                    default_color = color.crosshair,
+                    flashing_color = hud.color "rgba(255, 0, 0, 0.9)",
+                    flash_period = 1,
+                    flash_delay = 0,
+                    number_of_flashes = 1,
+                    flash_length = 1,
+                    disabled_color = hud.color "rgba(0, 0, 0, 0)",
+                    sequence_index = weapon.crosshair and weapon.crosshair.index or 0,
+                    flags = {
+                        flashes_when_active = true,
+                        not_a_sprite = not weapon.crosshair or not weapon.crosshair.isSprite
+                    }
+                }
+            }
+        }
+    }
+    if weapon.zoom then
+        if weapon.zoom.levels then
+            table.insert(crosshairElements, {
+                crosshair_type = "zoom_overlay",
+                allowed_view_type = "any",
+                crosshair_bitmap = hud.path .. "weapons/bitmaps/zooms/" ..
+                    table.concat(table.map(weapon.zoom.levels, function(level)
+                        return level .. "x"
+                    end), "_") .. ".bitmap",
+                crosshair_overlays = {
+                    {
+                        anchor_offset = "150, 104",
+                        width_scale = 0.5,
+                        height_scale = 0.5,
+                        scaling_flags = {use_high_res_scale = false},
+                        default_color = color.crosshair,
+                        flashing_color = hud.color "rgba(255, 0, 0, 0.9)",
+                        flags = {show_only_when_zoomed = true},
+                        sequence_index = 0
+                    }
+                }
+            })
+        end
     end
 
     local weaponHudData = {
@@ -321,34 +384,7 @@ for _, weapon in ipairs(weapons) do
                 flags = {show_leading_zeros = true}
             }
         },
-        crosshairs = {
-            {
-                crosshair_type = "aim",
-                allowed_view_type = "any",
-                crosshair_bitmap = hud.path .. "weapons/bitmaps/crosshairs/" .. weapon.name .. "_crosshair.bitmap",
-                crosshair_overlays = {
-                    {
-                        anchor_offset = "0, 0",
-                        width_scale = 0.5,
-                        height_scale = 0.5,
-                        scaling_flags = {use_high_res_scale = true},
-                        default_color = color.crosshair,
-                        flashing_color = hud.color "rgba(255, 0, 0, 0.9)",
-                        flash_period = 1,
-                        flash_delay = 0,
-                        number_of_flashes = 1,
-                        flash_length = 1,
-                        disabled_color = hud.color "rgba(0, 0, 0, 0)",
-                        sequence_index = 0,
-                        flags = {
-                            flashes_when_active = true,
-                            not_a_sprite = true,
-                            dont_show_when_zoomed = true
-                        }
-                    }
-                }
-            }
-        }
+        crosshairs = crosshairElements
     }
     huds[weapon.name .. ".weapon_hud_interface"] = weaponHudData
 end
@@ -368,4 +404,4 @@ for hudName, hudData in pairs(huds) do
 end
 
 -- TODO Rename this to huds
-tag.global(unitHudCollectionPath, "coop_evolved/ui/custom_hud.tag_collection")
+tag.global(unitHudCollectionPath, "coop_evolved/ui/custom_huds.tag_collection")
