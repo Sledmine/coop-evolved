@@ -4,7 +4,6 @@ extend_limits: true
 scenarios:
   - coop_evolved/levels/a10/a10_coop_evolved_dev
   - coop_evolved/levels/a30/a30_coop_evolved_dev
-  - coop_evolved/levels/a30/a30_coop_evolved_dev
   - coop_evolved/levels/a50/a50_coop_evolved_dev
   - coop_evolved/levels/b30/b30_coop_evolved_dev
   - coop_evolved/levels/b40/b40_coop_evolved_dev
