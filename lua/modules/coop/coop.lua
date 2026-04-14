@@ -9,7 +9,7 @@ local findTags = engine.tag.findTags
 local objectClasses = blam.objectClasses
 local objectNetworkRoleClasses = blam.objectNetworkRoleClasses
 local blam2 = require "blam2"
-local core =  require "coop.core"
+local core = require "coop.core"
 
 local hsc = require "hsc"
 
@@ -72,17 +72,19 @@ end
 
 --- Determine if this player is a candidate for respawn point
 ---@param playerBiped blamObject
----@param exceptionPlayerIndex? number
+---@param bypassVehicleCheck? boolean If true, will not check if player is near a vehicle, used for when player is already in a vehicle
 ---@return boolean isCandidate
-function coop.isRespawnCandidate(playerBiped, exceptionPlayerIndex)
-    for objectIndex = 0, blam.MAXIMUM_OBJECTS - 1 do
-        local object, objectHandle = blam.getObject(objectIndex)
-        if object and objectHandle then
-            -- Check if  playere is near any vehicle, if it is do not consider it a respawn
-            if object.class == objectClasses.vehicle then
-                -- TODO Consider bounding radius as well
-                if core.isObjectNearToObject(playerBiped, object, 1) then
-                    return false
+function coop.isRespawnCandidate(playerBiped, bypassVehicleCheck)
+    if not bypassVehicleCheck then
+        for objectIndex = 0, blam.MAXIMUM_OBJECTS - 1 do
+            local object, objectHandle = blam.getObject(objectIndex)
+            if object and objectHandle then
+                -- Check if player is near any vehicle, if it is do not consider it a respawn
+                if object.class == objectClasses.vehicle then
+                    -- TODO Consider bounding radius as well
+                    if core.isObjectNearToObject(playerBiped, object, 1) then
+                        return false
+                    end
                 end
             end
         end
@@ -122,8 +124,9 @@ end
 
 --- Find a new spawn point for the players
 ---@param exceptionPlayerIndex? number Player index to ignore when searching for a new spawn
+---@param bypassVehicleCheck? boolean If true, will not check if player is near a vehicle, used for when player is already in a vehicle
 ---@return boolean
-function coop.findNewSpawn(exceptionPlayerIndex)
+function coop.findNewSpawn(exceptionPlayerIndex, bypassVehicleCheck)
     local tellFunction = engine.core.consolePrint
     if engine.netgame.getServerType() == "sapp" then
         -- BALLTZE MIGRATE
@@ -131,6 +134,7 @@ function coop.findNewSpawn(exceptionPlayerIndex)
     end
     local playerUsedForSpawn
     local cinematic = blam.cinematicGlobals()
+    -- Add logic for edge cases such as when all players are dead
     if not cinematic.isInProgress then
         for playerIndex = constants.firstPlayerIndex, constants.lastPlayerIndex do
             if playerIndex ~= exceptionPlayerIndex then
@@ -227,7 +231,11 @@ function coop.changeBiped(desiredBipedIndex)
         mpInfo[1].unit = desiredBiped.id
         logger:debug("Replacing biped with " .. desiredBiped.name)
         globals.multiplayerInformation = mpInfo
-        delete_object(player.objectId)
+        -- Check if object exists before trying to delete it, otherwise triggers exception
+        -- BALLTZE MIGRATE
+        if (get_object(player.objectId)) then
+            delete_object(player.objectId)
+        end
     end
 end
 

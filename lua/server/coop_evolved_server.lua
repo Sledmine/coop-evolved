@@ -343,6 +343,21 @@ function StartCoop()
             isStarterWeaponsEnabled = false
         end)
     end
+
+    local lastBspIndex = 0
+    -- Ensure to find new spawn points when the BSP index changes
+    script.continuous(function (_, sleep)
+        currentBspIndex = lastBspIndex
+        sleep(function ()
+            ---@diagnostic disable-next-line: undefined-field
+            currentBspIndex = hsc.structure_bsp_index()
+            return currentBspIndex ~= lastBspIndex
+        end)
+        lastBspIndex = currentBspIndex
+        logger:debug("BSP index changed to {}, finding new spawn points!", lastBspIndex)
+        coop.findNewSpawn(nil, true)
+        sleep(utils.secondsToTicks(3))
+    end)
 end
 
 function OnObjectSpawn(playerIndex, tagId, parentId, objectId)
