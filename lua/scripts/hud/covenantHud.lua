@@ -39,7 +39,7 @@ local sounds = {
     health_low = "sound/sfx/ui/health_low_heart.sound"
 }
 
-unitHudData = {
+local unitHudData = {
     anchor = "bottom_left",
     -- HUD Background
     -- hud_background_anchor_offset = "11, 15",
@@ -182,31 +182,130 @@ local fragHudData = {
     -- total_grenades_numbers_flash_cutoff = 0
 }
 
-local defaultZoom = {mask = hud.bitmaps .. "weapons/zooms/scope_mask.bitmap"}
+local plasmaHudData = table.copy(fragHudData)
+plasmaHudData.background_interface_bitmap = hud.bitmaps .. "plasma_background.bitmap"
+plasmaHudData.total_grenades_background_interface_bitmap = hud.bitmaps .. "plasma_foreground.bitmap"
+plasmaHudData.total_grenades_numbers_anchor_offset = "41, 11"
+
+local defaultZoom = {scope = {mask = hud.path .. "weapons/bitmaps/zooms/scope_mask.bitmap"}}
 
 local weapons = {
-    {name = "plasma_rifle", icon = {index = 12}, zoom = defaultZoom, ammoType = "battery"},
+    {
+        name = "plasma_rifle",
+        icon = {index = 12, offset = "47, 12", scale = 0.72},
+        zoom = defaultZoom,
+        ammoType = "heat",
+        messaging = {index = 11, widthOffset = 2, textIndex = 0}
+    },
     {
         name = "sniper_rifle",
         zoom = {
             levels = {2, 8},
             scope = {
-                mask = hud.bitmaps .. "weapons/zooms/sniper_rifle_scope_mask.bitmap",
-                splitscreen = hud.bitmaps ..
-                    "weapons/zooms/sniper_rifle_scope_splitscreen_mask.bitmap"
+                mask = hud.path .. "weapons/bitmaps/zooms/sniper_rifle_scope_mask.bitmap",
+                splitscreen = hud.path ..
+                    "weapons/bitmaps/zooms/sniper_rifle_scope_splitscreen_mask.bitmap"
             }
         },
-        meter = {multiplier = 60, bias = 1},
-        icon = {index = 4}
+        meter = {offset = "24, 32", multiplier = 60, bias = 1, scale = 0.8},
+        icon = {index = 4, offset = "30, 14", scale = 0.82},
+        crosshair = {scale = 0.35},
+        messaging = {index = 4, widthOffset = 2, textIndex = 0}
     },
-    {name = "rocket_launcher", zoom = defaultZoom, icon = {index = 10}},
-    {name = "shotgun", zoom = defaultZoom, icon = {index = 6}},
-    {name = "assault_rifle", zoom = defaultZoom, icon = {index = 1}},
+    {
+        name = "rocket_launcher",
+        zoom = {
+            levels = {2, 8},
+            scope = {
+                mask = "ui/hud/bitmaps/pistol/pistol_scope_mask.bitmap",
+                splitscreen = "ui/hud/bitmaps/pistol/pistol_scope_mask split.bitmap"
+            }
+        },
+        icon = {index = 10, offset = "32, 11", scale = 0.95},
+        meter = {offset = "12, 29", multiplier = 120, bias = 1, scale = 1},
+        messaging = {index = 5, widthOffset = 2, textIndex = 0}
+    },
+    {
+        name = "shotgun",
+        zoom = defaultZoom,
+        icon = {index = 6, offset = "31, 12", scale = 0.89},
+        meter = {offset = "26, 30", multiplier = 20, bias = 0, scale = 0.95},
+        index = 7,
+        messaging = {index = 12, widthOffset = 2, textIndex = 0}
+    },
+    {
+        name = "assault_rifle",
+        alias = "assault_rifle_gl",
+        crosshair = {
+            bitmap = "ui/hud/hrx_bitmaps/hrx_crosshairs/hrx_crosshairs.bitmap",
+            index = 0,
+            isSprite = true,
+            scale = 0.25
+        },
+        zoom = defaultZoom,
+        icon = {index = 1, offset = "39, 12", scale = 0.8},
+        meter = {offset = "23, 30", multiplier = 1, bias = 0, scale = 0.8},
+        messaging = {index = 8, widthOffset = 2, textIndex = 0}
+    },
     {
         name = "needler",
-        crosshair = {bitmap = "ui/hud/hrx_bitmaps/hrx_crosshairs/hrx_crosshairs.bitmap", index = 6, isSprite = true, scale = 0.25},
+        alias = "needler_mp",
+        crosshair = {
+            bitmap = "ui/hud/hrx_bitmaps/hrx_crosshairs/hrx_crosshairs.bitmap",
+            index = 6,
+            isSprite = true,
+            scale = 0.25
+        },
         zoom = defaultZoom,
-        icon = {index = 14}
+        icon = {index = 14, offset = "46, 11", scale = 0.58},
+        meter = {offset = "28, 32", multiplier = 1, bias = 0, scale = 1},
+        messaging = {index = 10, widthOffset = 2, textIndex = 0}
+    },
+    {
+        name = "plasma_pistol",
+        zoom = defaultZoom,
+        icon = {index = 13, offset = "48, 12", scale = 0.75},
+        ammoType = "heat",
+        messaging = {index = 6, widthOffset = 2, textIndex = 0}
+    },
+    {
+        name = "pistol",
+        zoom = {
+            levels = {2, 8},
+            scope = {
+                mask = "ui/hud/bitmaps/pistol/pistol_scope_mask.bitmap",
+                splitscreen = "ui/hud/bitmaps/pistol/pistol_scope_mask split.bitmap"
+            }
+        },
+        icon = {index = 9, offset = "47, 12", scale = 0.9},
+        meter = {offset = "11, 30", multiplier = 20, bias = 0, scale = 1},
+        messaging = {index = 9, widthOffset = 2, textIndex = 0}
+    },
+    {
+        name = "plasma_cannon",
+        zoom = defaultZoom,
+        crosshair = {
+            bitmap = "ui/hud/hrx_bitmaps/hrx_crosshairs/hrx_crosshairs.bitmap",
+            index = 15,
+            isSprite = true,
+            scale = 0.25
+        },
+        icon = {index = 19, offset = "46, 12", scale = 0.6},
+        ammoType = "heat",
+        messaging = {index = 24, widthOffset = 2, textIndex = 0}
+    },
+    {
+        name = "fuel_rod",
+        zoom = defaultZoom,
+        icon = {index = 20, offset = "38, 10", scale = 0.8},
+        meter = {offset = "27, 32", multiplier = 1, bias = 0, scale = 0.6}
+    },
+    {
+        name = "energy_sword",
+        zoom = defaultZoom,
+        icon = {index = 22, offset = "31, 10", scale = 0.95},
+        ammoType = "age",
+        meter = {disable = true}
     }
 }
 
@@ -230,15 +329,19 @@ for _, weapon in ipairs(weapons) do
         sequence_index = 0
     }
 
+    local backgroundType = "rounds"
+    if ammoType == "age" or ammoType == "heat" then
+        backgroundType = "energy"
+    end
     staticElements = {
         table.merge(baseWeaponInfo, {
-            interface_bitmap = hud.bitmaps .. ammoType .. "_background.bitmap",
+            interface_bitmap = hud.bitmaps .. backgroundType .. "_background.bitmap",
             default_color = color.background,
             flashing_color = color.background,
             disabled_color = color.background
         }),
         table.merge(baseWeaponInfo, {
-            interface_bitmap = hud.bitmaps .. ammoType .. "_foreground.bitmap",
+            interface_bitmap = hud.bitmaps .. backgroundType .. "_foreground.bitmap",
             default_color = color.foreground,
             flashing_color = color.foreground,
             disabled_color = color.foreground
@@ -249,9 +352,9 @@ for _, weapon in ipairs(weapons) do
         state_attached_to = "age",
         allowed_view_type = "any",
         anchor = "from_parent",
-        anchor_offset = "47, 12",
-        width_scale = 0.72,
-        height_scale = 0.72,
+        anchor_offset = weapon.icon and weapon.icon.offset or "47, 12",
+        width_scale = weapon.icon and weapon.icon.scale or 1,
+        height_scale = weapon.icon and weapon.icon.scale or 1,
         scaling_flags = {use_high_res_scale = true},
         interface_bitmap = hud.bitmaps .. "weapon_icons.bitmap",
         default_color = color.foreground,
@@ -263,8 +366,8 @@ for _, weapon in ipairs(weapons) do
     local weaponMeterBaseInfo = {
         anchor = "from_parent",
         allowed_view_type = "any",
-        width_scale = 1,
-        height_scale = 1,
+        width_scale = weapon.meter and weapon.meter.scale or 1,
+        height_scale = weapon.meter and weapon.meter.scale or 1,
         scaling_flags = {use_high_res_scale = true},
         color_at_meter_minimum = color.foreground,
         color_at_meter_maximum = hud.color "rgba(255, 0, 0, 1)",
@@ -282,42 +385,51 @@ for _, weapon in ipairs(weapons) do
     }
 
     local meterElements = {}
-    if ammoType == "battery" then
-        meterElements = {
-            table.merge(weaponMeterBaseInfo, {
-                state_attached_to = "heat",
-                anchor_offset = "-8, 31",
-                meter_bitmap = hud.path .. "weapons/bitmaps/meters/battery_meter.bitmap"
-            })
-        }
-    else
-        meterElements = {
-            table.merge(weaponMeterBaseInfo, {
-                state_attached_to = "loaded_ammo",
-                anchor_offset = "24, 32",
-                width_scale = 0.8,
-                height_scale = 0.8,
-                meter_bitmap = hud.path .. "weapons/bitmaps/meters/" .. weapon.name ..
-                    "_meter.bitmap",
-                alpha_multiplier = weapon.meter and weapon.meter.multiplier or 1,
-                alpha_bias = weapon.meter and weapon.meter.bias or 0,
-                empty_color = color.empty,
-                flash_color = hud.color "rgba(255, 0, 0, 1)"
-            })
-        }
+    if not (weapon.meter and weapon.meter.disable) then
+        if ammoType == "heat" then
+            meterElements = {
+                table.merge(weaponMeterBaseInfo, {
+                    state_attached_to = "heat",
+                    anchor_offset = "-8, 31",
+                    meter_bitmap = hud.path .. "weapons/bitmaps/meters/heat_meter.bitmap"
+                })
+            }
+        elseif ammoType == "age" then
+            meterElements = {
+                table.merge(weaponMeterBaseInfo, {
+                    state_attached_to = "age",
+                    -- TODO Fix offset alignment
+                    anchor_offset = "-8, 31",
+                    meter_bitmap = hud.path .. "weapons/bitmaps/meters/age_meter.bitmap"
+                })
+            }
+        else
+            meterElements = {
+                table.merge(weaponMeterBaseInfo, {
+                    state_attached_to = "loaded_ammo",
+                    anchor_offset = weapon.meter and weapon.meter.offset or "24, 32",
+                    meter_bitmap = hud.path .. "weapons/bitmaps/meters/" .. weapon.name ..
+                        "_meter.bitmap",
+                    alpha_multiplier = weapon.meter and weapon.meter.multiplier or 1,
+                    alpha_bias = weapon.meter and weapon.meter.bias or 0,
+                    empty_color = color.empty,
+                    flash_color = hud.color "rgba(255, 0, 0, 1)"
+                })
+            }
+        end
     end
 
     local crosshairElements = {
         {
             crosshair_type = "aim",
             allowed_view_type = "any",
-            crosshair_bitmap = weapon.crosshair and weapon.crosshair.bitmap or hud.path .. "weapons/bitmaps/crosshairs/" ..
-                weapon.name .. "_crosshair.bitmap",
+            crosshair_bitmap = weapon.crosshair and weapon.crosshair.bitmap or hud.path ..
+                "weapons/bitmaps/crosshairs/" .. weapon.name .. "_crosshair.bitmap",
             crosshair_overlays = {
                 {
                     anchor_offset = "0, 0",
-                    width_scale = weapon.crosshair and weapon.crosshair.scale or 0.5,
-                    height_scale = weapon.crosshair and weapon.crosshair.scale or 0.5,
+                    width_scale = weapon.crosshair and weapon.crosshair.scale or 0.3,
+                    height_scale = weapon.crosshair and weapon.crosshair.scale or 0.3,
                     scaling_flags = {use_high_res_scale = true},
                     default_color = color.crosshair,
                     flashing_color = hud.color "rgba(255, 0, 0, 0.9)",
@@ -360,8 +472,23 @@ for _, weapon in ipairs(weapons) do
         end
     end
 
+    local screenEffects = {}
+    if weapon.zoom and weapon.zoom.scope then
+        table.insert(screenEffects, {
+            mask_flags = {only_when_zoomed = true},
+            mask_fullscreen = weapon.zoom.scope.mask,
+            mask_splitscreen = weapon.zoom.scope.splitscreen,
+            convolution_flags = {only_when_zoomed = true},
+            convolution_fov_in_bounds = "64.367, 6.568",
+            convolution_radius_out_bounds = "0, 11"
+        })
+    end
+
     local weaponHudData = {
         anchor = "top_right",
+        child_hud = (weapon.ammoType == "heat" or weapon.ammoType == "age") and hud.path ..
+            "weapons/warnings_energy.weapon_hud_interface" or hud.path ..
+            "weapons/warnings_rounds.weapon_hud_interface",
         total_ammo_cutoff = 0,
         loaded_ammo_cutoff = 0,
         heat_cutoff = 75,
@@ -370,7 +497,8 @@ for _, weapon in ipairs(weapons) do
         meter_elements = meterElements,
         number_elements = {
             {
-                state_attached_to = "age",
+                state_attached_to = (weapon.ammoType == "heat" or weapon.ammoType == "age") and
+                    "age" or "total_ammo",
                 allowed_view_type = "any",
                 anchor = "from_parent",
                 anchor_offset = "94, 11",
@@ -379,23 +507,30 @@ for _, weapon in ipairs(weapons) do
                 scaling_flags = {use_high_res_scale = true},
                 default_color = color.grenades.numbers,
                 flashing_color = color.grenades.numbers,
-                disabled_color = color.background,
+                disabled_color = color.grenades.numbers,
                 maximum_number_of_digits = 3,
-                flags = {show_leading_zeros = true}
+                flags = {
+                    show_leading_zeros = (weapon.ammoType == "heat" or weapon.ammoType == "age")
+                }
             }
         },
-        crosshairs = crosshairElements
+        crosshairs = crosshairElements,
+        screen_effect = screenEffects,
+        messaging_information_sequence_index = weapon.messaging and weapon.messaging.index or 0,
+        messaging_information_width_offset = weapon.messaging and weapon.messaging.widthOffset or 0,
+        messaging_information_text_index = weapon.messaging and weapon.messaging.textIndex or 0
     }
-    huds[weapon.name .. ".weapon_hud_interface"] = weaponHudData
+    local hudFileName = "weapons/" .. weapon.name .. ".weapon_hud_interface"
+    if weapon.alias then
+        -- Create a duplicate to the same HUD data for the alias weapon, so that both weapons can reference the "same" HUD tag
+        huds["weapons/" .. weapon.alias .. ".weapon_hud_interface"] = weaponHudData
+    end
+    huds[hudFileName] = weaponHudData
 end
-
-local plasmaHudData = table.copy(fragHudData)
-plasmaHudData.background_interface_bitmap = hud.bitmaps .. "plasma_background.bitmap"
-plasmaHudData.total_grenades_background_interface_bitmap = hud.bitmaps .. "plasma_foreground.bitmap"
-plasmaHudData.total_grenades_numbers_anchor_offset = "41, 11"
 
 local unitHudCollectionPath = hud.path .. "hud.tag_collection"
 
+-- Create individual HUD tags and add them to the hud collection
 for hudName, hudData in pairs(huds) do
     local hudPath = hud.path .. hudName
     tag.create(hudPath, hudData)
@@ -403,5 +538,9 @@ for hudName, hudData in pairs(huds) do
     print()
 end
 
--- TODO Rename this to huds
+-- TODO Create this tag as well, until now just reference the existing one
+local digitsHudPath = hud.path .. "digits.hud_number"
+tag.global(digitsHudPath, unitHudCollectionPath)
+
+-- Add global reference to the HUD collection in the tag system
 tag.global(unitHudCollectionPath, "coop_evolved/ui/custom_huds.tag_collection")
