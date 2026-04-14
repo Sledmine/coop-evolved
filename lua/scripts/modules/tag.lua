@@ -214,6 +214,12 @@ end
 ---@param tagCollectionPath string
 function tag.global(tagPath, tagCollectionPath)
     local fs = require "lua.scripts.modules.fs"
+
+    if not fs.is("tags/" .. tagCollectionPath) then
+        print("Tag collection \"" .. tagCollectionPath .. "\" does not exist. Creating new tag collection.")
+        tag.create(tagCollectionPath, {})
+    end
+
     local tagCount = tag.count(tagCollectionPath, "tags")
     local tagPath = tagPath:replace("\\", "/")
 
