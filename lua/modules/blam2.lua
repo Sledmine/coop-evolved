@@ -16,8 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "2.0.0-dev", debug = false}
-
+local blam = {_VERSION = "2.0.2-dev", debug = false}
 
 ---Physics gravity default constant
 blam.PHYSICS_GRAVITY_DEFAULT = 996779464
@@ -35,6 +34,7 @@ local printdebug = function(...)
 end
 
 blam.tag = {}
+blam.gameState = {}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -82,13 +82,16 @@ local function split(s, sep)
     return array
 end
 
-local null = 0xFFFFFFFF
+local NULL = 0xFFFFFFFF
+-- Valid user-mode memory range for a Halo CE process
+local PROCESS_MEMORY_BASE_ADDRESS    = 0x400000   -- Default Win32 PE image base; anything below is unmapped/null-page
+local PROCESS_MEMORY_CEILING_ADDRESS = 0x6FFFFFFF -- Conservative ceiling below the 0x7FFFFFFF user/kernel boundary
 
 --- Get if given value equals a null value in game engine terms
 ---@param value any
 ---@return boolean
 function blam.isNull(value)
-    if value == 0xFF or value == 0xFFFF or value == null or value == nil then
+    if value == 0xFF or value == 0xFFFF or value == NULL or value == nil then
         return true
     end
     return false
@@ -242,8 +245,8 @@ local tagGroups = {
     wind = "wind"
 }
 
--- Blam object classes values
----@enum objectClasses
+---Object groups values
+---@enum objectGroup
 local objectClasses = {
     biped = 0,
     vehicle = 1,
@@ -258,6 +261,8 @@ local objectClasses = {
     placeHolder = 10,
     soundScenery = 11
 }
+
+---@alias objectClasses objectGroup
 
 -- Camera types
 ---@enum cameraTypes
@@ -388,373 +393,6 @@ local dPadValues = {
 }
 
 local engineConstants = {defaultNetworkObjectsCount = 509}
-
--- Global variables
-
----	This is the current gametype that is running. If no gametype is running, this will be set to nil
----, possible values are: ctf, slayer, oddball, king, race.
----@type string | nil
-gametype = gametype
----This is the index of the local player. This is a value between 0 and 15, this value does not
----match with player index in the server and is not instantly assigned after joining.
----@type number | nil
-local_player_index = local_player_index
----This is the name of the current loaded map.
----@type string
-map = map
----Return if the map has protected tags data.
----@type boolean
-map_is_protected = map_is_protected
----This is the name of the script. If the script is a global script, it will be defined as the
----filename of the script. Otherwise, it will be the name of the map.
----@type string
-script_name = script_name
----This is the script type, possible values are global or map.
----@type string
-script_type = script_type
----@type "none" | "local" | "dedicated" | "sapp"
----@diagnostic disable-next-line: assign-type-mismatch
-server_type = server_type or "none"
----Return whether or not the script is sandboxed. See Sandoboxed Scripts for more information.
----@deprecated
----@type boolean
-sandboxed = sandboxed ---@diagnostic disable-line: deprecated
-
-local backupFunctions = {}
-
-backupFunctions.console_is_open = _G.console_is_open
-backupFunctions.console_out = _G.console_out
-backupFunctions.execute_script = _G.execute_script
-backupFunctions.get_global = _G.get_global
--- backupFunctions.set_global = _G.set_global
-backupFunctions.get_tag = _G.get_tag
-backupFunctions.set_callback = _G.set_callback
-backupFunctions.set_timer = _G.set_timer
-backupFunctions.stop_timer = _G.stop_timer
-
-backupFunctions.spawn_object = _G.spawn_object
-backupFunctions.delete_object = _G.delete_object
-backupFunctions.get_object = _G.get_object
-backupFunctions.get_dynamic_player = _G.get_dynamic_player
-
-backupFunctions.hud_message = _G.hud_message
-
-backupFunctions.create_directory = _G.create_directory
-backupFunctions.remove_directory = _G.remove_directory
-backupFunctions.directory_exists = _G.directory_exists
-backupFunctions.list_directory = _G.list_directory
-backupFunctions.write_file = _G.write_file
-backupFunctions.read_file = _G.read_file
-backupFunctions.delete_file = _G.delete_file
-backupFunctions.file_exists = _G.file_exists
-
-------------------------------------------------------------------------------
--- Chimera API auto completion
--- EmmyLua autocompletion for some functions!
--- Functions below do not have a real implementation and are not supossed to be imported
-------------------------------------------------------------------------------
-
----Attempt to spawn an object given tag class, tag path and coordinates.
----Given a tag id is also accepted.
----@overload fun(tagHandle: number, x: number, y: number, z: number):number
----@param tagGroup tagGroup Type of the tag to spawn
----@param tagPath string Path of object to spawn
----@param x number
----@param y number
----@param z number
----@return number? objectId
-function spawn_object(tagGroup, tagPath, x, y, z)
-    -- If tagPath is a number, it is a tag handle
-    if type(tagGroup) == "number" then
-        local tagHandle = tagGroup --[[@as number]]
-        local x = tagPath --[[@as number]]
-        local y = x
-        local z = y
-        local tag = blam.getTagEntry(tagHandle)
-        if tag then
-            return backupFunctions.spawn_object(tag.primaryGroup, tag.path, x, y, z)
-        end
-    end
-    return backupFunctions.spawn_object(tagGroup --[[@as string]] , tagPath, x, y, z)
-end
-
----Attempt to get the address of a player unit object given player index, returning nil on failure.<br>
----If no argument is given, the address to the local player’s unit object is returned, instead.
----@param playerIndex? number
----@return number? objectAddress
-function get_dynamic_player(playerIndex)
-end
-
-get_dynamic_player = backupFunctions.get_dynamic_player
-
-------------------------------------------------------------------------------
--- SAPP API bindings
-------------------------------------------------------------------------------
-
----Write content to a text file given file path
----@param path string Path to the file to write
----@param content string Content to write into the file
----@return boolean, string? result True if successful otherwise nil, error
-function write_file(path, content)
-    local file, error = io.open(path, "w")
-    if (not file) then
-        return false, error
-    end
-    local success, err = file:write(content)
-    file:close()
-    if (not success) then
-        os.remove(path)
-        return false, err
-    else
-        return true
-    end
-end
-
----Read the contents from a file given file path.
----@param path string Path to the file to read
----@return boolean, string? content string if successful otherwise nil, error
-function read_file(path)
-    local file, error = io.open(path, "r")
-    if (not file) then
-        return false, error
-    end
-    local content, error = file:read("*a")
-    if (content == nil) then
-        return false, error
-    end
-    file:close()
-    return content
-end
-
----Attempt create a directory with the given path.
----
----An error will occur if the directory can not be created.
----@param path string Path to the directory to create
----@return boolean
-function create_directory(path)
-    local success, error = os.execute("mkdir " .. path)
-    if (not success) then
-        return false
-    end
-    return true
-end
-
----Attempt to remove a directory with the given path.
----
----An error will occur if the directory can not be removed.
----@param path string Path to the directory to remove
----@return boolean
-function remove_directory(path)
-    local success, error = os.execute("rmdir -r " .. path)
-    if (not success) then
-        return false
-    end
-    return true
-end
-
----Verify if a directory exists given directory path
----@param path string
----@return boolean
-function directory_exists(path)
-    print("directory_exists", path)
-    return os.execute("dir \"" .. path .. "\" > nul") == 0
-end
-
----List the contents from a directory given directory path
----@param path string
----@return nil | integer | table
-function list_directory(path)
-    -- TODO This needs a way to separate folders from files
-    if (path) then
-        local command = "dir \"" .. path .. "\" /B"
-        local pipe = io.popen(command, "r")
-        if pipe then
-            local output = pipe:read("*a")
-            if (output) then
-                local items = split(output, "\n")
-                for index, item in pairs(items) do
-                    if (item and item == "") then
-                        items[index] = nil
-                    end
-                end
-                return items
-            end
-        end
-    end
-    return nil
-end
-
----Delete a file given file path
----@param path string
----@return boolean
-function delete_file(path)
-    return os.remove(path)
-end
-
----Return if a file exists given file path.
----@param path string
----@return boolean
-function file_exists(path)
-    local file = io.open(path, "r")
-    if (file) then
-        file:close()
-        return true
-    end
-    return false
-end
-
----Return the memory address of a tag given tagId or tagClass and tagPath
----@param tagIdOrTagType string | number
----@param tagPath? string
----@return number?
-function get_tag(tagIdOrTagType, tagPath)
-    if (not tagPath) then
-        return lookup_tag(tagIdOrTagType)
-    else
-        return lookup_tag(tagIdOrTagType, tagPath)
-    end
-end
-
----Execute a custom Halo script.
----
----A script can be either a standalone Halo command or a Lisp-formatted Halo scripting block.
----@param command string
-function execute_script(command)
-    return execute_command(command)
-end
-
----Return the address of the object memory given object id
----@param objectId number
----@return number?
-function get_object(objectId)
-    if (objectId) then
-        local object_memory = get_object_memory(objectId)
-        if (object_memory ~= 0) then
-            return object_memory
-        end
-    end
-    return nil
-end
-
----Despawn an object given objectId. An error will occur if the object does not exist.
----@param objectId number
-function delete_object(objectId)
-    destroy_object(objectId)
-end
-
----Output text to the console, optional text colors in decimal format.<br>
----Avoid sending console messages if console_is_open() is true to avoid annoying the player.
----@overload fun(message: string | number)
----@overload fun(message: string | number, red: number, green: number, blue: number)
-function console_out(...)
-    cprint(...)
-end
-
----Output text to console as debug message.
----
----This function will only output text if the debug mode is enabled.
----@param message string
-function console_debug(message)
-    if DebugMode then
-        console_out(message)
-    end
-end
-
----Return true if the player has the console open, always returns true on SAPP.
----@return boolean
-function console_is_open()
-    return true
-end
-
-
----Print message to player HUD.\
----Messages will be printed to console if SAPP uses this function
----@param message string
-function hud_message(message)
-    cprint(message)
-end
-
----Set the callback for an event game from the game events available on Chimera
----@param event "command" | "frame" | "preframe" | "map load" | "precamera" | "rcon message" | "tick" | "pretick" | "unload"
----@param callback string Global function name to call when the event is triggered
-function set_callback(event, callback)
-    if event == "tick" then
-        register_callback(cb["EVENT_TICK"], callback)
-    elseif event == "pretick" then
-        error("SAPP does not support pretick event")
-    elseif event == "frame" then
-        error("SAPP does not support frame event")
-    elseif event == "preframe" then
-        error("SAPP does not support preframe event")
-    elseif event == "map load" then
-        register_callback(cb["EVENT_GAME_START"], callback)
-    elseif event == "precamera" then
-        error("SAPP does not support precamera event")
-    elseif event == "rcon message" then
-        _G[callback .. "_rcon_message"] = function(playerIndex,
-                                                   command,
-                                                   environment,
-                                                   password)
-            return _G[callback](playerIndex, command, password)
-        end
-        register_callback(cb["EVENT_COMMAND"], callback .. "_rcon_message")
-    elseif event == "command" then
-        _G[callback .. "_command"] = function(playerIndex, command, environment)
-            return _G[callback](playerIndex, command, environment)
-        end
-        register_callback(cb["EVENT_COMMAND"], callback .. "_command")
-    elseif event == "unload" then
-        register_callback(cb["EVENT_GAME_END"], callback)
-    else
-        error("Unknown event: " .. event)
-    end
-end
-
----Register a timer to be called every intervalMilliseconds.<br>
----The callback function will be called with the arguments passed after the callbackName.<br>
----
----**WARNING:** SAPP will not return a timerId, it will return nil instead so timers can not be stopped.
----@param intervalMilliseconds number
----@param globalFunctionCallbackName string
----@vararg any
----@return number?
-function set_timer(intervalMilliseconds, globalFunctionCallbackName, ...)
-    return timer(intervalMilliseconds, globalFunctionCallbackName, ...)
-end
-
-function stop_timer(timerId)
-    error("SAPP does not support stopping timers")
-end
-
--- register_callback is a SAPP only function, we are running in SAPP then
-if register_callback then
-    -- Provide global server type variable on SAPP
-    server_type = "sapp"
-    print("Compatibility with Chimera Lua API has been loaded!")
-else
-    console_is_open = backupFunctions.console_is_open
-    console_out = backupFunctions.console_out
-    execute_script = backupFunctions.execute_script
-    get_global = backupFunctions.get_global
-    -- set_global = -- backupFunctions.set_global
-    get_tag = backupFunctions.get_tag
-    set_callback = backupFunctions.set_callback
-    set_timer = backupFunctions.set_timer
-    stop_timer = backupFunctions.stop_timer
-    spawn_object = backupFunctions.spawn_object
-    delete_object = backupFunctions.delete_object
-    get_object = backupFunctions.get_object
-    get_dynamic_player = backupFunctions.get_dynamic_player
-    hud_message = backupFunctions.hud_message
-    create_directory = backupFunctions.create_directory
-    remove_directory = backupFunctions.remove_directory
-    directory_exists = backupFunctions.directory_exists
-    list_directory = backupFunctions.list_directory
-    write_file = backupFunctions.write_file
-    read_file = backupFunctions.read_file
-    delete_file = backupFunctions.delete_file
-    file_exists = backupFunctions.file_exists
-end
 
 ------------------------------------------------------------------------------
 -- Generic functions
@@ -1181,6 +819,12 @@ local function createBindStruct(baseAddress, struct, parentStruct, parentMeta)
             assert(fieldMeta and address, "Field '" .. key .. "' not found in struct")
             local value
 
+            -- Address is not valid, likely a null pointer, we can return nil without trying to read it
+            if not (address >= PROCESS_MEMORY_BASE_ADDRESS and address <= PROCESS_MEMORY_CEILING_ADDRESS) then
+                printdebug(string.format("0x%x", address), key .. " (" .. tostring(fieldMeta.type) ..
+                           ") INVALID ADDRESS, returning nil")
+                return nil
+            end
             if cTypes[fieldMeta.type] and cTypes[fieldMeta.type].read then
                 value = cTypes[fieldMeta.type].read(address, fieldMeta.offset)
             elseif fieldMeta.is == "struct" or fieldMeta.is == "union" or fieldMeta.fields then
@@ -1211,7 +855,6 @@ local function createBindStruct(baseAddress, struct, parentStruct, parentMeta)
             end
             printdebug(string.format("0x%x", address),
                        key .. " (" .. tostring(fieldMeta.type) .. ") READ = " .. tostring(value))
-
             return value
         end,
         __newindex = function(t, key, value)
@@ -1220,9 +863,15 @@ local function createBindStruct(baseAddress, struct, parentStruct, parentMeta)
             printdebug(string.format("0x%x", address),
                        key .. " (" .. tostring(fieldMeta.type) .. ") WRITE = " .. tostring(value))
 
+            -- Address is not valid, likely a null pointer, we can return nil without trying to read it
+            if not (address >= PROCESS_MEMORY_BASE_ADDRESS and address <= PROCESS_MEMORY_CEILING_ADDRESS) then
+                printdebug(string.format("0x%x", address), key .. " (" .. tostring(fieldMeta.type) ..
+                           ") INVALID ADDRESS, write cancelled")
+                return
+            end
             if cTypes[fieldMeta.type] and cTypes[fieldMeta.type].write then
                 cTypes[fieldMeta.type].write(address, value, fieldMeta.offset)
-            elseif fieldMeta.is == "struct" then
+            elseif fieldMeta.is == "struct" or fieldMeta.is == "union" or fieldMeta.fields then
                 -- If it's a struct, we can set fields directly as it will trigger the __index metamethod
                 if type(value) == "table" then
                     for k, v in pairs(value) do
@@ -1330,22 +979,27 @@ local tagDataHeaderStructure = {
 }
 
 ---@class tagEntry
----@field primaryGroup string Primary group of the tag
----@field secondaryGroup string Secondary group of the tag
----@field tertiaryGroup string Tertiary group of the tag
--- @field handle number Tag handle, used for tag references
----@field handle { value: number, index: number, id: number } Handle of the tag, it is a struct with value, index and id
+---@field primaryClass string | any Primary group/class of the tag
+---@field secondaryClass string | any Secondary group/class of the tag
+---@field tertiaryClass string | any Tertiary group/class of the tag
+---@field handle { value: integer, index: integer, id: integer, isNull: fun(): boolean } Handle of the tag, it is a struct with value, index and id
 ---@field path string Path of the tag
----@field data number Data of the tag, it represents the actual tag data in get_object_memory
+---@field data any Data of the tag, it represents the actual tag data in get_object_memory
+---@field dataAddress any Address of the tag data, it can be used for direct memory manipulation of the tag data
 ---@field indexed boolean Is this tag indexed on an external map file
 
--- @class tagEntry<T> : { primaryGroup: string, secondaryGroup: string, tertiaryGroup: string, handle: number, path: string, data: T, indexed: boolean }
+-- @class tagEntry<T> : { primaryClass: string, secondaryClass: string, tertiaryClass: string, handle: number, path: string, data: T, indexed: boolean }
 
 -- Tag structure
 local tagEntryStructure = {
+    -- Just for API compability
     primaryGroup = {type = "dword", offset = 0x0},
     secondaryGroup = {type = "dword", offset = 0x4},
     tertiaryGroup = {type = "dword", offset = 0x8},
+
+    primaryClass = {type = "dword", offset = 0x0},
+    secondaryClass = {type = "dword", offset = 0x4},
+    tertiaryClass = {type = "dword", offset = 0x8},
     index = {type = "word", offset = 0xC}, -- Deprecated, use handle instead
     id = {type = "dword", offset = 0xC}, -- Deprecated, use handle instead
     handle = {
@@ -1357,13 +1011,14 @@ local tagEntryStructure = {
             id = {type = "dword", offset = 0x2}
         },
         methods = {
-            isNull = function (handle)
+            isNull = function(handle)
                 return isNull(handle.value)
             end
         }
     },
     path = {type = "string", offset = 0x10, is = "ptr"},
     data = {type = "dword", offset = 0x14},
+    dataAddress = {type = "dword", offset = 0x14},
     indexed = {type = "dword", offset = 0x18}
 }
 
@@ -1376,10 +1031,7 @@ local cinematicGlobalsStructure = {
     isShowingLetterbox = {type = "bit", offset = 0x8, bitLevel = 0}
 }
 
-hardcodedBindings = {
-    TableResourceHandle = tagEntryStructure.handle
-}
-
+hardcodedBindings = {TableResourceHandle = tagEntryStructure.handle}
 
 ------------------------------------------------------------------------------
 -- LuaBlam globals
@@ -1414,7 +1066,7 @@ blam.tagDataHeader = createBindStruct(addressList.tagDataHeader, tagDataHeaderSt
 -- Add utilities to library
 blam.dumpTable = dumpTable
 blam.consoleOutput = consoleOutput
-blam.null = null
+blam.null = NULL
 
 ---Get the current game camera type
 ---@return number?
@@ -1468,6 +1120,20 @@ function blam.getJoystickInput(joystickOffset)
     return inputValue
 end
 
+local function createObject(address, structName)
+    if address and address ~= 0 then
+        local success, struct = pcall(require, "structures.object." .. structName)
+        if success and struct then
+            if type(struct) ~= "table" then
+                error("Object structure is not a table for struct: " .. structName)
+            end
+            return createBindStruct(address, struct)
+        else
+            return nil
+        end
+    end
+end
+
 --- Create a tag object from a given address, this object can't write data to game memory
 ---@param address integer
 ---@return tagEntry?
@@ -1482,6 +1148,10 @@ local function createTag(address)
         tag.primaryGroup = integerToTagGroup(tag.primaryGroup)
         tag.secondaryGroup = integerToTagGroup(tag.secondaryGroup)
         tag.tertiaryGroup = integerToTagGroup(tag.tertiaryGroup)
+
+        tag.primaryClass = integerToTagGroup(tag.primaryClass)
+        tag.secondaryClass = integerToTagGroup(tag.secondaryClass)
+        tag.tertiaryClass = integerToTagGroup(tag.tertiaryClass)
         tag.address = address
 
         local tagStructureModuleName
@@ -1499,7 +1169,7 @@ local function createTag(address)
         -- print("tag.primaryGroup", tag.primaryGroup)
         -- print("tagStructureModuleName", tagStructureModuleName)
 
-        local success, struct = pcall(require, "structures." .. tagStructureModuleName)
+        local success, struct = pcall(require, "structures.tag." .. tagStructureModuleName)
         if success and struct then
             if type(struct) ~= "table" then
                 error("Tag structure is not a table for tag: " .. tag.primaryGroup)
@@ -1826,7 +1496,7 @@ end
 function blam.tag.findTag(keyword, tagGroup)
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
         local tag = blam.getTagEntry(tagIndex)
-        if tag and tag.path:find(keyword, 1, true) and tag.primaryGroup == tagGroup then
+        if tag and tag.path:find(keyword, 1, true) and tag.primaryClass == tagGroup then
             return tag
         end
     end
@@ -1843,11 +1513,24 @@ function blam.tag.findTags(keyword, tagGroup)
     local tagsList = {}
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
         local tag = blam.getTagEntry(tagIndex)
-        if tag and tag.path:find(keyword, 1, true) and tag.primaryGroup == tagGroup then
+        if tag and tag.path:find(keyword, 1, true) and tag.primaryClass == tagGroup then
             tagsList[#tagsList + 1] = tag
         end
     end
     return tagsList
+end
+
+-- Get a tag
+---@param tagHandleOrPath EngineTagHandle|integer|string Tag handle or path of the tag to get, if a path is given, tag group must be provided as second argument
+---@param tagGroup? tagGroup Tag group of the tag to get, required if first argument is a path
+---@return tagEntry?
+function blam.tag.getTag(tagHandleOrPath, tagGroup)
+    if isNumber(tagHandleOrPath) then
+        return blam.getTagEntry(tagHandleOrPath)
+    elseif isString(tagHandleOrPath) and tagGroup then
+        return blam.getTagEntry(tagHandleOrPath, tagGroup)
+    end
+    return nil
 end
 
 --- Return the index of a resource handle
@@ -2059,10 +1742,51 @@ function blam.globalGravity(gravity)
 end
 
 ---Restore global gravity to default value
----@return boolean
 function blam.restoreGlobalGravity()
     local gravityAddress = addressList.globalGravity
     write_dword(gravityAddress, blam.PHYSICS_GRAVITY_DEFAULT)
+end
+
+---Get an object from the current game
+---@param handle number Object handle, it can be an object index or id
+---@param objectGroup objectGroup
+function blam.gameState.getObject(handle, objectGroup)
+    local handle
+    local objectAddress
+
+    -- Get object address
+    if handle then
+        -- Get object ID
+        if handle < 0xFFFF then
+            local index = handle
+
+            -- Get objects table
+            local table = createBindStruct(addressList.objectTable, dataTableStructure)
+            if index > table.capacity then
+                return nil
+            end
+
+            -- Calculate object ID (this may be invalid, be careful)
+            handle = (read_word(table.firstElementAddress + index * table.elementSize) * 0x10000) +
+                         index
+        else
+            handle = idOrIndex
+        end
+
+        objectAddress = get_object(handle)
+
+        if objectAddress then
+            local objectStructName
+            for name, objectGroupValue in pairs(objectClasses) do
+                if objectGroup == objectGroupValue then
+                    objectStructName = name
+                    break
+                end
+            end
+            createObject(objectAddress, objectStructName)
+        end
+    end
+    return nil
 end
 
 return blam

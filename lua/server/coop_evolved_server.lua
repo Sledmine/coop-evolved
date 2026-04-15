@@ -13,7 +13,7 @@ local objectClasses = blam.objectClasses
 console_out = cprint
 
 -- Pre require structures for blam2 (This helps the bundler to include modules properly)
-require "structures.vehicle"
+require "structures.tag.vehicle"
 
 local isNull = blam.isNull
 local inspect = require "inspect"
