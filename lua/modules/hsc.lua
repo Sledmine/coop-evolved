@@ -477,6 +477,16 @@ function hsc.deactivate_team_nav_point_object(team, object)
     return native("deactivate_team_nav_point_object", team, object)
 end
 
+function hsc.display_scenario_help(index)
+    -- TODO Reimplement scenario help display in Lua to support custom maps and display given string
+    --if engine.netgame.getServerType() ~= "sapp" then
+    --    local mapName = engine.map.getCurrentMapHeader().name
+    --    logger:debug("Displaying scenario help for map {} at index {}", mapName, index)
+    --    
+    --    return engine.userInterface.openWidget
+    --end
+end
+
 -- Bind existing in game HSC functions to Lua
 setmetatable(hsc, {
     __index = function(_, key)
