@@ -1,0 +1,10 @@
+a10_coop_evolved:coop
+a30_coop_evolved:coop
+a50_coop_evolved:coop
+b30_coop_evolved:coop
+b40_coop_evolved:coop
+c10_coop_evolved:coop
+c20_coop_evolved:coop
+c40_coop_evolved:coop
+d20_coop_evolved:coop
+d40_coop_evolved:coop
