@@ -172,17 +172,25 @@ function PluginLoad()
     end)
 
     for command, data in pairs(commands) do
-        balltze.command.registerCommand(command, command, data.description, data.help, false,
-                                        data.minArgs or 0, data.maxArgs or 0, false, true,
-                                        function(...)
-            local success, result = pcall(data.execute, table.unpack(...))
-            if not success then
-                logger:error("Error executing command '{}': {}", command, result)
-                return false
+        balltze.command.registerCommand(command, command, data.description, data.help,
+                                        data.save or false, data.minArgs or 0, data.maxArgs or 0,
+                                        false, true, function(args)
+            -- logger:debug("{}", inspect(args))
+            if (args and data.minArgs and data.maxArgs) and (#args < data.minArgs) or
+                (#args > data.maxArgs) then
+                logger:error("Invalid number of arguments. Usage: {}, Example: {}", data.help,
+                             data.example)
+                return true
+            end
+            -- data.func(table.unpack(args or {}))
+            local ok, message = pcall(data.func, table.unpack(args or {}))
+            if not ok then
+                logger:error("Error executing command \"{}\": {}", command, message)
             end
             return true
         end)
     end
+    balltze.command.loadSettings()
 
     local function main()
         constants.get()
