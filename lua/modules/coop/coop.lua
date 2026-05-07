@@ -136,6 +136,22 @@ function coop.findNewSpawn(exceptionPlayerIndex, bypassVehicleCheck)
     local cinematic = blam.cinematicGlobals()
     -- Add logic for edge cases such as when all players are dead
     if not cinematic.isInProgress then
+        local isEveryPlayerInAVehicle = false
+        for playerIndex = constants.firstPlayerIndex, constants.lastPlayerIndex do
+            if playerIndex ~= exceptionPlayerIndex then
+                local playerBiped = blam.biped(get_dynamic_player(playerIndex))
+                if playerBiped then
+                    if not isNull(playerBiped.vehicleObjectId) then
+                        -- logger:debug("Player {} is in a vehicle, bypassing vehicle check for spawn point selection", playerIndex)
+                        isEveryPlayerInAVehicle = true
+                    else
+                        -- logger:debug("Player {} is not in a vehicle", playerIndex)
+                        isEveryPlayerInAVehicle = false
+                        break
+                    end
+                end
+            end
+        end
         for playerIndex = constants.firstPlayerIndex, constants.lastPlayerIndex do
             if playerIndex ~= exceptionPlayerIndex then
                 local playerBiped = blam.biped(get_dynamic_player(playerIndex))
@@ -143,7 +159,8 @@ function coop.findNewSpawn(exceptionPlayerIndex, bypassVehicleCheck)
                 -- TODO Research more on how exactly conditions for "safe to save" work
                 -- if player and playerBiped and hsc.game_safe_to_save() then
                 if player and playerBiped then
-                    if coop.isRespawnCandidate(playerBiped) then
+                    if coop.isRespawnCandidate(playerBiped,
+                                               bypassVehicleCheck or isEveryPlayerInAVehicle) then
                         playerUsedForSpawn = coop.updateSpawn(playerBiped, playerIndex)
                         playerUsedForSpawn = player.name
                         break

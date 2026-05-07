@@ -9,9 +9,9 @@ constants.findNewSpawnEverySecs = 7
 constants.findNewSpawnEveryMillisecs = utils.secondsToMillisecs(constants.findNewSpawnEverySecs)
 constants.firstPlayerIndex = 0
 constants.lastPlayerIndex = 15
---constants.maximumNetworkObjectsForItems = 448
---constants.maximumNetworkObjectsForItems = 384
 constants.maximumNetworkObjectsForItems = 345
+constants.secondsForWaitingPlayersInPelican = 90
+constants.ticksForPelicanPlayerWait = utils.secondsToTicks(constants.secondsForWaitingPlayersInPelican)
 
 if Engine.netgame.getServerType() == "sapp" then
     constants.firstPlayerIndex = 1
@@ -27,7 +27,7 @@ constants.seats = {
         "P-riderRB",
         "P-riderLM",
         "P-riderRM",
-        -- "cargo",
+        "cargo",
         "P-riderRB01",
         "P-riderRB02",
         "P-riderLB02",
