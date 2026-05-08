@@ -3,17 +3,17 @@ local engine = Engine
 package.preload["luna"] = nil
 package.loaded["luna"] = nil
 require "luna"
+inspect = require "inspect"
+
 local blam = require "blam"
 local commands = require "coop.commands"
-local events = require "coop.network.events"
-local constants = require "coop.constants"
+require "coop.network.events"
 local coop = require "coop.coop"
 local constants = require "coop.constants"
 local component = require "ui.component"
 local ether = require "ui.react"
 local script = require "script"
 local utils = require "coop.utils"
-inspect = require "inspect"
 require "coop.gameplay.utils"
 
 -- Settings
@@ -71,7 +71,6 @@ function PluginLoad()
         end
     end)
 
-    -- balltze.event.tick.subscribe(function(event)
     function OnTick(event)
         if event.time == "before" then
             if not console_is_open() then
@@ -99,6 +98,8 @@ function PluginLoad()
                         ether.render(constants.widgets.coopMenu.id)
                     end)
                 end
+                
+                local serverType = engine.netgame.getServerType()
 
                 -- We are on a local server, enable all spawns and find new spawn every X seconds
                 if serverType == "local" then
@@ -156,7 +157,6 @@ function PluginLoad()
             end
         end
     end
-    -- end)
 
     for command, data in pairs(commands) do
         balltze.command.registerCommand(command, command, data.description, data.help,
@@ -192,7 +192,7 @@ function PluginLoad()
     local textColor = {1.0, 0.45, 0.72, 1.0}
     local font = "smaller"
     local align = "center"
-    Balltze.event.frame.subscribe(function(event)
+    balltze.event.frame.subscribe(function(event)
         if event.time == "before" then
             if DebugMode then
                 local memory = collectgarbage("count")
@@ -206,6 +206,12 @@ function PluginLoad()
 
     if DebugMode then
         require "performance"
+    else
+        balltze.event.tick.subscribe(function(event)
+            if event.time == "before" then
+                OnTick(event)
+            end
+        end)
     end
 
     -- Get constants here due to plugin reloading (?)

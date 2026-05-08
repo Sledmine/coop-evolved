@@ -3,6 +3,10 @@ local engine = Engine
 
 -- Load Chimera Lua compatibility for modules that still rely on it
 local function loadChimeraCompatibility()
+    if not balltze.chimera then
+        logger:error("Chimera compatibility is not available. Please ensure the bridge module is loaded and that Chimera functions are accessible.")
+        return
+    end
     -- Populate global namespace with Chimera functions and variables, excluding some exceptions
     for k, v in pairs(balltze.chimera) do
         if not k:includes "timer" and not k:includes "execute_script" and
