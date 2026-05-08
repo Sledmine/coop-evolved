@@ -5,6 +5,11 @@ package.loaded["luna"] = nil
 require "luna"
 inspect = require "inspect"
 
+-- Settings
+DebugMode = false
+DebugPerformance = false
+
+
 local blam = require "blam"
 local commands = require "coop.commands"
 require "coop.network.events"
@@ -15,10 +20,6 @@ local ether = require "ui.react"
 local script = require "script"
 local utils = require "coop.utils"
 require "coop.gameplay.utils"
-
--- Settings
-DebugMode = false
-DebugPerformance = false
 
 -- Global state
 local lastBipedTagHandle

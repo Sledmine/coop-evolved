@@ -6,13 +6,14 @@ DebugTimes = {}
 
 local bounds = {left = 15, top = 45, right = 640, bottom = 480}
 local maxScriptThreadsToDisplay = 10
+
+-- ARGB color values
 local textColor = {
     default = {1.0, 0.45, 0.72, 1.0},
+    white = {1.0, 1.0, 1.0, 1.0},
+    info = {1.0, 0.8, 0.8, 0.8},
+    error = {1.0, 0.8, 0.45, 1.0},
     warning = {1.0, 0.8, 0.45, 1.0},
-    error = {1.0, 0.45, 0.45, 1.0},
-    info = {0.45, 0.8, 1.0, 1.0},
-    success = {0.45, 1.0, 0.45, 1.0, 1.0},
-    white = {1.0, 1.0, 1.0, 1.0}
 }
 
 local function getScriptThreadName(scriptThread)
@@ -79,9 +80,13 @@ balltze.event.frame.subscribe(function(event)
         local drawText = balltze.chimera.draw_text
         local scriptStatus
         local startTime
+
+        -- Measure performance from here
         if DebugPerformance then
             startTime = os.clock()
         end
+
+        -- Prevent drawing info in menus or when console is open
         if console_is_open() then
             return
         end
@@ -95,47 +100,44 @@ balltze.event.frame.subscribe(function(event)
         if not player then
             return
         end
+
+
         if DebugPerformance then
             local endTime = os.clock()
             local elapsedTime = endTime - startTime
             DebugTimes.frameTime = elapsedTime
             scriptStatus = getScriptPerformanceSnapshot()
 
-            -- drawText(string.format("Tick Time: %.6f s\nFrame Time: %.6f s",
-            --                       DebugTimes.tickTime or 0, DebugTimes.frameTime or 0),
-            --         bounds.left, bounds.top, bounds.right, bounds.bottom, "smaller", align,
-            --         table.unpack(textColor))
-        end
-
-        local yOffset = 0
-        for _, key in ipairs({"tickTime", "frameTime"}) do
-            local time = DebugTimes[key]
-            if time then
-                drawText(string.format("%s: %.6f s", key, time), bounds.left, bounds.top + yOffset,
-                         bounds.right, bounds.bottom, "smaller", align,
-                         table.unpack(textColor.default))
-            end
-            yOffset = yOffset + 20
-        end
-
-        if DebugPerformance and scriptStatus then
-            drawText(string.format("scriptThreads: %d", #scriptStatus), bounds.left,
-                     bounds.top + yOffset, bounds.right, bounds.bottom, "smaller", align,
-                     table.unpack(textColor.info))
-            yOffset = yOffset + 20
-
-            for index = 1, math.min(#scriptStatus, maxScriptThreadsToDisplay) do
-                -- Ignore script.lua threads, these are usually sleep threads and not very useful to display
-                if not (scriptStatus[index].referenceFile and
-                    scriptStatus[index].referenceFile:find("script.lua")) then
-                    local scriptThread = scriptStatus[index]
-                    drawText(string.format("%s | last %.3f ms | total %.3f ms",
-                                           getScriptThreadName(scriptThread),
-                                           (scriptThread.lastRunTime or 0) * 1000,
-                                           (scriptThread.totalRunTime or 0) * 1000), bounds.left,
+            local yOffset = 0
+            for _, key in ipairs({"tickTime", "frameTime"}) do
+                local time = DebugTimes[key]
+                if time then
+                    drawText(string.format("%s: %.6f s", key, time), bounds.left,
                              bounds.top + yOffset, bounds.right, bounds.bottom, "smaller", align,
                              table.unpack(textColor.default))
-                    yOffset = yOffset + 20
+                end
+                yOffset = yOffset + 20
+            end
+
+            if scriptStatus then
+                drawText(string.format("scriptThreads: %d", #scriptStatus), bounds.left,
+                         bounds.top + yOffset, bounds.right, bounds.bottom, "smaller", align,
+                         table.unpack(textColor.info))
+                yOffset = yOffset + 20
+
+                for index = 1, math.min(#scriptStatus, maxScriptThreadsToDisplay) do
+                    -- Ignore script.lua threads, these are usually sleep threads and not very useful to display
+                    if not (scriptStatus[index].referenceFile and
+                        scriptStatus[index].referenceFile:find("script.lua")) then
+                        local scriptThread = scriptStatus[index]
+                        drawText(string.format("%s | last %.3f ms | total %.3f ms",
+                                               getScriptThreadName(scriptThread),
+                                               (scriptThread.lastRunTime or 0) * 1000,
+                                               (scriptThread.totalRunTime or 0) * 1000),
+                                 bounds.left, bounds.top + yOffset, bounds.right, bounds.bottom,
+                                 "smaller", align, table.unpack(textColor.default))
+                        yOffset = yOffset + 20
+                    end
                 end
             end
         end
