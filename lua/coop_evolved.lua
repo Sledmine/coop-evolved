@@ -14,12 +14,11 @@ local ether = require "ui.react"
 local script = require "script"
 local utils = require "coop.utils"
 inspect = require "inspect"
-local hscExecuteScript = engine.hsc.executeScript
-local hsc = require "hsc"
 require "coop.gameplay.utils"
 
 -- Settings
 DebugMode = false
+DebugPerformance = false
 
 -- Global state
 local lastBipedTagHandle
@@ -47,40 +46,12 @@ end))
 function PluginMetadata()
     return {
         name = "Coop Evolved",
-        author = "Shadowmods",
-        version = "1.9.0",
+        author = "Insurrection Team",
+        version = "1.10.0",
         targetApi = "1.0.0",
         reloadable = true,
         maps = loadWhenIn
     }
-end
-
-local function loadChimeraCompatibility()
-    -- Load Chimera compatibility
-    for k, v in pairs(balltze.chimera) do
-        if not k:includes "timer" and not k:includes "execute_script" and
-            not k:includes "set_callback" then
-            _G[k] = v
-        end
-    end
-    server_type = engine.netgame.getServerType()
-
-    -- Replace Chimera functions with Balltze functions
-    write_bit = balltze.memory.writeBit
-    write_byte = balltze.memory.writeInt8
-    write_word = balltze.memory.writeInt16
-    write_dword = balltze.memory.writeInt32
-    write_int = balltze.memory.writeInt32
-    write_float = balltze.memory.writeFloat
-    write_string = function(address, value)
-        for i = 1, #value do
-            write_byte(address + i - 1, string.byte(value, i))
-        end
-        if #value == 0 then
-            write_byte(address, 0)
-        end
-    end
-    execute_script = engine.hsc.executeScript
 end
 
 local loaded = false
@@ -89,7 +60,8 @@ function PluginLoad()
     logger = balltze.logger.createLogger("Coop Evolved")
     logger:muteDebug(not DebugMode)
 
-    loadChimeraCompatibility()
+    -- Load Chimera compatibility module (run at runtime when Chimera functions are available)
+    require "chimeraCompat"()
 
     balltze.event.rconMessage.subscribe(function(event)
         if event.time == "before" then
@@ -99,7 +71,8 @@ function PluginLoad()
         end
     end)
 
-    balltze.event.tick.subscribe(function(event)
+    -- balltze.event.tick.subscribe(function(event)
+    function OnTick(event)
         if event.time == "before" then
             if not console_is_open() then
                 script.poll()
@@ -126,8 +99,6 @@ function PluginLoad()
                         ether.render(constants.widgets.coopMenu.id)
                     end)
                 end
-
-                local serverType = engine.netgame.getServerType()
 
                 -- We are on a local server, enable all spawns and find new spawn every X seconds
                 if serverType == "local" then
@@ -163,13 +134,29 @@ function PluginLoad()
                         logger:warning("Error loading level script: {}", result)
                     else
                         logger:debug("Loaded level script for \"{}\"", levelName)
+                        if DebugPerformance then
+                            script.continuous(function(_, sleep)
+                                script.setReferenceContext(result)
+                                -- logger:debug("{}", inspect(script.getStatus()))
+                                for i, thread in ipairs(script.getStatus()) do
+                                    if thread.type == "continuous" then
+                                        -- logger:debug("Running continuous script thread #{}: {}", i, thread.referenceFile)
+                                        print("Running continuous script thread #" .. i .. ": " ..
+                                                  thread.referenceFile)
+                                    end
+                                end
+                                print("----")
+                                sleep(120)
+                            end)
+                        end
                     end
                 end
 
                 loaded = true
             end
         end
-    end)
+    end
+    -- end)
 
     for command, data in pairs(commands) do
         balltze.command.registerCommand(command, command, data.description, data.help,
@@ -192,34 +179,37 @@ function PluginLoad()
     end
     balltze.command.loadSettings()
 
-    local function main()
-        constants.get()
-        -- hscExecuteScript("fade_in", 0, 0, 0, 0)
-    end
-
     balltze.event.mapLoad.subscribe(function(event)
         if event.time == "after" then
-            server_type = engine.netgame.getServerType()
-            main()
+            constants.get()
         end
     end)
 
-    local generalBounds = {left = 0, top = 460, right = 640, bottom = 480}
-    local textColor = {1, 1, 1, 1}
-    balltze.event.frame.subscribe(function(event)
-        if event.time == "before" and DebugMode then
-            -- Draw current script memory usage
+    ---@diagnostic disable-next-line: inject-field
+    logger.warn = logger.warning -- alias warning to warn
+
+    local bounds = {left = 0, top = 400, right = 640, bottom = 480}
+    local textColor = {1.0, 0.45, 0.72, 1.0}
+    local font = "smaller"
+    local align = "center"
+    Balltze.event.frame.subscribe(function(event)
+        if event.time == "before" then
             if DebugMode then
-                local memoryUsage = collectgarbage("count") / 1024
-                local memoryText = string.format("Coop Evolved script memory usage: %.2f MB",
-                                                 memoryUsage)
-                draw_text(memoryText, 0, generalBounds.top - 32, generalBounds.right - 10,
-                          generalBounds.bottom, "console", "right", table.unpack(textColor))
+                local memory = collectgarbage("count")
+                local sizeInMb = memory / 1024
+                local text = string.format("Coop Evolved Lua %.4f MB", sizeInMb)
+                Balltze.chimera.draw_text(text, bounds.left, bounds.top, bounds.right,
+                                          bounds.bottom, font, align, table.unpack(textColor))
             end
         end
     end)
 
-    main()
+    if DebugMode then
+        require "performance"
+    end
+
+    -- Get constants here due to plugin reloading (?)
+    constants.get()
 
     return true
 end
