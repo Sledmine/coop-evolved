@@ -98,7 +98,7 @@ function PluginLoad()
                         ether.render(constants.widgets.coopMenu.id)
                     end)
                 end
-                
+
                 local serverType = engine.netgame.getServerType()
 
                 -- We are on a local server, enable all spawns and find new spawn every X seconds
@@ -136,19 +136,27 @@ function PluginLoad()
                     else
                         logger:debug("Loaded level script for \"{}\"", levelName)
                         if DebugPerformance then
-                            script.continuous(function(_, sleep)
-                                script.setReferenceContext(result)
-                                -- logger:debug("{}", inspect(script.getStatus()))
-                                for i, thread in ipairs(script.getStatus()) do
-                                    if thread.type == "continuous" then
-                                        -- logger:debug("Running continuous script thread #{}: {}", i, thread.referenceFile)
-                                        print("Running continuous script thread #" .. i .. ": " ..
-                                                  thread.referenceFile)
+                            script.setReferenceContext(result)
+                            if false then
+                                script.continuous(function(_, sleep)
+                                    -- logger:debug("{}", inspect(script.getStatus()))
+                                    for i, thread in ipairs(script.getStatus()) do
+                                        if thread.type == "continuous" then
+                                            -- logger:debug("Running continuous script thread #{}: {}", i, thread.referenceFile)
+                                            print(string.format(
+                                                      "Running continuous script thread #%d: %s | last %.3f ms | avg %.3f ms | max %.3f ms | total %.3f ms | runs %d",
+                                                      i, thread.referenceFile,
+                                                      (thread.lastRunTime or 0) * 1000,
+                                                      (thread.averageRunTime or 0) * 1000,
+                                                      (thread.maxRunTime or 0) * 1000,
+                                                      (thread.totalRunTime or 0) * 1000,
+                                                      thread.runCount or 0))
+                                        end
                                     end
-                                end
-                                print("----")
-                                sleep(120)
-                            end)
+                                    print("----")
+                                    sleep(120)
+                                end)
+                            end
                         end
                     end
                 end
@@ -182,25 +190,6 @@ function PluginLoad()
     balltze.event.mapLoad.subscribe(function(event)
         if event.time == "after" then
             constants.get()
-        end
-    end)
-
-    ---@diagnostic disable-next-line: inject-field
-    logger.warn = logger.warning -- alias warning to warn
-
-    local bounds = {left = 0, top = 400, right = 640, bottom = 480}
-    local textColor = {1.0, 0.45, 0.72, 1.0}
-    local font = "smaller"
-    local align = "center"
-    balltze.event.frame.subscribe(function(event)
-        if event.time == "before" then
-            if DebugMode then
-                local memory = collectgarbage("count")
-                local sizeInMb = memory / 1024
-                local text = string.format("Coop Evolved Lua %.4f MB", sizeInMb)
-                Balltze.chimera.draw_text(text, bounds.left, bounds.top, bounds.right,
-                                          bounds.bottom, font, align, table.unpack(textColor))
-            end
         end
     end)
 

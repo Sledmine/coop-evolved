@@ -2,6 +2,7 @@ local script = {}
 
 local engine = Engine
 local getTickCount = engine.core.getTickCount
+local getClock = os.clock
 
 -- Control if thread args are passed as local arguments to the thread function
 local useLocalThreadArgs = true
@@ -19,6 +20,10 @@ local functionsReferenceContext = {}
 ---@field started boolean
 ---@field run fun(): boolean
 ---@field func fun()
+---@field totalRunTime number
+---@field lastRunTime number
+---@field maxRunTime number
+---@field runCount number
 
 ---@type ScriptThread[]
 local callTrace = {}
@@ -62,6 +67,23 @@ local function getBottomMostScriptChild(scriptThread)
         currentScriptThread = currentScriptThread.child
     end
     return currentScriptThread
+end
+
+---@param scriptThread ScriptThread
+---@param elapsedTime number
+local function recordScriptThreadRunTime(scriptThread, elapsedTime)
+    scriptThread.lastRunTime = elapsedTime
+    scriptThread.totalRunTime = (scriptThread.totalRunTime or 0) + elapsedTime
+    scriptThread.runCount = (scriptThread.runCount or 0) + 1
+    scriptThread.maxRunTime = math.max(scriptThread.maxRunTime or 0, elapsedTime)
+end
+
+---@param scriptThread ScriptThread
+local function resumeScriptThread(scriptThread, ...)
+    local startTime = getClock()
+    local ok, result = coroutine.resume(scriptThread.thread, ...)
+    recordScriptThreadRunTime(scriptThread, getClock() - startTime)
+    return ok, result
 end
 
 ---@param ticks number
@@ -191,7 +213,7 @@ local function handleScriptThread(scriptThread, result)
         -- logger:debug("No child, thread result: " .. tostring(threadResult))
     else
         -- logger:debug("Parent, got result: " .. tostring(result))
-        local ok, result = coroutine.resume(scriptThread.thread, result)
+        local ok, result = resumeScriptThread(scriptThread, result)
         if not ok then
             error(result, 2)
         end
@@ -234,7 +256,11 @@ function script.thread(func, metadata)
         parent = nil,
         child = nil,
         type = metadata.type,
-        isSleep = false
+        isSleep = false,
+        totalRunTime = 0,
+        lastRunTime = 0,
+        maxRunTime = 0,
+        runCount = 0
     }
     addThreadToTrace(parentScriptThread)
 
@@ -243,11 +269,11 @@ function script.thread(func, metadata)
         scriptThread.started = true
         local ok, result
         if useLocalThreadArgs then
-            ok, result = coroutine.resume(scriptThread.thread, script.call, script.sleep,
-                                          table.unpack(parentScriptThread.args or {}))
+            ok, result = resumeScriptThread(scriptThread, script.call, script.sleep,
+                                            table.unpack(parentScriptThread.args or {}))
         else
-            ok, result = coroutine.resume(scriptThread.thread,
-                                          table.unpack(parentScriptThread.args or {}))
+            ok, result = resumeScriptThread(scriptThread,
+                                            table.unpack(parentScriptThread.args or {}))
         end
         if not ok then
             error(debug.traceback(scriptThread.thread, result), 2)
@@ -316,13 +342,14 @@ function script.getStatus()
     local status = {}
     for i, scriptThread in ipairs(callTrace) do
         local referenceName = tostring(scriptThread.func)
+        local functionInfo = debug.getinfo(scriptThread.func)
         for name, func in pairs(functionsReferenceContext) do
             if func == scriptThread.func then
                 referenceName = name
                 break
             end
         end
-        local referenceFile = debug.getinfo(scriptThread.func).short_src .. ":" .. debug.getinfo(scriptThread.func).linedefined ..
+        local referenceFile = functionInfo.short_src .. ":" .. functionInfo.linedefined ..
                             " (" .. (referenceName or "unknown") .. ")"
         table.insert(status, {
             index = i,
@@ -334,7 +361,13 @@ function script.getStatus()
             parentFunc = scriptThread.parent and scriptThread.parent.func or nil,
             childFunc = scriptThread.child and scriptThread.child.func or nil,
             referenceName = referenceName,
-            referenceFile = referenceFile
+            referenceFile = referenceFile,
+            totalRunTime = scriptThread.totalRunTime or 0,
+            lastRunTime = scriptThread.lastRunTime or 0,
+            maxRunTime = scriptThread.maxRunTime or 0,
+            runCount = scriptThread.runCount or 0,
+            averageRunTime = scriptThread.runCount and scriptThread.runCount > 0 and
+                (scriptThread.totalRunTime or 0) / scriptThread.runCount or 0
         })
     end
     return status
