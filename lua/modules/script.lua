@@ -5,6 +5,7 @@ local getTickCount = engine.core.getTickCount
 
 -- Control if thread args are passed as local arguments to the thread function
 local useLocalThreadArgs = true
+local functionsReferenceContext = {}
 
 ---@class ScriptThreadMetadata
 ---@field type "startup"|"continuous"|"dormant"
@@ -303,6 +304,40 @@ end
 function script.cleanup()
     callTrace = {}
     collectgarbage("collect")
+end
+
+---Set script functions context
+function script.setReferenceContext(context)
+    functionsReferenceContext = context or {}
+end
+
+---Get a summary of all script threads and their statuses for debugging purposes
+function script.getStatus()
+    local status = {}
+    for i, scriptThread in ipairs(callTrace) do
+        local referenceName = tostring(scriptThread.func)
+        for name, func in pairs(functionsReferenceContext) do
+            if func == scriptThread.func then
+                referenceName = name
+                break
+            end
+        end
+        local referenceFile = debug.getinfo(scriptThread.func).short_src .. ":" .. debug.getinfo(scriptThread.func).linedefined ..
+                            " (" .. (referenceName or "unknown") .. ")"
+        table.insert(status, {
+            index = i,
+            type = scriptThread.type,
+            isSleep = scriptThread.isSleep,
+            started = scriptThread.started,
+            func = scriptThread.func,
+            threadStatus = coroutine.status(scriptThread.thread),
+            parentFunc = scriptThread.parent and scriptThread.parent.func or nil,
+            childFunc = scriptThread.child and scriptThread.child.func or nil,
+            referenceName = referenceName,
+            referenceFile = referenceFile
+        })
+    end
+    return status
 end
 
 return script
