@@ -130,10 +130,14 @@ balltze.event.frame.subscribe(function(event)
                     if not (scriptStatus[index].referenceFile and
                         scriptStatus[index].referenceFile:find("script.lua")) then
                         local scriptThread = scriptStatus[index]
-                        drawText(string.format("%s | last %.3f ms | total %.3f ms",
+                        drawText(string.format("%s | type %s | last %.3f ms | avg %.3f ms | max %.3f ms | total %.3f ms | runs %d",
                                                getScriptThreadName(scriptThread),
+                                               tostring(scriptThread.type or "unknown"),
                                                (scriptThread.lastRunTime or 0) * 1000,
-                                               (scriptThread.totalRunTime or 0) * 1000),
+                                               (scriptThread.averageRunTime or 0) * 1000,
+                                               (scriptThread.maxRunTime or 0) * 1000,
+                                               (scriptThread.totalRunTime or 0) * 1000,
+                                               scriptThread.runCount or 0),
                                  bounds.left, bounds.top + yOffset, bounds.right, bounds.bottom,
                                  "smaller", align, table.unpack(textColor.default))
                         yOffset = yOffset + 20
