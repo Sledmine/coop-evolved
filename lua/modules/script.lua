@@ -6,6 +6,9 @@ local getClock = os.clock
 
 -- Control if thread args are passed as local arguments to the thread function
 local useLocalThreadArgs = true
+-- Keep a local reference to DebugPerformance to avoid global lookups in hot code paths (performance baby!)
+local debugPerformance = DebugPerformance
+
 local functionsReferenceContext = {}
 
 ---@class ScriptThreadMetadata
@@ -80,6 +83,9 @@ end
 
 ---@param scriptThread ScriptThread
 local function resumeScriptThread(scriptThread, ...)
+    if not debugPerformance then
+        return coroutine.resume(scriptThread.thread, ...)
+    end
     local startTime = getClock()
     local ok, result = coroutine.resume(scriptThread.thread, ...)
     recordScriptThreadRunTime(scriptThread, getClock() - startTime)
