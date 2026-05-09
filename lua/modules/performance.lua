@@ -5,7 +5,10 @@ local script = require "script"
 DebugTimes = {}
 
 local bounds = {left = 15, top = 45, right = 640, bottom = 480}
-local maxScriptThreadsToDisplay = 10
+local profileWindowTicks = 30 * 5
+local cachedScriptStatus = {}
+local ticksSinceSnapshot = 0
+local snapshotPeriod = 0
 
 -- ARGB color values
 local textColor = {
@@ -33,14 +36,38 @@ end
 local function getScriptPerformanceSnapshot()
     local scriptStatus = script.getStatus()
     table.sort(scriptStatus, function(left, right)
-        local leftLastRunTime = left.lastRunTime or 0
-        local rightLastRunTime = right.lastRunTime or 0
-        if leftLastRunTime == rightLastRunTime then
-            return (left.totalRunTime or 0) > (right.totalRunTime or 0)
+        local leftWindowAverageRunTime = left.windowAverageRunTime or 0
+        local rightWindowAverageRunTime = right.windowAverageRunTime or 0
+        if leftWindowAverageRunTime == rightWindowAverageRunTime then
+            local leftWindowMaxRunTime = left.windowMaxRunTime or 0
+            local rightWindowMaxRunTime = right.windowMaxRunTime or 0
+            if leftWindowMaxRunTime == rightWindowMaxRunTime then
+                return (left.totalRunTime or 0) > (right.totalRunTime or 0)
+            end
+            return leftWindowMaxRunTime > rightWindowMaxRunTime
         end
-        return leftLastRunTime > rightLastRunTime
+        return leftWindowAverageRunTime > rightWindowAverageRunTime
     end)
     return scriptStatus
+end
+
+local function getFilteredScriptStatus(scriptStatus)
+    local filteredScriptStatus = {}
+    for _, scriptThread in ipairs(scriptStatus or {}) do
+        -- Ignore script.lua threads, these are usually sleep threads and not very useful to display
+        if not (scriptThread.referenceFile and scriptThread.referenceFile:find("script.lua")) then
+            table.insert(filteredScriptStatus, scriptThread)
+        end
+    end
+    return filteredScriptStatus
+end
+
+script.setPerformanceWindowTicks(profileWindowTicks)
+
+local function refreshScriptSnapshot()
+    cachedScriptStatus = getFilteredScriptStatus(getScriptPerformanceSnapshot())
+    snapshotPeriod = snapshotPeriod + 1
+    ticksSinceSnapshot = 0
 end
 
 balltze.event.tick.subscribe(function(event)
@@ -54,6 +81,13 @@ balltze.event.tick.subscribe(function(event)
             local endTime = os.clock()
             local elapsedTime = endTime - startTime
             DebugTimes.tickTime = elapsedTime
+
+            ticksSinceSnapshot = ticksSinceSnapshot + 1
+            if snapshotPeriod == 0 or ticksSinceSnapshot >= profileWindowTicks then
+                refreshScriptSnapshot()
+            end
+        else
+            ticksSinceSnapshot = 0
         end
     end
 end)
@@ -78,7 +112,7 @@ balltze.event.frame.subscribe(function(event)
     if event.time == "before" then
         local align = "left"
         local drawText = balltze.chimera.draw_text
-        local scriptStatus
+        local scriptStatus = cachedScriptStatus
         local startTime
 
         -- Measure performance from here
@@ -106,7 +140,11 @@ balltze.event.frame.subscribe(function(event)
             local endTime = os.clock()
             local elapsedTime = endTime - startTime
             DebugTimes.frameTime = elapsedTime
-            scriptStatus = getScriptPerformanceSnapshot()
+
+            if #scriptStatus == 0 and snapshotPeriod == 0 then
+                refreshScriptSnapshot()
+                scriptStatus = cachedScriptStatus
+            end
 
             local yOffset = 0
             for _, key in ipairs({"tickTime", "frameTime"}) do
@@ -120,28 +158,37 @@ balltze.event.frame.subscribe(function(event)
             end
 
             if scriptStatus then
-                drawText(string.format("scriptThreads: %d", #scriptStatus), bounds.left,
+                drawText(string.format("scriptThreads: %d | window: %d ticks | snapshot #%d | next in %d",
+                                       #scriptStatus, profileWindowTicks, snapshotPeriod,
+                                       math.max(profileWindowTicks - ticksSinceSnapshot, 0)),
+                         bounds.left,
                          bounds.top + yOffset, bounds.right, bounds.bottom, "smaller", align,
                          table.unpack(textColor.info))
                 yOffset = yOffset + 20
 
-                for index = 1, math.min(#scriptStatus, maxScriptThreadsToDisplay) do
-                    -- Ignore script.lua threads, these are usually sleep threads and not very useful to display
-                    if not (scriptStatus[index].referenceFile and
-                        scriptStatus[index].referenceFile:find("script.lua")) then
-                        local scriptThread = scriptStatus[index]
-                        drawText(string.format("%s | type %s | last %.3f ms | avg %.3f ms | max %.3f ms | total %.3f ms | runs %d",
-                                               getScriptThreadName(scriptThread),
-                                               tostring(scriptThread.type or "unknown"),
-                                               (scriptThread.lastRunTime or 0) * 1000,
-                                               (scriptThread.averageRunTime or 0) * 1000,
-                                               (scriptThread.maxRunTime or 0) * 1000,
-                                               (scriptThread.totalRunTime or 0) * 1000,
-                                               scriptThread.runCount or 0),
-                                 bounds.left, bounds.top + yOffset, bounds.right, bounds.bottom,
-                                 "smaller", align, table.unpack(textColor.default))
-                        yOffset = yOffset + 20
-                    end
+                local slowestThread = scriptStatus[1]
+                if slowestThread then
+                    drawText(string.format("slowest(avg): %s | %.3f ms",
+                                           getScriptThreadName(slowestThread),
+                                           (slowestThread.windowAverageRunTime or 0) * 1000),
+                             bounds.left, bounds.top + yOffset, bounds.right, bounds.bottom,
+                             "smaller", align, table.unpack(textColor.warning))
+                    yOffset = yOffset + 20
+                end
+
+                for index = 1, #scriptStatus do
+                    local scriptThread = scriptStatus[index]
+                    drawText(string.format("%s | type %s | wAvg %.3f ms | wMax %.3f ms | last %.3f ms | total %.3f ms | runs %d",
+                                           getScriptThreadName(scriptThread),
+                                           tostring(scriptThread.type or "unknown"),
+                                           (scriptThread.windowAverageRunTime or 0) * 1000,
+                                           (scriptThread.windowMaxRunTime or 0) * 1000,
+                                           (scriptThread.lastRunTime or 0) * 1000,
+                                           (scriptThread.totalRunTime or 0) * 1000,
+                                           scriptThread.runCount or 0),
+                             bounds.left, bounds.top + yOffset, bounds.right, bounds.bottom,
+                             "smaller", align, table.unpack(textColor.default))
+                    yOffset = yOffset + 20
                 end
             end
         end

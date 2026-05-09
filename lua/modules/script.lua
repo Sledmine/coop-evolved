@@ -10,6 +10,7 @@ local useLocalThreadArgs = true
 local debugPerformance = DebugPerformance
 
 local functionsReferenceContext = {}
+local performanceWindowTicks = 30
 
 ---@class ScriptThreadMetadata
 ---@field type "startup"|"continuous"|"dormant"
@@ -27,6 +28,11 @@ local functionsReferenceContext = {}
 ---@field lastRunTime number
 ---@field maxRunTime number
 ---@field runCount number
+---@field currentPollRunTime number
+---@field pollRunWindow number[]
+---@field pollWindowTotalRunTime number
+---@field pollWindowAverageRunTime number
+---@field pollWindowMaxRunTime number
 
 ---@type ScriptThread[]
 local callTrace = {}
@@ -79,6 +85,38 @@ local function recordScriptThreadRunTime(scriptThread, elapsedTime)
     scriptThread.totalRunTime = (scriptThread.totalRunTime or 0) + elapsedTime
     scriptThread.runCount = (scriptThread.runCount or 0) + 1
     scriptThread.maxRunTime = math.max(scriptThread.maxRunTime or 0, elapsedTime)
+    scriptThread.currentPollRunTime = (scriptThread.currentPollRunTime or 0) + elapsedTime
+end
+
+---@param scriptThread ScriptThread
+local function updateScriptThreadPollWindow(scriptThread)
+    local pollWindow = scriptThread.pollRunWindow or {}
+    scriptThread.pollRunWindow = pollWindow
+
+    local currentPollRunTime = scriptThread.currentPollRunTime or 0
+    table.insert(pollWindow, currentPollRunTime)
+    scriptThread.pollWindowTotalRunTime = (scriptThread.pollWindowTotalRunTime or 0) + currentPollRunTime
+
+    if #pollWindow > performanceWindowTicks then
+        local removed = table.remove(pollWindow, 1) or 0
+        scriptThread.pollWindowTotalRunTime = scriptThread.pollWindowTotalRunTime - removed
+    end
+
+    local samples = #pollWindow
+    if samples > 0 then
+        scriptThread.pollWindowAverageRunTime = scriptThread.pollWindowTotalRunTime / samples
+    else
+        scriptThread.pollWindowAverageRunTime = 0
+    end
+
+    local maxPollRunTime = 0
+    for _, value in ipairs(pollWindow) do
+        if value > maxPollRunTime then
+            maxPollRunTime = value
+        end
+    end
+    scriptThread.pollWindowMaxRunTime = maxPollRunTime
+    scriptThread.currentPollRunTime = 0
 end
 
 ---@param scriptThread ScriptThread
@@ -249,6 +287,11 @@ function script.poll()
             handleScriptThread(currentScript)
         end
     end
+
+    for _, currentScript in ipairs(callTrace) do
+        updateScriptThreadPollWindow(currentScript)
+    end
+
     return #callTrace
 end
 
@@ -266,7 +309,12 @@ function script.thread(func, metadata)
         totalRunTime = 0,
         lastRunTime = 0,
         maxRunTime = 0,
-        runCount = 0
+        runCount = 0,
+        currentPollRunTime = 0,
+        pollRunWindow = {},
+        pollWindowTotalRunTime = 0,
+        pollWindowAverageRunTime = 0,
+        pollWindowMaxRunTime = 0
     }
     addThreadToTrace(parentScriptThread)
 
@@ -343,6 +391,16 @@ function script.setReferenceContext(context)
     functionsReferenceContext = context or {}
 end
 
+---Set rolling performance window size (in ticks/polls)
+---@param ticks number
+function script.setPerformanceWindowTicks(ticks)
+    if type(ticks) ~= "number" then
+        return
+    end
+    local clamped = math.max(1, math.floor(ticks))
+    performanceWindowTicks = clamped
+end
+
 ---Get a summary of all script threads and their statuses for debugging purposes
 function script.getStatus()
     local status = {}
@@ -372,6 +430,11 @@ function script.getStatus()
             lastRunTime = scriptThread.lastRunTime or 0,
             maxRunTime = scriptThread.maxRunTime or 0,
             runCount = scriptThread.runCount or 0,
+            windowRunTime = scriptThread.pollWindowTotalRunTime or 0,
+            windowAverageRunTime = scriptThread.pollWindowAverageRunTime or 0,
+            windowMaxRunTime = scriptThread.pollWindowMaxRunTime or 0,
+            windowSamples = scriptThread.pollRunWindow and #scriptThread.pollRunWindow or 0,
+            windowSize = performanceWindowTicks,
             averageRunTime = scriptThread.runCount and scriptThread.runCount > 0 and
                 (scriptThread.totalRunTime or 0) / scriptThread.runCount or 0
         })
