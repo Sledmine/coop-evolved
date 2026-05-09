@@ -1,5 +1,6 @@
 api_version = "1.12.0.0"
-DebugMode = false
+DebugMode = true
+DebugPerformance = true
 IsLevelDebugMode = false
 require "luna"
 
@@ -25,8 +26,14 @@ local utils = require "coop.utils"
 require "coop.gameplay.utils"
 
 local script = require "script"
+local performance = require "performance"
 local hsc = require "hsc"
 local hscDoc = require "hscDoc"
+
+-- Print each profiler snapshot to console when DebugPerformance is enabled
+if DebugPerformance then
+    performance.onSnapshotRefresh = performance.printSnapshot
+end
 
 local concat = table.concat
 
@@ -465,6 +472,8 @@ function OnGameEnd()
 end
 
 function OnTick()
+    local tickStart
+    if DebugPerformance then tickStart = os.clock() end
     script.poll()
     for objectId in pairs(blam.getObjects()) do
         local object = blam.object(get_object(objectId))
@@ -491,6 +500,9 @@ function OnTick()
                 end
             end
         end
+    end
+    if DebugPerformance then
+        performance.tick(os.clock() - tickStart)
     end
 end
 

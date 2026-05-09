@@ -157,3 +157,21 @@ end
 function Engine.userInterface.playSound(soundPath)
     cprint("Should be playing sound: " .. soundPath)
 end
+
+-- Chimera compatibility shim for server-side rendering
+-- On the server there is no renderer, so draw_text falls back to console output.
+Balltze.chimera = Balltze.chimera or {}
+
+---Print text to console (server-side replacement for chimera draw_text).
+---The positional / font / alignment / color arguments are accepted but ignored so
+---call-sites that target both client and server do not need to branch.
+---@param text string
+---@param left? number
+---@param top? number
+---@param right? number
+---@param bottom? number
+---@param font? string
+---@param align? string
+function Balltze.chimera.draw_text(text, left, top, right, bottom, font, align, ...)
+    cprint(text)
+end

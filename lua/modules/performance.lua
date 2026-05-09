@@ -155,10 +155,23 @@ local function buildSnapshotThreads(currentThreads)
     return snapshotThreads
 end
 
+-- ---------------------------------------------------------------------------
+-- Public module
+-- ---------------------------------------------------------------------------
+local performance = {}
+
+---Optional callback invoked every time a new snapshot is built.
+---Signature: function(snapshotThreads: table)
+---On the server set this to `performance.printSnapshot` to log each snapshot.
+performance.onSnapshotRefresh = nil
+
 local function refreshScriptSnapshot(currentThreads)
     profilerState.snapshot.threads = buildSnapshotThreads(currentThreads)
     profilerState.snapshot.period = profilerState.snapshot.period + 1
     profilerState.snapshot.ticks = 0
+    if performance.onSnapshotRefresh then
+        performance.onSnapshotRefresh(profilerState.snapshot.threads)
+    end
 end
 
 local function tickSnapshotWindow(currentThreads)
@@ -166,6 +179,67 @@ local function tickSnapshotWindow(currentThreads)
     if profilerState.snapshot.period == 0 or profilerState.snapshot.ticks >= profileWindowTicks then
         refreshScriptSnapshot(currentThreads)
     end
+end
+
+---Update rolling windows and advance the snapshot window for one game tick.
+---Pass `elapsedTime` (seconds) to record the tick wall-clock time in DebugTimes.
+---Called by the client's Balltze tick subscriber and by the server's OnTick.
+---@param elapsedTime? number
+function performance.tick(elapsedTime)
+    if elapsedTime then
+        DebugTimes.tickTime = elapsedTime
+    end
+    local currentThreads = getCurrentScriptThreads()
+    updateThreadWindows(currentThreads)
+    tickSnapshotWindow(currentThreads)
+end
+
+---Return the current frozen snapshot table.
+---@return {threads: table[], ticks: number, period: number}
+function performance.getSnapshot()
+    return profilerState.snapshot
+end
+
+---Return the display name for a script thread.
+---@param scriptThread table
+---@return string
+function performance.getThreadName(scriptThread)
+    return getScriptThreadName(scriptThread)
+end
+
+---Print the current (or supplied) snapshot to the console via Balltze.chimera.draw_text.
+---Compatible with both client (on-screen) and server (console via balltzeCompat shim).
+---@param snapshotThreads? table[]
+function performance.printSnapshot(snapshotThreads)
+    snapshotThreads = snapshotThreads or profilerState.snapshot.threads
+    local drawText = Balltze.chimera.draw_text
+    drawText(string.format("[Profiler] scriptThreads: %d | window: %d ticks | snapshot #%d",
+        #snapshotThreads, profileWindowTicks, profilerState.snapshot.period))
+    local slowest = snapshotThreads[1]
+    if slowest then
+        drawText(string.format("  slowest(avg): %s | %.3f ms",
+            getScriptThreadName(slowest),
+            (slowest.windowAverageRunTime or 0) * 1000))
+    end
+    for _, t in ipairs(snapshotThreads) do
+        drawText(string.format(
+            "  %s | type %s | wAvg %.3f ms | wMax %.3f ms | last %.3f ms | total %.3f ms | runs %d",
+            getScriptThreadName(t),
+            tostring(t.type or "unknown"),
+            (t.windowAverageRunTime or 0) * 1000,
+            (t.windowMaxRunTime or 0) * 1000,
+            (t.lastRunTime or 0) * 1000,
+            (t.totalRunTime or 0) * 1000,
+            t.runCount or 0))
+    end
+end
+
+-- ---------------------------------------------------------------------------
+-- Client-only: Balltze event subscribers (skipped on server where Balltze.event
+-- does not exist)
+-- ---------------------------------------------------------------------------
+if not (balltze and balltze.event) then
+    return performance
 end
 
 balltze.event.tick.subscribe(function(event)
@@ -176,13 +250,7 @@ balltze.event.tick.subscribe(function(event)
         end
         OnTick(event)
         if DebugPerformance then
-            local endTime = os.clock()
-            local elapsedTime = endTime - startTime
-            DebugTimes.tickTime = elapsedTime
-
-            local currentThreads = getCurrentScriptThreads()
-            updateThreadWindows(currentThreads)
-            tickSnapshotWindow(currentThreads)
+            performance.tick(os.clock() - startTime)
         else
             profilerState.snapshot.ticks = 0
         end
@@ -295,3 +363,5 @@ balltze.event.frame.subscribe(function(event)
         end
     end
 end)
+
+return performance
