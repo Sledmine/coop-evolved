@@ -112,18 +112,6 @@ local play_music_b30_031_alt = false
 local play_music_b30_032 = false
 local play_music_b30_032_alt = false
 
-local function isUnitInsidePelican(unit, vehicle)
-    local isInside = false
-    -- Loop trough all pelican seats
-    for _, seat in ipairs(constants.seats.pelican) do
-        if hsc.vehicle_test_seat(vehicle, seat, unit) then
-            isInside = true
-            break
-        end
-    end
-    return isInside
-end
-
 function b30.player0(call, sleep)
     return hsc.unit(hsc.list_get(hsc.players(), 0))
 end
@@ -1353,35 +1341,18 @@ function b30.obj_shafta_goal(call, sleep)
     hsc.object_teleport("extraction_pelican", "extraction_pelican_flag_1")
     hsc.recording_play_and_hover("extraction_pelican", "extraction_pelican_1")
     sleep(hsc.recording_time("extraction_pelican"))
+
     -- TODO This might break if there are more players than seats in the pelican, add new pelican
     local allPlayersMustBeInPelican = hsc.game_is_cooperative()
-
     -- Show timer only if all players must be in pelican at extraction
     if allPlayersMustBeInPelican then
-        hsc.hud_set_timer_position(0, 5, "bottom_right")
-        hsc.hud_set_timer_time(0, secondsForWaitingPlayersInPelican)
-        hsc.hud_set_timer_warning_time(1, 0)
-        hsc.show_hud_timer(true)
+        startPelicanTimer()
     end
-    sleep(function()
-        local result = false
-        for i = 0, getPlayerCount() - 1 do
-            local playerUnit = getPlayerUnit(i)
-            if allPlayersMustBeInPelican then
-                if not isUnitInsidePelican(playerUnit, "extraction_pelican") then
-                    result = false
-                    break
-                else
-                    result = true
-                end
-            else
-                if isUnitInsidePelican(playerUnit, "extraction_pelican") then
-                    return true
-                end
-            end
-        end
-        return result
-    end, 1, not allPlayersMustBeInPelican and 0 or ticksForPelicanPlayerWait)
+    local targetPelican = "extraction_pelican"
+    sleep(function ()
+        return waitForPlayersInPelican(targetPelican, allPlayersMustBeInPelican)
+    end, 1, not allPlayersMustBeInPelican and 0 or constants.ticksForPelicanPlayerWait)
+
     sleep(30)
     hsc.show_hud_timer(false)
     play_music_b30_06 = false

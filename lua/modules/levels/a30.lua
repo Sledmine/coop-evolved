@@ -7,6 +7,7 @@ local easy = "easy"
 local normal = "normal"
 local hard = "hard"
 local impossible = "impossible"
+local constants = require "coop.constants"
 
 local a30 = {}
 
@@ -760,7 +761,8 @@ function a30.gotohell_beatch(call, sleep)
         hsc.player_enable_input(true)
     end
 end
-script.continuous(a30.gotohell_beatch)
+-- Disable this, does not make sense (why Bungie, why?)
+--script.continuous(a30.gotohell_beatch)
 
 function a30.tutorial_sniper(call, sleep)
     if hsc.game_is_cooperative() or not (hsc.game_difficulty_get() == normal) or
@@ -845,30 +847,9 @@ function a30.mission_extraction_cliff(call, sleep)
     hsc.unit_set_enterable_by_player("foehammer_cliff", true)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a30\\a30_1141_cortana"))
     hsc.sound_impulse_start("sound\\dialog\\a30\\a30_extract_050_pilot", "none", 1)
-    global_timer = hsc.game_time() + delay_lost
 
-    if hsc.game_is_cooperative() then
-        sleep(function()
-            return hsc.vehicle_test_seat_list("foehammer_cliff", "p-riderlf", hsc.players()) or
-                       hsc.vehicle_test_seat_list("foehammer_cliff", "p-riderrf", hsc.players()) or
-                       global_timer < hsc.game_time()
+    waitForBoardingPelican("foehammer_cliff")
 
-        end, 1, delay_lost)
-    else
-        sleep(function()
-            return hsc.vehicle_test_seat_list("foehammer_cliff", "p-riderlf", hsc.players()) or
-                       hsc.vehicle_test_seat_list("foehammer_cliff", "p-riderrf", hsc.players()) or
-                       global_timer < hsc.game_time()
-
-        end, 1, delay_lost)
-    end
-    hsc.deactivate_team_nav_point_object("player", "foehammer_cliff")
-    hsc.player_enable_input(false)
-    hsc.fade_out(0, 0, 0, 15)
-    sleep(30)
-    hsc.ai_erase_all()
-    hsc.vehicle_load_magic("foehammer_cliff", "p-riderlf", call(a30.player0))
-    hsc.vehicle_load_magic("foehammer_cliff", "p-riderrf", call(a30.player1))
     if call(a30.cinematic_skip_start) then
         call(a30.mission_extraction_cliff_skip)
     end
@@ -937,30 +918,9 @@ function a30.mission_extraction_rubble(call, sleep)
     hsc.unit_set_enterable_by_player("foehammer_rubble", true)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a30\\a30_1141_cortana"))
     hsc.sound_impulse_start("sound\\dialog\\a30\\a30_extract_050_pilot", "none", 1)
-    global_timer = hsc.game_time() + delay_lost
 
-    if hsc.game_is_cooperative() then
-        sleep(function()
-            return hsc.vehicle_test_seat_list("foehammer_rubble", "p-riderlf", hsc.players()) or
-                       hsc.vehicle_test_seat_list("foehammer_rubble", "p-riderrf", hsc.players()) or
-                       global_timer < hsc.game_time()
+    waitForBoardingPelican("foehammer_rubble")
 
-        end, 1, delay_lost)
-    else
-        sleep(function()
-            return hsc.vehicle_test_seat_list("foehammer_rubble", "p-riderlf", hsc.players()) or
-                       hsc.vehicle_test_seat_list("foehammer_rubble", "p-riderrf", hsc.players()) or
-                       global_timer < hsc.game_time()
-
-        end, 1, delay_lost)
-    end
-    hsc.deactivate_team_nav_point_object("player", "foehammer_rubble")
-    hsc.player_enable_input(false)
-    hsc.fade_out(0, 0, 0, 15)
-    sleep(30)
-    hsc.ai_erase_all()
-    hsc.vehicle_load_magic("foehammer_rubble", "p-riderlf", call(a30.player0))
-    hsc.vehicle_load_magic("foehammer_rubble", "p-riderrf", call(a30.player1))
     if call(a30.cinematic_skip_start) then
         call(a30.mission_extraction_rubble_skip)
     end
@@ -1029,30 +989,9 @@ function a30.mission_extraction_river(call, sleep)
     hsc.unit_set_enterable_by_player("foehammer_river", true)
     sleep(hsc.sound_impulse_time("sound\\dialog\\a30\\a30_1141_cortana"))
     hsc.sound_impulse_start("sound\\dialog\\a30\\a30_extract_050_pilot", "none", 1)
-    global_timer = hsc.game_time() + delay_lost
 
-    if hsc.game_is_cooperative() then
-        sleep(function()
-            return hsc.vehicle_test_seat_list("foehammer_river", "p-riderlf", hsc.players()) or
-                       hsc.vehicle_test_seat_list("foehammer_river", "p-riderrf", hsc.players()) or
-                       global_timer < hsc.game_time()
+    waitForBoardingPelican("foehammer_river")
 
-        end, 1, delay_lost)
-    else
-        sleep(function()
-            return hsc.vehicle_test_seat_list("foehammer_river", "p-riderlf", hsc.players()) or
-                       hsc.vehicle_test_seat_list("foehammer_river", "p-riderrf", hsc.players()) or
-                       global_timer < hsc.game_time()
-
-        end, 1, delay_lost)
-    end
-    hsc.deactivate_team_nav_point_object("player", "foehammer_river")
-    hsc.player_enable_input(false)
-    hsc.fade_out(0, 0, 0, 15)
-    sleep(30)
-    hsc.ai_erase_all()
-    hsc.vehicle_load_magic("foehammer_river", "p-riderlf", call(a30.player0))
-    hsc.vehicle_load_magic("foehammer_river", "p-riderrf", call(a30.player1))
     if call(a30.cinematic_skip_start) then
         call(a30.mission_extraction_river_skip)
     end
@@ -4155,5 +4094,22 @@ function a30.mission_killer(call, sleep)
     sleep(-1, a30.mission_river)
 end
 script.startup(a30.mission_killer)
+
+-- Debugging purposes 
+--script.startup(function(_, sleep)
+--    hsc.game_won = function ()
+--        
+--    end
+--    hsc.switch_bsp(1)
+--    
+--    teleportPlayersTo("foehammer_rubble_flag")
+--    sleep(10)
+--    local blam = require "blam"
+--    --blam.biped(get_dynamic_player()).x = -499
+--
+--    --blam.biped(get_dynamic_player()).y = 27.65
+--    --blam.biped(get_dynamic_player()).z = 67.06
+--    wake(a30.mission_extraction_rubble)
+--end)
 
 return a30
