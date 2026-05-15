@@ -90,7 +90,8 @@ function Balltze.logger.createLogger(name)
                     index = index + 1
                     return tostring(arg)
                 end)
-                cprint((os.date("%H:%M:%S") .. " [" .. name .. "] DEBUG - " .. formattedMessage), color.debug)
+                cprint((os.date("%H:%M:%S") .. " [" .. name .. "] DEBUG - " .. formattedMessage),
+                       color.debug)
             end
         end,
         info = function(self, message, ...)
@@ -101,7 +102,8 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            cprint((os.date("%H:%M:%S") .. " [" .. name .. "]  INFO - " .. formattedMessage), color.info)
+            cprint((os.date("%H:%M:%S") .. " [" .. name .. "]  INFO - " .. formattedMessage),
+                   color.info)
         end,
         warning = function(self, message, ...)
             local args = {...}
@@ -111,7 +113,8 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            cprint((os.date("%H:%M:%S") .. " [" .. name .. "]  WARN - " .. formattedMessage), color.warning)
+            cprint((os.date("%H:%M:%S") .. " [" .. name .. "]  WARN - " .. formattedMessage),
+                   color.warning)
         end,
         error = function(self, message, ...)
             local args = {...}
@@ -121,7 +124,8 @@ function Balltze.logger.createLogger(name)
                 index = index + 1
                 return tostring(arg)
             end)
-            cprint((os.date("%H:%M:%S") .. " [" .. name .. "] ERROR - " .. formattedMessage), color.error)
+            cprint((os.date("%H:%M:%S") .. " [" .. name .. "] ERROR - " .. formattedMessage),
+                   color.error)
         end,
         muteDebug = function(self, value)
             mute = value == true
@@ -174,4 +178,137 @@ Balltze.chimera = Balltze.chimera or {}
 ---@param align? string
 function Balltze.chimera.draw_text(text, left, top, right, bottom, font, align, ...)
     cprint(text)
+end
+
+-- ---------------------------------------------------------------------------
+-- SAPP → Balltze.event shims
+-- Exposes the same Balltze.event subscribe/dispatch API used by the client,
+-- backed by SAPP register_callback / set_callback under the hood.
+-- Only installed when running under SAPP (register_callback global exists).
+-- ---------------------------------------------------------------------------
+if type(register_callback) == "function" and type(cb) == "table" then
+    Balltze.event = Balltze.event or {}
+
+    ---Create a simple pub/sub event channel that propagates return values.
+    ---Subscribers receive an event table; the first non-nil return from any
+    ---subscriber is returned by _dispatch (supports multiple return values).
+    local function makeEventChannel()
+        local subscribers = {}
+        return {
+            subscribe = function(fn)
+                table.insert(subscribers, fn)
+            end,
+            _dispatch = function(event)
+                for _, fn in ipairs(subscribers) do
+                    local results = {fn(event)}
+                    if results[1] ~= nil then
+                        return table.unpack(results)
+                    end
+                end
+            end
+        }
+    end
+
+    -- Stubs for client-only HUD guard APIs used in frame subscribers.
+    -- On the server: no console, no menu widget, return a truthy sentinel for
+    -- get_dynamic_player so frame subscriber bodies are not skipped.
+    if type(console_is_open) ~= "function" then
+        console_is_open = function()
+            return false
+        end
+    end
+    if not Engine.userInterface.getRootWidget then
+        Engine.userInterface.getRootWidget = function()
+            return nil
+        end
+    end
+
+    -- frame: server has no renderer; we dispatch it once per tick (at end of
+    -- _BalltzeOnTick) so modules like performance.lua that subscribe to frame
+    -- events work on the server using the tick cadence.
+    if not Balltze.event.frame then
+        Balltze.event.frame = makeEventChannel()
+    end
+
+    -- tick
+    Balltze.event.tick = makeEventChannel()
+    function _BalltzeOnTick()
+        Balltze.event.tick._dispatch({time = "before"})
+        Balltze.event.tick._dispatch({time = "after"})
+        -- Drive frame subscribers on the server using tick cadence
+        Balltze.event.frame._dispatch({time = "before"})
+        Balltze.event.frame._dispatch({time = "after"})
+    end
+
+    -- mapLoad
+    Balltze.event.mapLoad = makeEventChannel()
+    function _BalltzeOnMapLoad()
+        Balltze.event.mapLoad._dispatch({time = "before"})
+        Balltze.event.mapLoad._dispatch({time = "after"})
+    end
+
+    -- playerJoin
+    Balltze.event.playerJoin = makeEventChannel()
+    function _BalltzeOnPlayerJoin(playerIndex)
+        Balltze.event.playerJoin._dispatch({time = "before", playerIndex = playerIndex})
+        Balltze.event.playerJoin._dispatch({time = "after", playerIndex = playerIndex})
+    end
+
+    -- playerLeave
+    Balltze.event.playerLeave = makeEventChannel()
+    function _BalltzeOnPlayerLeave(playerIndex)
+        Balltze.event.playerLeave._dispatch({time = "before", playerIndex = playerIndex})
+        Balltze.event.playerLeave._dispatch({time = "after", playerIndex = playerIndex})
+    end
+
+    -- playerDeath
+    Balltze.event.playerDeath = makeEventChannel()
+    function _BalltzeOnPlayerDead(deadPlayerIndex)
+        Balltze.event.playerDeath._dispatch({time = "before", playerIndex = deadPlayerIndex})
+        Balltze.event.playerDeath._dispatch({time = "after", playerIndex = deadPlayerIndex})
+    end
+
+    -- objectSpawn (return value forwarded: SAPP uses it to swap spawn tag)
+    Balltze.event.objectSpawn = makeEventChannel()
+    function _BalltzeOnObjectSpawn(playerIndex, tagId, parentId, objectId)
+        return Balltze.event.objectSpawn._dispatch({
+            time = "before",
+            playerIndex = playerIndex,
+            tagId = tagId,
+            parentId = parentId,
+            objectId = objectId
+        })
+    end
+
+    -- gameEnd
+    Balltze.event.gameEnd = makeEventChannel()
+    function _BalltzeOnGameEnd()
+        Balltze.event.gameEnd._dispatch({time = "before"})
+        Balltze.event.gameEnd._dispatch({time = "after"})
+    end
+
+    -- rconMessage (return value forwarded: false = block message)
+    Balltze.event.rconMessage = makeEventChannel()
+    function _BalltzeOnRconMessage(playerIndex, message, password)
+        return Balltze.event.rconMessage._dispatch({
+            time = "before",
+            playerIndex = playerIndex,
+            message = message,
+            password = password
+        })
+    end
+
+    ---Register all SAPP callbacks. Must be called after all event subscribers
+    ---have been set up (e.g. at the end of OnScriptLoad) because SAPP requires
+    ---register_callback / set_callback to run after the script has finished loading.
+    function Balltze.event.registerSappCallbacks()
+        register_callback(cb["EVENT_TICK"], "_BalltzeOnTick")
+        set_callback("map load", "_BalltzeOnMapLoad")
+        register_callback(cb["EVENT_JOIN"], "_BalltzeOnPlayerJoin")
+        register_callback(cb["EVENT_LEAVE"], "_BalltzeOnPlayerLeave")
+        register_callback(cb["EVENT_DIE"], "_BalltzeOnPlayerDead")
+        register_callback(cb["EVENT_OBJECT_SPAWN"], "_BalltzeOnObjectSpawn")
+        register_callback(cb["EVENT_GAME_END"], "_BalltzeOnGameEnd")
+        set_callback("rcon message", "_BalltzeOnRconMessage")
+    end
 end
