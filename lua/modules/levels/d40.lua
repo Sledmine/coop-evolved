@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
 local wake = require"script".wake
@@ -1823,7 +1824,8 @@ function d40.trench_jeep_test(call, sleep)
         --call(d40.d40_360_cortana)
     end
 end
-script.continuous(d40.trench_jeep_test)
+-- No need to run this on multiplayer, we don't care about the "jeep"
+--script.continuous(d40.trench_jeep_test)
 
 function d40.timer_begin(call, sleep)
     if impossible == hsc.game_difficulty_get() then
@@ -4373,6 +4375,7 @@ function d40.enc1_4_manager(call, sleep)
     if hsc.ai_living_count("enc1_4_flood/infs") < min_infection_spawn then
         hsc.ai_place("enc1_4_flood/infs")
     end
+    sleep(30)
 end
 script.continuous(d40.enc1_4_manager)
 
