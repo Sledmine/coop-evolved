@@ -64,9 +64,11 @@ local function findScriptThreadByThread(thread)
     return nil
 end
 
+---@param scriptThread ScriptThread
+---@return ScriptThread?
 local function getBottomMostScriptChild(scriptThread)
     local currentScriptThread = scriptThread
-    while currentScriptThread.child do
+    while currentScriptThread and currentScriptThread.child do
         currentScriptThread = currentScriptThread.child
     end
     return currentScriptThread
@@ -136,21 +138,37 @@ function script.sleep(...)
         local ticks = args[1]
         local scriptFunc = args[2]
         local scriptThread = findScriptThreadByFunc(scriptFunc)
-        if scriptThread then
-            local _, callScriptThread = script.thread(function()
-                sleepThreadFor(ticks)
-            end)
-            callScriptThread.parent = scriptThread
-            scriptThread.child = callScriptThread
-            callScriptThread.isSleep = true
-            -- else
+        if not scriptThread then
             -- logger:warning("Tried to sleep a script that does not exist.")
+            -- error("Cannot sleep for a function that does not exist", 2)
+            return
         end
+        if scriptThread.child then
+            -- TODO This scenario might be conflicting, we need to research how HSC handles this
+            -- as what happens when a thread that is already waiting for another child thread,
+            -- is being put to sleep again with this method?
+            -- Do they just ignore the new sleep call or do they replace the existing child
+            -- thread with the new sleep thread? 
+
+            -- As for now usual campaign scenarios imply to "kill" the thread
+            -- Remove child thread if it exists, we are replacing it with a new sleep thread
+            removeThreadFromTrace(scriptThread.child)
+            -- logger:warning("Script thread for function \"{}\" already has a child, removing it and replacing with new sleep thread", scriptFunc)
+        end
+        if ticks == -1 then
+            logger:debug("Sleeping script thread for function \"{}\" until woken up", scriptFunc)
+        end
+        local _, sleepThread = script.thread(function()
+            sleepThreadFor(ticks)
+        end)
+        sleepThread.parent = scriptThread
+        scriptThread.child = sleepThread
+        sleepThread.isSleep = true
         return
     end
 
     -- Normal case: create a child thread that sleeps based on args
-    local _, callScriptThread = script.thread(function()
+    local _, sleepThread = script.thread(function()
         if type(args[1]) == "number" then
             local ticks = args[1]
             sleepThreadFor(ticks)
@@ -160,9 +178,9 @@ function script.sleep(...)
             error("Invalid sleep arguments")
         end
     end)
-    callScriptThread.isSleep = true
-    callScriptThread.parent = currentScriptThread
-    currentScriptThread.child = callScriptThread
+    sleepThread.isSleep = true
+    sleepThread.parent = currentScriptThread
+    currentScriptThread.child = sleepThread
     return coroutine.yield()
 end
 
@@ -318,11 +336,15 @@ end
 function script.wake(func)
     local foundScript = findScriptThreadByFunc(func)
     if foundScript then
+        logger:debug("Waking script thread for function.")
         local child = getBottomMostScriptChild(foundScript)
-        if child.isSleep then
+        if child and child.isSleep then
+            -- Technically this is a sleep thread, so we can just remove it from the trace
+            -- and let the parent thread continue running
             removeThreadFromTrace(child)
         end
     else
+        logger:error("Tried to wake a script that does not exist. Creating a new thread for it.")
         script.thread(func)
     end
 end
@@ -356,8 +378,8 @@ function script.getStatus()
                 break
             end
         end
-        local referenceFile = functionInfo.short_src .. ":" .. functionInfo.linedefined ..
-                            " (" .. (referenceName or "unknown") .. ")"
+        local referenceFile = functionInfo.short_src .. ":" .. functionInfo.linedefined .. " (" ..
+                                  (referenceName or "unknown") .. ")"
         table.insert(status, {
             index = i,
             type = scriptThread.type,
