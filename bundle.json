@@ -1,7 +1,7 @@
 {
     "target": "lua53",
     "output": "dist/coop_evolved.lua",
-    "main": "lua/coop_evolved",
+    "main": "coop_evolved",
     "include": [
         "lua",
         "lua/modules"
