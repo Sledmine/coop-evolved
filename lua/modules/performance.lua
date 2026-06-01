@@ -222,21 +222,6 @@ end
 -- On the server the frame channel is a no-op shim (subscribers are never called),
 -- so the client-specific API calls inside are unreachable and safe.
 
-balltze.event.tick.subscribe(function(event)
-    if event.time == "before" then
-        local startTime
-        if DebugPerformance then
-            startTime = os.clock()
-        end
-        OnTick(event)
-        if DebugPerformance then
-            performance.tick(os.clock() - startTime)
-        else
-            profilerState.snapshot.ticks = 0
-        end
-    end
-end)
-
 balltze.event.frame.subscribe(function(event)
     if event.time == "before" then
         if DebugMode then

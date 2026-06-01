@@ -1,6 +1,6 @@
 api_version = "1.12.0.0"
-DebugMode = true
-DebugPerformance = true
+DebugMode = false
+DebugPerformance = false
 IsLevelDebugMode = false
 require "luna"
 
@@ -26,12 +26,13 @@ local utils = require "coop.utils"
 require "coop.gameplay.utils"
 
 local script = require "script"
-local performance = require "performance"
+local performance
 local hsc = require "hsc"
 local hscDoc = require "hscDoc"
 
 -- Print each profiler snapshot to console when DebugPerformance is enabled
 if DebugPerformance then
+    performance = require "performance"
     performance.onSnapshotRefresh = performance.printSnapshot
 end
 
@@ -538,6 +539,12 @@ function OnScriptLoad()
 
     -- Block Team Changing
     execute_script("block_tc 1")
+
+    Balltze.event.tick.subscribe(function(event)
+        if event.time == "before" then
+            OnTick()
+        end
+    end)
 
     Balltze.event.playerJoin.subscribe(function(event)
         if event.time == "before" then
