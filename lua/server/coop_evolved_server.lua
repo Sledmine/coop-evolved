@@ -41,11 +41,7 @@ logger = Balltze.logger.createLogger("Coop Evolved Server")
 
 ---@type table<number, number>
 CustomPlayerBipeds = {}
-CoopServerState = {
-    remainingVotes = 0,
-    difficulty = coop.difficulties[1],
-    playersReady = {}
-}
+CoopServerState = {remainingVotes = 0, difficulty = coop.difficulties[1], playersReady = {}}
 RunCinematics = false
 IsCoopStarted = false
 IsVotingRequired = true
@@ -192,7 +188,8 @@ local function createHscPacket(functionName, args)
     local funcMeta = table.find(hscDoc.functions, function(v, k)
         return v.funcName == functionName
     end)
-    logger:debug("Creating HSC packet for function: \"{}\" with args: {}", functionName, inspect(args))
+    logger:debug("Creating HSC packet for function: \"{}\" with args: {}", functionName,
+                 inspect(args))
     if not funcMeta then
         error("Function " .. functionName .. " not found in hscDoc")
     end
@@ -201,7 +198,7 @@ local function createHscPacket(functionName, args)
         if argType == "object" then
             local objectIndex = getObjectIndexByName(argValue)
             if objectIndex then
-                --logger:debug("Value {} is an object, converting to object index!", argValue)
+                -- logger:debug("Value {} is an object, converting to object index!", argValue)
                 return objectIndex
             end
         elseif argType == "tag" then
@@ -209,7 +206,7 @@ local function createHscPacket(functionName, args)
             if not argIsSubExpression then
                 local tagEntry = blam.getTag(argValue, tagType)
                 if tagEntry then
-                    --logger:debug("Value {} is a tag, converting to tag handle!", argValue)
+                    -- logger:debug("Value {} is a tag, converting to tag handle!", argValue)
                     return tagEntry.id
                 end
             end
@@ -226,7 +223,7 @@ local function createHscPacket(functionName, args)
             logger:error("Failed to convert object name index to integer!")
             return
         end
-        --logger:debug("Object name index: {}", objectNameIndex)
+        -- logger:debug("Object name index: {}", objectNameIndex)
         local scenario = blam.scenario(0)
         assert(scenario, "Failed to load scenario tag")
 
@@ -234,12 +231,12 @@ local function createHscPacket(functionName, args)
             local object = blam.getObject(objectId)
             if object and object.nameIndex == objectNameIndex - 1 then
                 if object.class == objectClasses.biped then
-                    --logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
+                    -- logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
                     return
                 elseif object.class == objectClasses.vehicle then
-                    --logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
+                    -- logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
                 elseif object.class == objectClasses.weapon then
-                    --logger:debug("Object {} is a weapon, not syncing!", objectNameIndex)
+                    -- logger:debug("Object {} is a weapon, not syncing!", objectNameIndex)
                     return
                 end
             end
@@ -324,9 +321,9 @@ function StartCoop()
 
     -- Load level script
     if not IsLevelDebugMode then
-        script.create(function (_, sleep)
+        script.create(function(_, sleep)
             -- Wait for all players to spawn
-            sleep(function ()
+            sleep(function()
                 sleep(utils.secondsToTicks(1))
                 say_all("Waiting for all players to spawn...")
                 local spawnedPlayers = 0
@@ -345,6 +342,9 @@ function StartCoop()
                 logger:warning("Error loading level script: {}", result)
             else
                 logger:debug("Loaded level script for \"{}\"", levelName)
+                if DebugPerformance then
+                    script.setReferenceContext(result)
+                end
             end
             sleep(utils.secondsToTicks(3))
             isStarterWeaponsEnabled = false
@@ -353,9 +353,9 @@ function StartCoop()
 
     local lastBspIndex = 0
     -- Ensure to find new spawn points when the BSP index changes
-    script.continuous(function (_, sleep)
+    script.continuous(function(_, sleep)
         currentBspIndex = lastBspIndex
-        sleep(function ()
+        sleep(function()
             ---@diagnostic disable-next-line: undefined-field
             currentBspIndex = hsc.structure_bsp_index()
             return currentBspIndex ~= lastBspIndex
@@ -455,12 +455,6 @@ function OnCommand()
 end
 
 function OnRconMessage(playerIndex, message, password)
-    -- TODO Add a proper command handling for this
-    --if message:lower() == "start_coop" then
-    --    StartCoop()
-    --    coop.enableSpawn(true)
-    --    return false
-    --end
     return blam.rcon.handle(message, password, playerIndex)
 end
 
@@ -473,7 +467,9 @@ end
 
 function OnTick()
     local tickStart
-    if DebugPerformance then tickStart = os.clock() end
+    if DebugPerformance then
+        tickStart = os.clock()
+    end
     script.poll()
     for objectId in pairs(blam.getObjects()) do
         local object = blam.object(get_object(objectId))
@@ -540,19 +536,53 @@ function OnScriptLoad()
 
     set_timer(constants.findNewSpawnEveryMillisecs, "FindNewSpawn")
 
-    set_callback("map load", "OnMapLoad")
-    set_callback("rcon message", "OnRconMessage")
-
     -- Block Team Changing
     execute_script("block_tc 1")
 
-    register_callback(cb["EVENT_JOIN"], "OnPlayerJoin")
-    register_callback(cb["EVENT_LEAVE"], "OnPlayerLeave")
-    register_callback(cb["EVENT_DIE"], "OnPlayerDead")
-    register_callback(cb["EVENT_OBJECT_SPAWN"], "OnObjectSpawn")
-    -- register_callback(cb["EVENT_SPAWN"], "OnPlayerSpawn")
-    register_callback(cb["EVENT_GAME_END"], "OnGameEnd")
-    register_callback(cb["EVENT_TICK"], "OnTick")
+    Balltze.event.playerJoin.subscribe(function(event)
+        if event.time == "before" then
+            OnPlayerJoin(event.playerIndex)
+        end
+    end)
+
+    Balltze.event.playerLeave.subscribe(function(event)
+        if event.time == "before" then
+            OnPlayerLeave(event.playerIndex)
+        end
+    end)
+
+    Balltze.event.playerDeath.subscribe(function(event)
+        if event.time == "before" then
+            OnPlayerDead(event.playerIndex)
+        end
+    end)
+
+    Balltze.event.objectSpawn.subscribe(function(event)
+        if event.time == "before" then
+            return OnObjectSpawn(event.playerIndex, event.tagId, event.parentId, event.objectId)
+        end
+    end)
+
+    Balltze.event.gameEnd.subscribe(function(event)
+        if event.time == "before" then
+            OnGameEnd()
+        end
+    end)
+
+    Balltze.event.rconMessage.subscribe(function(event)
+        if event.time == "before" then
+            return OnRconMessage(event.playerIndex, event.message, event.password)
+        end
+    end)
+
+    Balltze.event.mapLoad.subscribe(function(event)
+        if event.time == "before" then
+            OnMapLoad()
+        end
+    end)
+
+    -- Register all SAPP callbacks now that all subscribers are in place
+    Balltze.event.registerSappCallbacks()
 
     blam.rcon.patch()
 end
