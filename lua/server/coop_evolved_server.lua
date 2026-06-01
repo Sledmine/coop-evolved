@@ -8,6 +8,9 @@ require "luna"
 require "compat53"
 require "balltzeCompat"
 
+local engine = Engine
+local balltze = Balltze
+
 local blam = require "blam"
 local tagClasses = blam.tagClasses
 local objectClasses = blam.objectClasses
@@ -283,7 +286,7 @@ function GetReadyForCoop(playerIndex)
         local isStaticCameraAvailable = false
         local cameraName
         for mapPattern, camera in pairs(introCameras) do
-            if map:includes(mapPattern) then
+            if engine.map.getCurrentMapHeader().name:includes(mapPattern) then
                 isStaticCameraAvailable = true
                 logger:warning("Using static camera: {}", camera)
                 cameraName = camera
@@ -291,7 +294,7 @@ function GetReadyForCoop(playerIndex)
             end
         end
         if not isStaticCameraAvailable then
-            local mapPrefix = map:split("_")[1]
+            local mapPrefix = engine.map.getCurrentMapHeader().name:split("_")[1]
             local customCameraName = mapPrefix .. "_start"
             logger:warning("Using custom camera name: {}", customCameraName)
             cameraName = customCameraName
@@ -337,7 +340,7 @@ function StartCoop()
             end)
             hsc.print("Starting Coop Evolved!")
             IsCoopStarted = true
-            local levelName = map:split("_coop")[1]
+            local levelName = engine.map.getCurrentMapHeader().name:split("_coop")[1]
             local ok, result = pcall(require, "levels." .. levelName)
             if not ok then
                 logger:warning("Error loading level script: {}", result)
@@ -384,7 +387,7 @@ function OnObjectSpawn(playerIndex, tagId, parentId, objectId)
                 return true
             end
             for mapPattern, weapons in pairs(starterWeapons) do
-                if map:includes(mapPattern) then
+                if engine.map.getCurrentMapHeader().name:includes(mapPattern) then
                     -- TODO Add a way to detect secondary weapon
                     local weapon = weapons[1]
                     if isNull(weapon) then
@@ -411,13 +414,13 @@ function OnPlayerJoin(playerIndex)
     -- is the value of 1 and equals to team "player" in campaign, allowing scripts and maps to
     -- work as expected. Yei!
     --
-    -- execute_script("st " .. playerIndex .. " blue")
+    -- engine.hsc.executeScript("st " .. playerIndex .. " blue")
     --
     -- This is future me, it turns out ai_alleigance does not work in multiplayer, so back to
     -- force encounters to use team "red"... :(
 
     -- Set players on the same team for coop purposes
-    execute_script("st " .. playerIndex .. " red")
+    engine.hsc.executeScript("st " .. playerIndex .. " red")
 
     if not IsCoopStarted then
 
@@ -463,7 +466,7 @@ function OnGameEnd()
     IsCoopStarted = false
     CoopServerState = {remainingVotes = 0, difficulty = coop.difficulties[1], playersReady = {}}
     -- Unload level script
-    package.loaded["levels." .. map:split("_coop")[1]] = nil
+    package.loaded["levels." .. engine.map.getCurrentMapHeader().name:split("_coop")[1]] = nil
 end
 
 function OnTick()
@@ -507,7 +510,7 @@ function OnMapLoad()
     constants.get()
 
     CoopServerState.difficulty = coop.difficulties[blam.getGameDifficultyIndex()]
-    map = get_var(0, "$map")
+
     isStarterWeaponsEnabled = true
     -- Fix biped that do not belong to a an AI encounter like the gun from the spirit dropship
     -- EXPERIMENTAL might not work or break stuff
@@ -521,8 +524,7 @@ function OnMapLoad()
     script.cleanup()
 end
 
-function OnScriptLoad()
-    map = get_var(0, "$map")
+function PluginLoad()
     logger:muteDebug(not DebugMode)
 
     AvailableBipeds = coop.getAvailableBipeds()
@@ -538,7 +540,7 @@ function OnScriptLoad()
     set_timer(constants.findNewSpawnEveryMillisecs, "FindNewSpawn")
 
     -- Block Team Changing
-    execute_script("block_tc 1")
+    engine.hsc.executeScript("block_tc 1")
 
     Balltze.event.tick.subscribe(function(event)
         if event.time == "before" then
@@ -594,7 +596,7 @@ function OnScriptLoad()
     blam.rcon.patch()
 end
 
-function OnScriptUnload()
+function PluginUnload()
     blam.rcon.unpatch()
 end
 

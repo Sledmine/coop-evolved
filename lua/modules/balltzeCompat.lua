@@ -3,7 +3,16 @@
 local blam = require "blam"
 local luna = require "luna"
 Balltze = Balltze or {logger = {}}
-Engine = Engine or {core = {}, hsc = {}, tag = {}, netgame = {}, gameState = {}, userInterface = {}}
+Engine = Engine or
+             {
+        core = {},
+        hsc = {},
+        tag = {},
+        netgame = {},
+        gameState = {},
+        userInterface = {},
+        map = {}
+    }
 
 function Engine.tag.getTag(tagHandleOrPath, tagClass)
     ---@diagnostic disable-next-line: param-type-mismatch
@@ -311,4 +320,25 @@ if type(register_callback) == "function" and type(cb) == "table" then
         register_callback(cb["EVENT_GAME_END"], "_BalltzeOnGameEnd")
         set_callback("rcon message", "_BalltzeOnRconMessage")
     end
+end
+
+function OnScriptLoad()
+    PluginLoad()
+end
+
+function OnScriptUnload()
+    PluginUnload()
+end
+
+function Engine.map.getCurrentMapHeader()
+    return {
+        engineType = "custom",
+        fileSize = 0,
+        tagDataOffset = 0x40440000,
+        tagDataSize = 0,
+        name = get_var(0, "$map"),
+        build = "unknown",
+        gameType = "multiplayer",
+        crc32 = 0
+    }
 end
