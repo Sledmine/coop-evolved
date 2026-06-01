@@ -18,6 +18,7 @@ console_out = cprint
 
 -- Pre require structures for blam2 (This helps the bundler to include modules properly)
 require "structures.tag.vehicle"
+-- require "structures.tag.scenario"
 
 local isNull = blam.isNull
 local inspect = require "inspect"
@@ -186,18 +187,18 @@ end
 
 --- Create a packet string for an hsc function invocation
 ---@param functionName string
----@param args string[]
+---@param funcArgs string[]
 ---@return string | nil
-local function createHscPacket(functionName, args)
+local function createHscPacket(functionName, funcArgs)
     local funcMeta = table.find(hscDoc.functions, function(v, k)
         return v.funcName == functionName
     end)
     logger:debug("Creating HSC packet for function: \"{}\" with args: {}", functionName,
-                 inspect(args))
+                 inspect(funcArgs))
     if not funcMeta then
         error("Function " .. functionName .. " not found in hscDoc")
     end
-    local args = table.map(args, function(argValue, argIndex)
+    local args = table.map(funcArgs, function(argValue, argIndex)
         local argType, tagType = getArgType(funcMeta, argIndex)
         if argType == "object" then
             local objectIndex = getObjectIndexByName(argValue)
@@ -231,6 +232,20 @@ local function createHscPacket(functionName, args)
         local scenario = blam.scenario(0)
         assert(scenario, "Failed to load scenario tag")
 
+        -- FIXME Dirty hack to force default unit state
+        --local scenarioEntry = blam2.tag.findTag("", blam2.tag.groups.scenario) --[[@as MetaEngineScenarioTag]]
+        --assert(scenarioEntry)
+        --for vehicleElementIndex = 1, scenarioEntry.data.vehicles.count do
+        --    local vehicleElement = scenarioEntry.data.vehicles.elements[vehicleElementIndex]
+        --    if vehicleElement.name == objectNameIndex - 1 then
+        --        logger:warning("Forcing close state in vehicle \"{}\"", funcArgs[1])
+        --        script.thread(function (_, sleep)
+        --            sleep(30)
+        --            hsc.unit_close(funcArgs[1])
+        --        end)()
+        --    end
+        --end
+
         for objectId in pairs(blam.getObjects()) do
             local object = blam.getObject(objectId)
             if object and object.nameIndex == objectNameIndex - 1 then
@@ -245,19 +260,6 @@ local function createHscPacket(functionName, args)
                 end
             end
         end
-        -- for _, bipedEntry in pairs(scenario.bipeds) do
-        --    if bipedEntry.nameIndex == objectNameIndex - 1 then
-        --        logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
-        --        return
-        --    end
-        -- end
-        -- TODO Add vehicle check
-        -- for _, vehicleEntry in pairs(scenario.vehicles) do
-        --    if vehicleEntry.nameIndex == objectNameIndex - 1 then
-        --        logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
-        --        return
-        --    end
-        -- end
     end
 
     local packet = {packetPrefix .. funcMeta.hash, table.unpack(args)}
