@@ -344,7 +344,15 @@ function script.wake(func)
             removeThreadFromTrace(child)
         end
     else
-        logger:error("Tried to wake a script that does not exist. Creating a new thread for it.")
+        -- This somehow imitates how "dormant" scripts work in HSC
+        -- as all our scripts/threads can be started and sent to sleep independently
+        -- no need to differentiate dormant scripts, as they are basically threads just sleeping
+        -- until woken up
+
+        -- So we do not declare them as dormant as we do with "startup" and "continuous" scripts,
+        -- we just create a new thread for them when they are woken up
+
+        -- logger:error("Tried to wake a script that does not exist. Creating a new thread for it.")
         script.thread(func)
     end
 end
@@ -370,34 +378,37 @@ end
 function script.getStatus()
     local status = {}
     for i, scriptThread in ipairs(callTrace) do
-        local referenceName = tostring(scriptThread.func)
-        local functionInfo = debug.getinfo(scriptThread.func)
-        for name, func in pairs(functionsReferenceContext) do
-            if func == scriptThread.func then
-                referenceName = name
-                break
+        if not scriptThread.isSleep then
+            local referenceName = tostring(scriptThread.func)
+            local functionInfo = debug.getinfo(scriptThread.func)
+            for name, func in pairs(functionsReferenceContext) do
+                if func == scriptThread.func then
+                    referenceName = name
+                    break
+                end
             end
+            local referenceFile =
+                functionInfo.short_src .. ":" .. functionInfo.linedefined .. " (" ..
+                    (referenceName or "unknown") .. ")"
+            table.insert(status, {
+                index = i,
+                type = scriptThread.type,
+                isSleep = scriptThread.isSleep,
+                started = scriptThread.started,
+                func = scriptThread.func,
+                threadStatus = coroutine.status(scriptThread.thread),
+                parentFunc = scriptThread.parent and scriptThread.parent.func or nil,
+                childFunc = scriptThread.child and scriptThread.child.func or nil,
+                referenceName = referenceName,
+                referenceFile = referenceFile,
+                totalRunTime = scriptThread.totalRunTime or 0,
+                lastRunTime = scriptThread.lastRunTime or 0,
+                maxRunTime = scriptThread.maxRunTime or 0,
+                runCount = scriptThread.runCount or 0,
+                averageRunTime = scriptThread.runCount and scriptThread.runCount > 0 and
+                    (scriptThread.totalRunTime or 0) / scriptThread.runCount or 0
+            })
         end
-        local referenceFile = functionInfo.short_src .. ":" .. functionInfo.linedefined .. " (" ..
-                                  (referenceName or "unknown") .. ")"
-        table.insert(status, {
-            index = i,
-            type = scriptThread.type,
-            isSleep = scriptThread.isSleep,
-            started = scriptThread.started,
-            func = scriptThread.func,
-            threadStatus = coroutine.status(scriptThread.thread),
-            parentFunc = scriptThread.parent and scriptThread.parent.func or nil,
-            childFunc = scriptThread.child and scriptThread.child.func or nil,
-            referenceName = referenceName,
-            referenceFile = referenceFile,
-            totalRunTime = scriptThread.totalRunTime or 0,
-            lastRunTime = scriptThread.lastRunTime or 0,
-            maxRunTime = scriptThread.maxRunTime or 0,
-            runCount = scriptThread.runCount or 0,
-            averageRunTime = scriptThread.runCount and scriptThread.runCount > 0 and
-                (scriptThread.totalRunTime or 0) / scriptThread.runCount or 0
-        })
     end
     return status
 end
