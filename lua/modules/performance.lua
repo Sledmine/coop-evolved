@@ -223,8 +223,8 @@ end
 -- so the client-specific API calls inside are unreachable and safe.
 
 balltze.event.frame.subscribe(function(event)
-    if event.time == "before" then
-        if DebugMode then
+    if DebugLuaMemory then
+        if event.time == "before" then
             local font = "smaller"
             local align = "center"
             local drawText = balltze.chimera.draw_text
@@ -244,33 +244,33 @@ balltze.event.frame.subscribe(function(event)
 end)
 
 balltze.event.frame.subscribe(function(event)
-    if event.time == "before" then
-        local align = "left"
-        local drawText = balltze.chimera.draw_text
-        local scriptStatus = profilerState.snapshot.threads
-        local startTime
+    if DebugPerformance then
+        if event.time == "before" then
+            local align = "left"
+            local drawText = balltze.chimera.draw_text
+            local scriptStatus = profilerState.snapshot.threads
+            local startTime
 
-        -- Measure performance from here
-        if DebugPerformance then
-            startTime = os.clock()
-        end
+            -- Measure performance from here
+            if DebugPerformance then
+                startTime = os.clock()
+            end
 
-        -- Prevent drawing info in menus or when console is open
-        if console_is_open() then
-            return
-        end
+            -- Prevent drawing info in menus or when console is open
+            if console_is_open() then
+                return
+            end
 
-        local rootWidget = engine.userInterface.getRootWidget()
-        local isPlayerOnMenu = rootWidget ~= nil
-        if isPlayerOnMenu then
-            return
-        end
-        -- local player = get_dynamic_player()
-        -- if not player then
-        --    return
-        -- end
+            local rootWidget = engine.userInterface.getRootWidget()
+            local isPlayerOnMenu = rootWidget ~= nil
+            if isPlayerOnMenu then
+                return
+            end
+            -- local player = get_dynamic_player()
+            -- if not player then
+            --    return
+            -- end
 
-        if DebugPerformance then
             local endTime = os.clock()
             local elapsedTime = endTime - startTime
             DebugTimes.frameTime = elapsedTime
