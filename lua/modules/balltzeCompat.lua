@@ -14,6 +14,14 @@ Engine = Engine or
         map = {}
     }
 
+-- Override cprint to make it faster! (original cprint is very slow)
+function cprint(message, colorId)
+    if colorId then
+        message = "\x1b[1;" .. colorId .. "m" .. message .. "\x1b[0m"
+    end
+    print(message)
+end
+
 function Engine.tag.getTag(tagHandleOrPath, tagClass)
     ---@diagnostic disable-next-line: param-type-mismatch
     local tagEntry = blam.getTag(tagHandleOrPath, tagClass)
