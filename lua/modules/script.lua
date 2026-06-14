@@ -43,6 +43,7 @@ local function removeThreadFromTrace(scriptThread)
     if scriptThread.parent then
         scriptThread.parent.child = nil
     end
+    scriptThread.thread = nil
     table.remove(callTrace, scriptThreadIndex)
 end
 
@@ -115,7 +116,14 @@ local function sleepThreadUntil(evaluateCondition, everyNTicks, maximumTicks)
     local currentTicks = getTickCount()
     while not evaluateCondition() and
         (not maximumTicks or getTickCount() - currentTicks < maximumTicks) do
-        coroutine.yield()
+        if everyNTicks then
+            local waitStart = getTickCount()
+            while getTickCount() - waitStart < everyNTicks do
+                coroutine.yield()
+            end
+        else
+            coroutine.yield()
+        end
     end
 end
 
@@ -357,7 +365,13 @@ function script.wake(func)
     end
 end
 
---- Creates a script thread and runs it immediately
+--- Creates a script thread and runs it immediately without waiting for the next poll.
+--- Useful for scripts that need to run immediately and will not live long enough to be caught by
+--- the poll loop, like short lived startup scripts or scripts that are being called by other
+--- threads and need to run immediately.
+---
+--- Note: This does not check if a script thread for the given function already exists, so it can
+--- lead to multiple threads running the same function if used carelessly. Use with caution.
 ---@param func fun()
 function script.create(func)
     script.thread(func)()
