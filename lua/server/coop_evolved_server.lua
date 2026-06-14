@@ -1,7 +1,9 @@
 api_version = "1.12.0.0"
 DebugMode = false
+DebugLuaMemory = false
 DebugPerformance = false
 IsLevelDebugMode = false
+AutoStart = false
 require "luna"
 
 -- Bring compatibility modules (Lua 5.3 and Balltze API)
@@ -17,8 +19,8 @@ local objectClasses = blam.objectClasses
 console_out = cprint
 
 -- Pre require structures for blam2 (This helps the bundler to include modules properly)
-require "structures.tag.vehicle"
--- require "structures.tag.scenario"
+assert(require "structures.tag.vehicle")
+-- assert(require "structures.tag.scenario")
 
 local isNull = blam.isNull
 local inspect = require "inspect"
@@ -30,13 +32,12 @@ local utils = require "coop.utils"
 require "coop.gameplay.utils"
 
 local script = require "script"
-local performance
+local performance = require "performance"
 local hsc = require "hsc"
 local hscDoc = require "hscDoc"
 
 -- Print each profiler snapshot to console when DebugPerformance is enabled
 if DebugPerformance then
-    performance = require "performance"
     performance.onSnapshotRefresh = performance.printSnapshot
 end
 
@@ -233,9 +234,9 @@ local function createHscPacket(functionName, funcArgs)
         assert(scenario, "Failed to load scenario tag")
 
         -- FIXME Dirty hack to force default unit state
-        --local scenarioEntry = blam2.tag.findTag("", blam2.tag.groups.scenario) --[[@as MetaEngineScenarioTag]]
-        --assert(scenarioEntry)
-        --for vehicleElementIndex = 1, scenarioEntry.data.vehicles.count do
+        -- local scenarioEntry = blam2.tag.findTag("", blam2.tag.groups.scenario) --[[@as MetaEngineScenarioTag]]
+        -- assert(scenarioEntry)
+        -- for vehicleElementIndex = 1, scenarioEntry.data.vehicles.count do
         --    local vehicleElement = scenarioEntry.data.vehicles.elements[vehicleElementIndex]
         --    if vehicleElement.name == objectNameIndex - 1 then
         --        logger:warning("Forcing close state in vehicle \"{}\"", funcArgs[1])
@@ -244,7 +245,7 @@ local function createHscPacket(functionName, funcArgs)
         --            hsc.unit_close(funcArgs[1])
         --        end)()
         --    end
-        --end
+        -- end
 
         for objectId in pairs(blam.getObjects()) do
             local object = blam.getObject(objectId)
@@ -427,7 +428,7 @@ function OnPlayerJoin(playerIndex)
     if not IsCoopStarted then
 
         -- Force game start for debugging purposes
-        if DebugMode then
+        if DebugMode and AutoStart then
             StartCoop()
             coop.enableSpawn(true)
             return
@@ -477,32 +478,6 @@ function OnTick()
         tickStart = os.clock()
     end
     script.poll()
-    for objectId in pairs(blam.getObjects()) do
-        local object = blam.object(get_object(objectId))
-        if object and object.class == blam.objectClasses.biped then
-            local forcedTeam = forcedBipedTeams[object.tagId]
-            if forcedTeam and object.team ~= forcedTeam then
-                console_debug("Forcing biped team to " ..
-                                  table.flip(blam.unitTeamClasses)[forcedTeam])
-                object.team = forcedTeam
-            end
-        end
-    end
-    for playerIndex = 1, 16 do
-        local playerBiped = blam.biped(get_dynamic_player(playerIndex))
-        if playerBiped then
-            if not isNull(playerBiped.mostRecentDamagerPlayer) then
-                local player = blam.player(get_player(playerIndex))
-                -- Just force AI damager if the player did not damaged himself
-                if player then
-                    if playerBiped.mostRecentDamagerPlayer ~= player.id then
-                        -- Force server to tell this player was damaged by AI (guardians)
-                        playerBiped.mostRecentDamagerPlayer = blam.null
-                    end
-                end
-            end
-        end
-    end
     if DebugPerformance then
         performance.tick(os.clock() - tickStart)
     end
@@ -524,6 +499,38 @@ function OnMapLoad()
 
     -- Clean up script threads from previous map
     script.cleanup()
+
+    -- Force biped teams to be on the same team for coop purposes
+    -- Also try to force players damage data to be caused by AI
+    script.continuous(function(_, sleep)
+        for objectId in pairs(blam.getObjects()) do
+            local object = blam.object(get_object(objectId))
+            if object and object.class == blam.objectClasses.biped then
+                local forcedTeam = forcedBipedTeams[object.tagId]
+                if forcedTeam and object.team ~= forcedTeam then
+                    console_debug("Forcing biped team to " ..
+                                      table.flip(blam.unitTeamClasses)[forcedTeam])
+                    object.team = forcedTeam
+                end
+            end
+        end
+        for playerIndex = 1, 16 do
+            local playerBiped = blam.biped(get_dynamic_player(playerIndex))
+            if playerBiped then
+                if not isNull(playerBiped.mostRecentDamagerPlayer) then
+                    local player = blam.player(get_player(playerIndex))
+                    -- Just force AI damager if the player did not damaged himself
+                    if player then
+                        if playerBiped.mostRecentDamagerPlayer ~= player.id then
+                            -- Force server to tell this player was damaged by AI (guardians)
+                            playerBiped.mostRecentDamagerPlayer = blam.null
+                        end
+                    end
+                end
+            end
+        end
+        sleep(3)
+    end)
 end
 
 function PluginLoad()
