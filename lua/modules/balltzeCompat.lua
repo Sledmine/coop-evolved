@@ -102,6 +102,7 @@ function Balltze.logger.createLogger(name)
             if not mute then
                 local args = {...}
                 local index = 1
+                local message = message or ""
                 local formattedMessage = message:gsub("{}", function()
                     local arg = args[index]
                     index = index + 1
@@ -114,6 +115,7 @@ function Balltze.logger.createLogger(name)
         info = function(self, message, ...)
             local args = {...}
             local index = 1
+            local message = message or ""
             local formattedMessage = message:gsub("{}", function()
                 local arg = args[index]
                 index = index + 1
@@ -125,6 +127,7 @@ function Balltze.logger.createLogger(name)
         warning = function(self, message, ...)
             local args = {...}
             local index = 1
+            local message = message or ""
             local formattedMessage = message:gsub("{}", function()
                 local arg = args[index]
                 index = index + 1
@@ -136,6 +139,7 @@ function Balltze.logger.createLogger(name)
         error = function(self, message, ...)
             local args = {...}
             local index = 1
+            local message = message or ""
             local formattedMessage = message:gsub("{}", function()
                 local arg = args[index]
                 index = index + 1
