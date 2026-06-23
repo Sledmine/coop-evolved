@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 2026-06-23
+### Fixed
+- Some Bipeds were not able to enter all vehicle seats (Grunt biped can now ride all vehicles)
+- Some optimizations for performance (trough Mimic)
+
 ## [1.10.0] - 2026-04-15
 ### Added
 - New campaign maps ported (The Pillar of Autumn, Two Betrayals, Keyes)
