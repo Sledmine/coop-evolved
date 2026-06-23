@@ -45,10 +45,11 @@ including the patches and modifications required for the Coop Evolved mod to wor
 
 You can install all the server files required using this Mercury command:
 ```
-mercury install sapp
+mercury install -f luacompat53 sapp
 ```
 **NOTE:** You have to install the `coopevolved` package as well, also make sure to be at least on
 version 10.3.2 of SAPP or higher!
+
 
 ## Running the server
 Running a server with mods loaded can be difficult to configure manually but to make this easier
@@ -88,6 +89,12 @@ New Game, Map: a10_coop_evolved, Mode: coop
 New bsp index detected: 0
 halo(
 ```
+
+If for any reason you encounter this error message:
+
+![missing-luacompat53](images/missing-luacompat53.png)
+
+Make sure that you have installed package `luacompat53` from Mercury prior to run the server.
 
 **NOTE:** Server map will change automatically when finishing a game if you load it trough the
 mapcycle option, you can type in the consele server to manually change the map using the command

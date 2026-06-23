@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Some Bipeds were not able to enter all vehicle seats (Grunt biped can now ride all vehicles)
 - Some optimizations for performance (trough Mimic)
+- Missing preconfigured "coop" gametype file has been added to the server files
 
 ## [1.10.0] - 2026-04-15
 ### Added
