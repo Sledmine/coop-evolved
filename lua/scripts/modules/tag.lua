@@ -1,0 +1,265 @@
+-- Tag creator/editor module
+-- This module is a wrapper for invader-edit to create and edit tags
+local luna = require "lua.modules.luna"
+local tag = {}
+
+local editCmd = [[invader-edit "%s" -n]]
+local countCmd = [[invader-edit "%s" -n -C %s]]
+local getCmd = [[invader-edit "%s" -n -G %s]]
+local insertCmd = [[invader-edit "%s" -n -I %s %s %s]]
+local createCmd = [[invader-edit "%s" -n -N]]
+local eraseCmd = [[invader-edit "%s" -n -E %s]]
+
+local _, windows = pcall(require, "lua.scripts.modules.fckwindows")
+local function executeCommand(cmd)
+    if jit.os and jit.os:lower() == "windows" then
+        -- Windows command execution
+        return windows.createProcess(cmd)
+    else
+        -- Unix-like command execution
+        return os.execute(cmd)
+    end
+end
+
+function nulled(value)
+    if (tonumber(value)) then
+        value = tonumber(value)
+        if (value == 0xFF or value == 0xFFFF or value == 0xFFFFFFFF or value == nil) then
+            return nil
+        end
+    end
+    return value
+end
+
+--- Build properties assignment type to invader string parameter
+local function writeMapFields(key, value)
+    local valueType = type(value)
+    if (valueType ~= "table") then
+        -- print(field .. " = " .. tostring(value))
+    end
+    -- Text property
+    if (valueType == "string") then
+        return (" -S %s \"%s\""):format(key, tostring(value))
+        -- Boolean property
+    elseif (valueType == "boolean") then
+        if (value) then
+            return (" -S %s %s"):format(key, 1)
+        end
+        return (" -S %s %s"):format(key, 0)
+        -- Number property
+    elseif (valueType == "number") then
+        return (" -S %s %s"):format(key, tostring(value))
+        -- Table
+    elseif (valueType == "table") then
+        local sentence = ""
+        for subField, subValue in pairs(value) do
+            if (tonumber(subField)) then
+                sentence = sentence ..
+                               writeMapFields((key .. "[%s]"):format(subField - 1), subValue)
+            else
+                sentence = sentence .. writeMapFields(key .. "." .. subField, subValue)
+            end
+        end
+        return sentence
+    else
+        print(key)
+        error("Unknown property type!")
+    end
+end
+
+local function createKeys(keys, value)
+    local valueType = type(value)
+    if (valueType ~= "table") then
+        -- print("Writting " .. keys .. " = " .. tostring(value))
+    end
+    -- Text property
+    if (valueType == "string") then
+        -- FIXME Split button index asignation via keyword without string formatting
+        return (" -S %s \"%s\""):format(keys, tostring(value))
+        -- Boolean property
+    elseif (valueType == "boolean") then
+        if (value) then
+            return (" -S %s %s"):format(keys, 1)
+        end
+        return (" -S %s %s"):format(keys, 0)
+        -- Number property
+    elseif (valueType == "number") then
+        return (" -S %s %s"):format(keys, tostring(value))
+        -- Table
+    elseif (valueType == "table" and #value == 0) then
+        local sentence = ""
+        for subField, subValue in pairs(value) do
+            sentence = sentence .. createKeys(keys .. "." .. subField, subValue)
+        end
+        return sentence
+        -- Array
+    elseif (valueType == "table" and #value > 0) then
+        -- Reserve elements space
+        local sentence = (" -I %s %s end"):format(keys, #value)
+        for elementIndex, subValue in ipairs(value) do
+            sentence = sentence .. createKeys((keys .. "[%s]"):format(elementIndex - 1), subValue)
+        end
+        return sentence
+    else
+        print(keys)
+        error("Unknown property type!")
+    end
+end
+
+--- Set properties to tag
+---@param tagPath string Path to tag
+---@param keys any
+function tag.edit(tagPath, keys)
+    print("Editing: " .. tagPath)
+    local updateTagCmd = editCmd:format(tagPath)
+    local t = table.map(keys, function(value, property)
+        updateTagCmd = updateTagCmd .. writeMapFields(property, value)
+        return updateTagCmd
+    end)
+    if executeCommand(updateTagCmd) then
+        return true
+    end
+    print(updateTagCmd)
+    error("Error at editing: " .. tagPath)
+end
+
+---Get a value from a tag given key
+---@param tagPath string
+---@param key string
+---@param index? number | "*"
+---@param subkey? string
+---@return string | number | nil
+function tag.get(tagPath, key, index, subkey)
+    local cmd = getCmd:format(tagPath, key)
+    if (index) then
+        cmd = getCmd:format(tagPath, key .. "[" .. index .. "]")
+        if (subkey) then
+            cmd = getCmd:format(tagPath, key .. "[" .. index .. "]." .. (subkey or ""))
+        end
+    end
+    local pipe = io.popen(cmd)
+    assert(pipe, "Error at attempting to read: " .. tagPath .. " " .. key)
+    local value = pipe:read("*a") --[[@as string]]
+    if not pipe:close() then
+        print("Attempting to read:")
+        print(tagPath, key, index, subkey)
+        error(value)
+    end
+    return nulled(value:trim())
+end
+
+---Count entries from a tag given key
+---@param tagPath any
+---@param key any
+---@return number
+function tag.count(tagPath, key)
+    local pipe = io.popen(countCmd:format(tagPath, key))
+    assert(pipe, "Error at attempting to count: " .. tagPath .. " " .. key)
+    local value = pipe:read("*a")
+    if not pipe:close() then
+        print("Attempting to count:")
+        print(tagPath, key)
+        error(value)
+    end
+    return tonumber(value) --[[@as number]]
+end
+
+---Erase structure from a tag given key
+---@param tagPath string
+---@param key string
+---@param index? number | "*"
+---@return boolean
+function tag.erase(tagPath, key, index)
+    if index then
+        key = key .. "[" .. index .. "]"
+    end
+    if executeCommand(eraseCmd:format(tagPath, key)) then
+        return true
+    end
+    error("Error at attempting to erase: " .. tagPath .. " " .. key)
+end
+
+---Insert a quantity of structs to specific key
+---@param tagPath string
+---@param key string
+---@param count number
+---@param position? number | '"end"'
+function tag.insert(tagPath, key, count, position)
+    if executeCommand(insertCmd:format(tagPath, key, count, position or 0)) then
+        return true
+    end
+    error("Error at attempting to insert: " .. tagPath .. " " .. key)
+end
+
+---Create a new tag with specified keys
+---@param tagPath string
+---@param keys any
+function tag.create(tagPath, keys)
+    print("Creating: " .. tagPath)
+    -- Create widget from scratch
+    local createTagCmd = createCmd:format(tagPath)
+    local t = table.map(keys, function(value, property)
+        createTagCmd = createTagCmd .. createKeys(property, value)
+        return createTagCmd
+    end)
+    if executeCommand(createTagCmd) then
+        return true
+    end
+    print(createTagCmd)
+    error("Error at creating tag: " .. tagPath)
+end
+
+--- Save tag path into a global tag collection reference
+---@param tagPath string
+---@param tagCollectionPath string
+function tag.global(tagPath, tagCollectionPath)
+    local fs = require "lua.scripts.modules.fs"
+
+    if not fs.is("tags/" .. tagCollectionPath) then
+        print("Tag collection \"" .. tagCollectionPath .. "\" does not exist. Creating new tag collection.")
+        tag.create(tagCollectionPath, {})
+    end
+
+    local tagCount = tag.count(tagCollectionPath, "tags")
+    local tagPath = tagPath:replace("\\", "/")
+
+    local tagCollection = {}
+    for i = 0, tagCount - 1 do
+        local reference = tag.get(tagCollectionPath, "tags", i, "reference") --[[@as string]]
+        if reference then
+            local normalizedReferencePath = reference:replace("\\", "/")
+            table.insert(tagCollection, {reference = normalizedReferencePath})
+        end
+    end
+
+    -- Filter duplicate tags (keep first occurrence)
+    local existingEntry = {}
+    tagCollection = table.filter(tagCollection, function(v, k)
+        if existingEntry[v.reference] then
+            return false
+        end
+        existingEntry[v.reference] = true
+        return true
+    end)
+
+    -- Filter tags not present in file system anymore
+    tagCollection = table.filter(tagCollection, function(v, k)
+        local exists = fs.is("tags/" .. v.reference) == true
+        return exists
+    end)
+
+    -- Check if tag already exists in tag collection
+    local isAlreadyInCollection = table.find(tagCollection, function(v, k)
+        return tagPath == v.reference
+    end)
+
+    if not isAlreadyInCollection then
+        table.insert(tagCollection, {reference = tagPath})
+        tag.create(tagCollectionPath, {tags = tagCollection})
+        print("Added tag to tag collection: " .. tagPath)
+        return
+    end
+    print("Tag \"" .. tagPath .. "\" is already in tag \"" .. tagCollectionPath .. "\".")
+end
+
+return tag

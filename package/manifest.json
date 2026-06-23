@@ -2,7 +2,7 @@
     "manifestVersion": "2.0.0",
     "files": [],
     "label": "coopevolved",
-    "version": "1.9.0",
+    "version": "1.10.1",
     "category": "map",
     "author": "Shadowmods",
     "name": "Coop Evolved",
@@ -10,16 +10,8 @@
     "dependencies": [
         {
             "label": "mimic",
-            "version": "3.0.7"
+            "version": "4.1.1"
         }
     ],
-    "deletes": [
-        "lua-map/a30_coop_evolved.lua",
-        "lua-map/a50_coop_evolved.lua",
-        "lua-map/b30_coop_evolved.lua",
-        "lua-map/b40_coop_evolved.lua",
-        "lua-map/c10_coop_evolved.lua",
-        "lua-map/c20_coop_evolved.lua",
-        "lua-map/d40_coop_evolved.lua"
-    ]
+    "deletes": []
 }

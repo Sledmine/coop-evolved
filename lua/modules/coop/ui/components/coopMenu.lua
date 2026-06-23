@@ -27,14 +27,12 @@ local function coopMenu()
     end)
 
     readyButton:onClick(function()
-        logger:debug("Ready button clicked")
         blam.rcon.dispatch("Ready")
         engine.userInterface.closeWidget()
     end)
 
     -- Render
     return function()
-        logger:debug("Rendering coop menu")
         bipedsList:setItems(bipeds)
         votesCount:setText(tostring(CoopState.remainingVotes))
         gameDifficulty:setBitmapIndex(table.indexof(coop.difficulties, CoopState.difficulty))

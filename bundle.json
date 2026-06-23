@@ -1,11 +1,22 @@
 {
     "target": "lua53",
     "output": "dist/coop_evolved.lua",
-    "main": "lua/coop_evolved",
+    "main": "coop_evolved",
     "include": [
         "lua",
         "lua/modules"
     ],
     "name": "Coop Evolved",
-    "modules": []
+    "modules": [
+        "levels/a10",
+        "levels/a30",
+        "levels/a50",
+        "levels/b30",
+        "levels/b40",
+        "levels/c10",
+        "levels/c20",
+        "levels/c40",
+        "levels/d20",
+        "levels/d40"
+    ]
 }

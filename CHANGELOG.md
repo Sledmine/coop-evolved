@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 2026-06-23
+### Fixed
+- Some Bipeds were not able to enter all vehicle seats (Grunt biped can now ride all vehicles)
+- Some optimizations for performance (trough Mimic)
+- Missing preconfigured "coop" gametype file has been added to the server files
+
+## [1.10.0] - 2026-04-15
+### Added
+- New campaign maps ported (The Pillar of Autumn, Two Betrayals, Keyes)
+- Minor easter eggs and events to improve coop experience
+- New "ready menu" cameras for all maps
+- New weapons, vehicles and bipeds models (by GDD)
+- Wraith vehicle is now drivable for most multiplayer bipeds
+- Some weapons dragged over from the Alpha Halo Firefight mod
+- Elite Sword is now pickupable by Elite bipeds (including multiplayer ones, WIP)
+- Custom HUD per biped, choosing a different character now will change the HUD
+
+### Changed
+- Campaign system is now using transpiled HS code into Lua to sync more game events, this will allow to expand and sync more complex events like cinematics, effects, sounds, machines, etc.
+- Respawn system update now avoids updating respawn if players are nearby to a vehicle to prevent spawn point from being blocked by vehicles
+- Floods can not fake death anymore, to improve synchronization stability
+- Some cinematics have been disabled on multiplayer until they can be properly synced, this will be fixed in future updates
+- All "2 player-based" events have been adjusted to support at least 6 players where possible, boarding a pelican, waiting for all players to enter a zone, etc.
+
 ## [1.9.0] - 2024-12-2
 ### Added
 - New Elite, Mjolnir Gen 1, Marine and Grunt multiplayer bipeds with more customization options (by GDD)

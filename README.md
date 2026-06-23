@@ -29,14 +29,14 @@ but requires setup and a reinvention of the campaign mechanisms to work in multi
 This project has different tools that can help in the procedure of adapting campaign maps to
 multiplayer:
 - [Mimic](https://github.com/Sledmine/mimic) - Core of all the synchronization mechanism for multiplayer
-- **Mimic Adapter** - Tool capable of rewriting the campaign HSC scripts for compatibility with multiplayer
-- [Harmony SAPP](https://github.com/JerryBrick/harmony) - A hook DLL provider to intercept script events for synchronization purposes via Mimic
+- [HSC to Lua Transpiler](https://github.com/Sledmine/mimic/blob/main/lua/scripts/hscToLua.lua) - Tool capable of rewriting HSC scripts into Lua code equivalent
+- Conversion scripts - Other Lua scripts over the Mimic project to easily convert tags, AI data and more for a more friendly multiplayer environment
 
 # Known Issues
-- AI/Bipeds do not hold weapons as they shoot (AI bipeds have weapons on the server side but their weapons are not syncing yet on the client side)
+- AI/Bipeds might not hold weapons as they shoot (some times AI bipeds that hold weapons on the server side might miss sync on the client side)
 - AI/Bipeds appear to be "shaking" sometimes (this seems to be an issue with the Chimera FPS interpolation feature and the position of the AI being sync from the server)
-- Vehicles in special pelicans, appear to shake in a similar way to AI (some vehicles like the pelicans are supossed to be in a state of levitation when no driver is inside the vehicle, this is common in campaign but the game netcode does not sync this levitation state in multiplayer)
-- Low FPS depending on network ping, higher ping, less FPS (in summary this is caused due to the low rate of receiving AI data from the server, we are working on a solution for this)
+- Vehicles that hover or are in special states (i.e pelicans), appear to shake in a similar way to AI (even when some special vehicle states are synced now, multiplayer does a lot of assumptions in vehicles that are not driven by players causing some weird behavior)
+- Constantly getting kicked out from a network game, not being able to connect at all after starting the game (loading high quality assets and receiving extra network data is somewhat demanding for some PCs causing network connection to drop)
 
 # How can I mount my own coop server?
 You have to download a modified and preconfigured version of the **Halo CE Dedicated Server**, this
@@ -45,29 +45,35 @@ including the patches and modifications required for the Coop Evolved mod to wor
 
 You can install all the server files required using this Mercury command:
 ```
-mercury install sapp
+mercury install -f luacompat53 sapp
 ```
-**NOTE:** You have to install the `coopevolved` package as well!
+**NOTE:** You have to install the `coopevolved` package as well, also make sure to be at least on
+version 10.3.2 of SAPP or higher!
+
 
 ## Running the server
 Running a server with mods loaded can be difficult to configure manually but to make this easier
 Mercury has a command that launches a server for you with less configuration just by giving some
 parameters, launch the server using:
 ```
-mercury serve a30_coop_evolved team_slayer -s mimic_server coop_evolved_server
+mercury serve --mapcycle coop_evolved --scripts mimic_server coop_evolved_server
 ```
-Where `a30_coop_evolved` is the map you want to load and `team_slayer` is the gametype you want
-to play, you can change these values to whatever you want, but make sure the map and gametype
-you are using are compatible with each other.
+Where `mapcycle` is the list of precreated mapcycle list you want to load (under Halo CE/mapcycles)
+and `scripts` is the list of scripts to load in the server to run, you can change these values to
+whatever you want, but make sure mapcycles and scripts are compatible. (Mimic and Coop Evolved is a
+must in this case)
 
-Here is a list of all the maps available in the mod, more maps will be added in the future:
+Here is a list of all the maps available in the mod:
 
+- a10_coop_evolved (The Pillar Of Autumn)
 - a30_coop_evolved (Halo)
 - a50_coop_evolved (The Truth and Reconciliation)
 - b30_coop_evolved (The Silent Cartographer)
 - b40_coop_evolved (Assault on the Control Room)
 - c10_coop_evolved (343 Guilty Spark)
 - c20_coop_evolved (The Library)
+- c40_coop_evolved (Two Betrayals)
+- d20_coop_evolved (Keyes)
 - d40_coop_evolved (The Maw)
 
 After that you should be ready to go, a terminal will appear displaying some messages like these:
@@ -79,32 +85,21 @@ Successfully loaded sapp.dll!
 sv_name: Coop Evolved Server
 sv_maxplayers: 16
 sv_public_value: 0
-New Game, Map: a30_coop_evolved, Mode: team_slayer
+New Game, Map: a10_coop_evolved, Mode: coop
 New bsp index detected: 0
 halo(
 ```
 
-Join the server using the in game menu, go to the LAN servers menu and you should see your
-server listed there, if you don't see it, make sure you are in the same network as the server
-and that your firewall is not blocking the server port (2302 by default) also launch the server
-after the game is running, if you launch the server first, the game might not be able to
-detect the server.
+If for any reason you encounter this error message:
 
-If you prefer to connect with the in game console, you can do it using the command:
-```
-connect <server_ip>:2302 x
-```
-Where `<server_ip>` is the IP of the server, you can get it using the command `ipconfig` in the
-Windows terminal, look for the line that says `IPv4 Address` and copy the IP address that appears
-there, if you want to join your own server using the same machine that is hosting the server, you
-should use:
-```
-connect localhost:2302 x
-```
+![missing-luacompat53](images/missing-luacompat53.png)
 
-**NOTE:** Server map will not change automatically when finishing a game yet... you will have to
-manually change the map using the command `sv_map <map_name> team_slayer` in the server
-terminal or launching `mercury serve` again with the new map name.
+Make sure that you have installed package `luacompat53` from Mercury prior to run the server.
+
+**NOTE:** Server map will change automatically when finishing a game if you load it trough the
+mapcycle option, you can type in the consele server to manually change the map using the command
+`sv_map <map_name> team_slayer` in the server terminal or launching `mercury serve` again with the
+new map name like: `mercury serve a10_coop_evolved coop --scripts mimic_server coop_evolved_server`
 
 Share your server IP to your friends and ensure you all are on the same network, your server is not
 public to the internet unless you do another hard process to achieve that, try virtual local network
@@ -119,6 +114,25 @@ With this configuration you can join to your server directly from the LAN server
 you will lose the ability to host or load maps in LAN mode using the in game option while your
 local dedicated server is running, close your server `haloceded.exe` before doing that if that is
 the case.
+
+**NOTE:** Some users might have encountered a lot of issues to follow this configuration, if it does
+not work, try to change the port used to host the server, just add `-p` at the end of the serve
+command such as:
+```
+mercury serve --mapcycle coop_evolved --scripts mimic_server coop_evolved_server -p 9090
+```
+
+So players can connect trough the in game console using this command:
+```
+connect localhost:9090 x
+```
+
+Example:
+
+![console-connect](images/console-connect.png)
+
+Do not forget to replace "localhost" with your server IP if you are joining a server hosted outside
+your network (a friend of your hosting it in another PC or similar).
 
 **WARNING:** SAPP package hosted in the Mercury repository contains a modified version of
 the **Halo CE Dedicated Server** that has a few bug fixes, is capable of loading huge maps built
@@ -160,8 +174,8 @@ sv_map a50_coop_evolved coop ; Map and gametype the server will run at load
 set is_multiplayer true
 load
 ```
-**NOTE:** Only edit the fields that have comments on them, the other properties are set that way in
-purpose.
+**NOTE:** It is HIGHLY RECOMMENDED to do not modify these fields and continue using `mercury serve`
+for a more stable server configuration experience.
 
 # Can I contribute/help?
 Of course! We need a lot of help to achieve this project, we have a workflow designed for contributions with support for people being added into the project development as soon as possible.

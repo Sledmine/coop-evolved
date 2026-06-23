@@ -1,6 +1,6 @@
 local ether = {}
 
-local scriptBlock = require"script".block
+local script = require"script".thread
 local core = require "ui.core"
 
 ---@type table<number, function>
@@ -26,9 +26,8 @@ function ether.render(tagHandle)
         local widgetTag = core.getCurrentUIWidgetTag()
         if widgetTag and widgetTag.id == tagHandle then
             render()
-        else
-            scriptBlock(function(sleep, sleepUntil)
-                sleepUntil(function()
+            script(function(call, sleep)
+                sleep(function()
                     local widgetTag = core.getCurrentUIWidgetTag()
                     return (widgetTag and widgetTag.id == tagHandle) or false
                 end)
@@ -68,7 +67,6 @@ function ether.reactive(table, callback)
         end,
         __newindex = function(t, k, v)
             t[prefix .. k] = v
-            logger:debug("Setting reactive property " .. k .. " to " .. tostring(v))
             callback()
         end
     })

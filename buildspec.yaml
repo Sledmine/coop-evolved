@@ -2,13 +2,17 @@ version: 1
 tag_space: 64M
 extend_limits: true
 scenarios:
-  - levels/a30/a30_coop_evolved_dev
-  - levels/a50/a50_coop_evolved_dev
-  - levels/b30/b30_coop_evolved_dev
-  - levels/b40/b40_coop_evolved_dev
-  - levels/c10/c10_coop_evolved_dev
-  - levels/c20/c20_coop_evolved_dev
-  - levels/d40/d40_coop_evolved_dev
+  - coop_evolved/levels/a10/a10_coop_evolved_dev
+  - coop_evolved/levels/a30/a30_coop_evolved_dev
+  - coop_evolved/levels/a50/a50_coop_evolved_dev
+  - coop_evolved/levels/b30/b30_coop_evolved_dev
+  - coop_evolved/levels/b40/b40_coop_evolved_dev
+  - coop_evolved/levels/c10/c10_coop_evolved_dev
+  - coop_evolved/levels/c20/c20_coop_evolved_dev
+  - coop_evolved/levels/c40/c40_coop_evolved_dev
+  - coop_evolved/levels/d20/d20_coop_evolved_dev
+  - coop_evolved/levels/d40/d40_coop_evolved_dev
+  #- levels/research/research_ai
 commands:
   package:
     - rm -f dist/coop_evolved.lua
@@ -21,14 +25,6 @@ commands:
     - rm package/balltze-plugins/*.lua
   symlinks:
     - ln -f -s "$PWD/dist/coop_evolved_server.lua" "$HALO_CE_DATA_PATH/sapp/lua/coop_evolved_server.lua"
-  hsc:
-    - invader-script -g gbx-custom levels/a30/a30_coop_evolved_dev
-    - invader-script -g gbx-custom levels/a50/a50_coop_evolved_dev
-    - invader-script -g gbx-custom levels/b30/b30_coop_evolved_dev
-    - invader-script -g gbx-custom levels/b40/b40_coop_evolved_dev
-    - invader-script -g gbx-custom levels/c10/c10_coop_evolved_dev
-    - invader-script -g gbx-custom levels/c20/c20_coop_evolved_dev
-    - invader-script -g gbx-custom levels/d40/d40_coop_evolved_dev
   release:
     - mercury build --release --output package/game-maps/
     - mercury build package

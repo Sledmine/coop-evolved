@@ -3,12 +3,23 @@
 local luna = require "lua.modules.luna"
 local tag = {}
 
-local editCmd = [[invader-edit "%s"]]
-local countCmd = [[invader-edit "%s" -C %s]]
-local getCmd = [[invader-edit "%s" -G %s]]
-local insertCmd = [[invader-edit "%s" -I %s %s %s]]
-local createCmd = [[invader-edit "%s" -N]]
-local eraseCmd = [[invader-edit "%s" -E %s]]
+local editCmd = [[invader-edit "%s" -n]]
+local countCmd = [[invader-edit "%s" -n -C %s]]
+local getCmd = [[invader-edit "%s" -n -G %s]]
+local insertCmd = [[invader-edit "%s" -n -I %s %s %s]]
+local createCmd = [[invader-edit "%s" -n -N]]
+local eraseCmd = [[invader-edit "%s" -n -E %s]]
+
+local _, windows = pcall(require, "lua.scripts.modules.fckwindows")
+local function executeCommand(cmd)
+    if jit.os and jit.os:lower() == "windows" then
+        -- Windows command execution
+        return windows.createProcess(cmd)
+    else
+        -- Unix-like command execution
+        return os.execute(cmd)
+    end
+end
 
 function nulled(value)
     if (tonumber(value)) then
@@ -105,16 +116,17 @@ function tag.edit(tagPath, keys)
         updateTagCmd = updateTagCmd .. writeMapFields(property, value)
         return updateTagCmd
     end)
-    if os.execute(updateTagCmd) then
+    if executeCommand(updateTagCmd) then
         return true
     end
+    print(updateTagCmd)
     error("Error at editing: " .. tagPath)
 end
 
 ---Get a value from a tag given key
 ---@param tagPath string
 ---@param key string
----@param index? number
+---@param index? number | "*"
 ---@param subkey? string
 ---@return string | number | nil
 function tag.get(tagPath, key, index, subkey)
@@ -153,11 +165,15 @@ function tag.count(tagPath, key)
 end
 
 ---Erase structure from a tag given key
----@param tagPath any
----@param key any
+---@param tagPath string
+---@param key string
+---@param index? number | "*"
 ---@return boolean
-function tag.erase(tagPath, key)
-    if os.execute(eraseCmd:format(tagPath, key)) then
+function tag.erase(tagPath, key, index)
+    if index then
+        key = key .. "[" .. index .. "]"
+    end
+    if executeCommand(eraseCmd:format(tagPath, key)) then
         return true
     end
     error("Error at attempting to erase: " .. tagPath .. " " .. key)
@@ -169,7 +185,7 @@ end
 ---@param count number
 ---@param position? number | '"end"'
 function tag.insert(tagPath, key, count, position)
-    if os.execute(insertCmd:format(tagPath, key, count, position or 0)) then
+    if executeCommand(insertCmd:format(tagPath, key, count, position or 0)) then
         return true
     end
     error("Error at attempting to insert: " .. tagPath .. " " .. key)
@@ -186,9 +202,10 @@ function tag.create(tagPath, keys)
         createTagCmd = createTagCmd .. createKeys(property, value)
         return createTagCmd
     end)
-    if os.execute(createTagCmd) then
+    if executeCommand(createTagCmd) then
         return true
     end
+    print(createTagCmd)
     error("Error at creating tag: " .. tagPath)
 end
 

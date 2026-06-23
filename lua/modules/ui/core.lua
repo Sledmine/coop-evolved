@@ -160,4 +160,39 @@ function core.getWidgetCursorPosition()
     end
 end
 
+function core.getStringFromWidget(widgetTagId)
+    local widget = blam.uiWidgetDefinition(widgetTagId)
+    assert(widget, "No widget found with tag id " .. widgetTagId)
+    local virtualValue = VirtualInputValue[widgetTagId]
+    if virtualValue then
+        return virtualValue
+    end
+    local unicodeStrings = blam.unicodeStringList(widget.unicodeStringListTag)
+    assert(unicodeStrings, "No unicodeStringList, can't get text from this widget")
+    return unicodeStrings.strings[widget.stringListIndex + 1]
+end
+
+function core.setStringToWidget(text, widgetTagId, mask)
+    local widgetDefinition = blam.uiWidgetDefinition(widgetTagId)
+    if widgetDefinition then
+        local unicodeStrings = blam.unicodeStringList(widgetDefinition.unicodeStringListTag)
+        if unicodeStrings then
+            if blam.isNull(unicodeStrings) then
+                error("No unicodeStringList, can't assign text to this widget")
+            end
+            local stringListIndex = widgetDefinition.stringListIndex
+            local newStrings = unicodeStrings.strings
+            if mask then
+                VirtualInputValue[widgetTagId] = text
+                newStrings[stringListIndex + 1] = string.rep(mask, #text)
+            else
+                newStrings[stringListIndex + 1] = text
+                VirtualInputValue[widgetTagId] = nil
+
+            end
+            unicodeStrings.strings = newStrings
+        end
+    end
+end
+
 return core

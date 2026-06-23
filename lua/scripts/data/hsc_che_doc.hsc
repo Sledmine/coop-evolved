@@ -709,7 +709,6 @@
 (<boolean> debug_material_effects)
 (<boolean> weather)
 (<boolean> breakable_surfaces)
-(<boolean> decals)
 (<boolean> profile_graph)
 (<boolean> profile_display)
 (<boolean> profile_timebase_ticks)

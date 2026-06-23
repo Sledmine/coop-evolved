@@ -1,0 +1,5 @@
+(global boolean lua_boolean false)
+(global short lua_short 0)
+(global long lua_long 0)
+(global real lua_real 0)
+(global string lua_string "")

@@ -15,8 +15,14 @@ local sqrt = math.sqrt
 local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
+local round = math.round or function(num)
+    return math.floor(num + 0.5)
+end
 
-local blam = {_VERSION = "1.12.1"}
+local blam = {_VERSION = "1.17.2"}
+
+blam.MAXIMUM_OBJECTS = 2048
+blam.MAXIMUM_NETWORK_OBJECTS = 512 - 3
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -110,7 +116,6 @@ end
 -- Engine address list
 local addressList = {
     tagDataHeader = 0x40440000,
-    cameraType = 0x00647498, -- from giraffe
     gamePaused = 0x004ACA79,
     gameOnMenus = 0x00622058,
     joystickInput = 0x64D998, -- from aLTis
@@ -122,7 +127,10 @@ local addressList = {
     syncedNetworkObjects = 0x006226F0, -- pointer, from Vulpes
     screenResolution = 0x637CF0,
     currentWidgetIdAddress = 0x6B401C,
-    cinematicGlobals = 0x0068c83c
+    cinematicGlobals = 0x0068c83c,
+    hscGlobalsPointer = 0x0064bab0,
+    cameraState = 0x00647498,
+    objectNamesList = 0x00653be8
 }
 
 -- Server side addresses adjustment
@@ -131,6 +139,9 @@ if blam.isGameSAPP() then
     addressList.objectTable = 0x4005062C
     addressList.syncedNetworkObjects = 0x00598020 -- not pointer cause cheat engine sucks
     addressList.cinematicGlobals = 0x005f506c
+    addressList.hscGlobalsPointer = 0x005bd890
+    addressList.hscGlobals = 0x6e144c
+    addressList.cameraState = 0x5b9278
 end
 
 -- Tag classes values
@@ -332,6 +343,13 @@ local joystickInputs = {
     startButton = 9,
     leftStick = 10,
     rightStick = 11,
+    rightStick2 = 12,
+    -- TODO Add joys axis
+    leftStickUp = 30,
+    leftStickDown = 32,
+    rightStickUp = 34,
+    rightStickDown = 36,
+    triggers = 38,
     -- Multiple values on the same offset, check dPadValues table
     dPad = 96,
     -- Non zero values
@@ -343,8 +361,6 @@ local joystickInputs = {
     dPadDownRight = 103,
     dPadUpLeft = 107,
     dPadDownLeft = 105
-    -- TODO Add joys axis
-    -- rightJoystick = 30,
 }
 
 -- Values for the possible dPad values from the joystick inputs
@@ -359,8 +375,6 @@ local dPadValues = {
     down = 769,
     up = 765
 }
-
-local engineConstants = {defaultNetworkObjectsCount = 509}
 
 -- Global variables
 
@@ -436,6 +450,16 @@ backupFunctions.file_exists = _G.file_exists
 ---@param z number
 ---@return number? objectId
 function spawn_object(tagClass, tagPath, x, y, z)
+    if type(tagClass) == "number" then
+        local x = tagPath --[[@as number]]
+        local y = x
+        local z = y
+        local tag = blam.getTag(tagClass)
+        if tag then
+            return backupFunctions.spawn_object(tag.class, tag.path, x, y, z)
+        end
+    end
+    return backupFunctions.spawn_object(tagClass, tagPath, x, y, z)
 end
 
 ---Attempt to get the address of a player unit object given player index, returning nil on failure.<br>
@@ -445,7 +469,6 @@ end
 function get_dynamic_player(playerIndex)
 end
 
-spawn_object = backupFunctions.spawn_object
 get_dynamic_player = backupFunctions.get_dynamic_player
 
 ------------------------------------------------------------------------------
@@ -609,9 +632,8 @@ end
 ---@param red? number
 ---@param green? number
 ---@param blue? number
-function console_out(message, red, green, blue)
-    -- TODO Add color printing to this function on SAPP
-    cprint(message)
+function console_out(...)
+    cprint(...)
 end
 
 ---Output text to console as debug message.
@@ -632,10 +654,40 @@ end
 
 ---Get the value of a Halo scripting global.\
 ---An error will be triggered if the global is not found
----@param name string Name of the global variable to get from hsc
+---@param globalName string Name of the  global variable to get from hsc
 ---@return boolean | number
-function get_global(name)
-    error("SAPP can not retrieve global variables as Chimera does.. yet!")
+function get_global(globalName)
+    if addressList.hscGlobals then
+        local hsGlobals = addressList.hscGlobals
+        -- local firstGlobal = read_dword(addressList.hscGlobals + 1)
+        local firstGlobal = 0x00001ec
+        local hsGlobalsTable = read_dword(hsGlobals)
+        local hsTable = read_dword(hsGlobalsTable + 0x34)
+
+        local scenarioTag = blam.getTag(0).data
+        local globalsCount = read_dword(scenarioTag + 0x4A8)
+        local globalsAddress = read_dword(scenarioTag + 0x4A8 + 4)
+
+        for i = 0, globalsCount - 1 do
+            local global = globalsAddress + i * 92
+            if read_string(global) == globalName then
+                local globalType = read_word(global + 0x20)
+                local location = hsTable + (i + firstGlobal) * 8
+                if globalType == 5 then
+                    return read_byte(location + 4) == 1
+                elseif globalType == 6 then
+                    return read_float(location + 4)
+                elseif globalType == 7 then
+                    return read_short(location + 4)
+                elseif globalType == 8 then
+                    return read_int(location + 4)
+                else
+                    return read_int(location + 4)
+                end
+            end
+        end
+    end
+    error("Global not found: " .. globalName)
 end
 
 ---Print message to player HUD.\
@@ -802,7 +854,7 @@ end
 ---@return number[]
 function blam.getObjects()
     local objects = {}
-    for objectIndex = 0, 2047 do
+    for objectIndex = 0, blam.MAXIMUM_OBJECTS - 1 do
         local object, objectId = blam.getObject(objectIndex)
         if object and objectId then
             objects[objectId] = objectIndex
@@ -958,20 +1010,22 @@ end
 ---@return string
 function blam.readUnicodeString(address, rawRead)
     local stringAddress
-    if (rawRead) then
+    if rawRead then
         stringAddress = address
     else
         stringAddress = read_dword(address)
     end
-    local length = stringAddress / 2
     local output = ""
-    -- TODO Refactor this to support full unicode char size
-    for i = 1, length do
-        local char = read_string(stringAddress + (i - 1) * 0x2)
-        if (char == "") then
+    local i = 0
+    -- TODO Refactor this to support reading ASCII and UTF16? strings
+    while true do
+        local char = read_string(stringAddress + i * 0x2)
+        -- local _, char = pcall(string.char, read_byte(stringAddress + (i - 1) * 0x2))
+        if not char or char == "" then
             break
         end
         output = output .. char
+        i = i + 1
     end
     return output
 end
@@ -979,10 +1033,11 @@ end
 --- Writes a unicode string in a given address
 ---@param address number
 ---@param newString string
----@param forced? boolean
-function blam.writeUnicodeString(address, newString, forced)
+---@param rawWrite? boolean
+---@param noNullTerminator? boolean
+function blam.writeUnicodeString(address, newString, rawWrite, noNullTerminator)
     local stringAddress
-    if (forced) then
+    if rawWrite then
         stringAddress = address
     else
         stringAddress = read_dword(address)
@@ -991,15 +1046,19 @@ function blam.writeUnicodeString(address, newString, forced)
     if newString == false then
         return
     end
-    -- TODO Refactor this to support writing ASCII and Unicode strings
+    local newString = tostring(newString)
+    -- TODO Refactor this to support writing ASCII and UTF16? strings
     for i = 1, #newString do
-        write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
-        if (i == #newString) then
-            write_byte(stringAddress + #newString * 0x2, 0x0)
+        local char = newString:sub(i, i)
+        local byte = string.byte(char) or string.byte("?")
+        local currentCharAddress = stringAddress + (i - 1) * 0x2
+        write_dword(currentCharAddress, byte)
+        if i == #newString and not noNullTerminator then
+            write_dword(currentCharAddress + 0x2, 0x0)
         end
     end
     if #newString == 0 then
-        write_string(stringAddress, "")
+        write_dword(stringAddress, 0)
     end
 end
 
@@ -1110,6 +1169,28 @@ local function writeTagReference(address, propertyData, tagId)
     write_dword(address + 0xC, tagId)
 end
 
+local function safeReadUnicodeString(address)
+    local size = read_dword(address)
+    if size == 0 then
+        return ""
+    end
+    return blam.readUnicodeString(address + 0xC)
+end
+
+local function safeWriteUnicodeString(address, propertyData, text)
+    local size = read_dword(address)
+    local newText = text
+    local maximumStringSize = size - 2
+    if #text * 2 >= maximumStringSize then
+        newText = newText:sub(1, maximumStringSize / 2)
+        -- String is too long, truncate it and write it without null terminator
+        return blam.writeUnicodeString(address + 0xC, newText, false, true)
+    end
+    -- String is short enough, write it with null terminator
+    -- This will ignore rest of the string if it was longer than new string size
+    return blam.writeUnicodeString(address + 0xC, newText, false, false)
+end
+
 -- Data types operations references
 typesOperations = {
     bit = {read = readBit, write = writeBit},
@@ -1126,7 +1207,8 @@ typesOperations = {
     ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
     table = {read = readTable, write = writeTable},
-    tagref = {read = readTagReference, write = writeTagReference}
+    tagref = {read = readTagReference, write = writeTagReference},
+    sustring = {read = safeReadUnicodeString, write = safeWriteUnicodeString}
 }
 
 -- Magic luablam metatable
@@ -1252,6 +1334,8 @@ local deviceGroupsTableStructure = {
 ---@field isCollideable boolean Enable/disable object collision, does not work with bipeds or vehicles
 ---@field isBeingPickedUp boolean Is the object being picked up
 ---@field hasNoCollision boolean Enable/disable object collision, causes animation problems
+---@field isGarbage boolean Is the object marked as garbage for cleanup
+---@field existenceTime number Time in ticks since the object was spawned
 ---@field model number Gbxmodel tag ID
 ---@field scale number Object scale factor
 ---@field health number Current health of the object
@@ -1326,7 +1410,7 @@ local objectStructure = {
     tagId = {type = "dword", offset = 0x0},
     networkRoleClass = {type = "dword", offset = 0x4},
     isNotMoving = {type = "bit", offset = 0x8, bitLevel = 0},
-    existanceTime = {type = "dword", offset = 0xC},
+    existenceTime = {type = "dword", offset = 0xC},
     isGhost = {type = "bit", offset = 0x10, bitLevel = 0},
     isOnGround = {type = "bit", offset = 0x10, bitLevel = 1},
     ---@deprecated
@@ -1336,6 +1420,7 @@ local objectStructure = {
     isStationary = {type = "bit", offset = 0x10, bitLevel = 5},
     hasNoCollision = {type = "bit", offset = 0x10, bitLevel = 7},
     dynamicShading = {type = "bit", offset = 0x10, bitLevel = 14},
+    isGarbage = {type = "bit", offset = 0x10, bitLevel = 16},
     isNotCastingShadow = {type = "bit", offset = 0x10, bitLevel = 18},
     isFrozen = {type = "bit", offset = 0x10, bitLevel = 20},
     -- FIXME Deprecated property, should be erased at a major release later
@@ -1433,6 +1518,8 @@ local unitStructure = extendStructure(objectStructure, {
     isControllable = {type = "bit", offset = 0x204, bitLevel = 5},
     isPlayerNotAllowedToEntry = {type = "bit", offset = 0x204, bitLevel = 16},
     parentSeatIndex = {type = "word", offset = 0x2F0},
+    weaponAnimationTypeIndex = {type = "byte", offset = 0x2A1},
+    weaponSlot = {type = "byte", offset = 0x2F2},
     firstWeaponObjectId = {type = "dword", offset = 0x2F8},
     secondWeaponObjectId = {type = "dword", offset = 0x2FC},
     thirdWeaponObjectId = {type = "dword", offset = 0x300},
@@ -1445,6 +1532,8 @@ local unitStructure = extendStructure(objectStructure, {
 ---@field isControllable boolean Unit controllable state
 ---@field isPlayerNotAllowedToEntry boolean Unit player not allowed to entry
 ---@field parentSeatIndex number Unit parent seat index
+---@field weaponAnimationTypeIndex number Unit weapon animation type index
+---@field weaponSlot number Current unit weapon slot
 ---@field firstWeaponObjectId number First weapon object id
 ---@field secondWeaponObjectId number Second weapon object id
 ---@field thirdWeaponObjectId number Third weapon object id
@@ -1470,7 +1559,6 @@ local bipedStructure = extendStructure(unitStructure, {
     grenadeHold = {type = "bit", offset = 0x208, bitLevel = 13},
     crouch = {type = "byte", offset = 0x2A0},
     shooting = {type = "float", offset = 0x284},
-    weaponSlot = {type = "byte", offset = 0x2A1},
     zoomLevel = {type = "byte", offset = 0x320},
     ---@deprecated
     invisibleScale = {type = "float", offset = 0x37C},
@@ -1603,12 +1691,15 @@ local tagCollectionStructure = {
 
 ---@class unicodeStringList
 ---@field count number Number of unicode strings
----@field stringList table List of unicode strings
+---@field strings string[] List of unicode strings
 
 -- UnicodeStringList structure
 local unicodeStringListStructure = {
     count = {type = "byte", offset = 0x0},
-    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14}
+    ---@deprecated
+    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14},
+    -- Previous string list property works because of magic (well because of shit code haha)
+    strings = {type = "list", offset = 0x4, elementsType = "sustring", jump = 0x14, noOffset = true}
 }
 
 ---@class bitmapSequence
@@ -1734,10 +1825,30 @@ local bitmapStructure = {
 ---@field type number Type of widget
 ---@field controllerIndex number Index of the player controller
 ---@field name string Name of the widget
+---@field top number Top bound of the widget
+---@field left number Left bound of the widget
+---@field bottom number Bottom bound of the widget
+---@field right number Right bound of the widget
 ---@field boundsY number Top bound of the widget
 ---@field boundsX number Left bound of the widget
 ---@field height number Bottom bound of the widget
 ---@field width number Right bound of the widget
+---@field passUnhandleEventsToFocusedChild boolean Pass unhandled events to focused child
+---@field pauseGameTime boolean Pause game time
+---@field flashBackgroundBitmap boolean Flash background bitmap
+---@field dpadUpDownTabsThruChildren boolean Dpad up down tabs thru children
+---@field dpadLeftRightTabsThruChildren boolean Dpad left right tabs thru children
+---@field dpadUpDownTabsThruListItems boolean Dpad up down tabs thru list items
+---@field dpadLeftRightTabsThruListItems boolean Dpad left right tabs thru list items
+---@field dontFocusSpecificChildWidget boolean Don't focus specific child widget
+---@field passUnhandledEventsToAllChildren boolean Pass unhandled events to all children
+---@field renderRegardlessOfControllerIndex boolean Render regardless of controller index
+---@field passHandledEventsToAllChildren boolean Pass handled events to all children
+---@field returnToMainMenuIfNoHistory boolean Return to main menu if no history
+---@field alwaysUseTagControllerIndex boolean Always use tag controller index
+---@field alwaysUseNiftyRenderFx boolean Always use nifty render fx
+---@field dontPushHistory boolean Don't push history
+---@field forceHandleMouse boolean Force handle mouse
 ---@field backgroundBitmap number Tag ID of the background bitmap
 ---@field eventHandlers uiWidgetDefinitionEventHandler[] tag ID list of the child widgets
 ---@field unicodeStringListTag number Tag ID of the unicodeStringList from this widget
@@ -1753,10 +1864,30 @@ local uiWidgetDefinitionStructure = {
     type = {type = "word", offset = 0x0},
     controllerIndex = {type = "word", offset = 0x2},
     name = {type = "string", offset = 0x4},
+    top = {type = "short", offset = 0x24},
+    left = {type = "short", offset = 0x26},
+    bottom = {type = "short", offset = 0x28},
+    right = {type = "short", offset = 0x2A},
     boundsY = {type = "short", offset = 0x24},
     boundsX = {type = "short", offset = 0x26},
     height = {type = "short", offset = 0x28},
     width = {type = "short", offset = 0x2A},
+    passUnhandleEventsToFocusedChild = {type = "bit", offset = 0x2C, bitLevel = 0},
+    pauseGameTime = {type = "bit", offset = 0x2C, bitLevel = 1},
+    flashBackgroundBitmap = {type = "bit", offset = 0x2C, bitLevel = 2},
+    dpadUpDownTabsThruChildren = {type = "bit", offset = 0x2C, bitLevel = 3},
+    dpadLeftRightTabsThruChildren = {type = "bit", offset = 0x2C, bitLevel = 4},
+    dpadUpDownTabsThruListItems = {type = "bit", offset = 0x2C, bitLevel = 5},
+    dpadLeftRightTabsThruListItems = {type = "bit", offset = 0x2C, bitLevel = 6},
+    dontFocusSpecificChildWidget = {type = "bit", offset = 0x2C, bitLevel = 7},
+    passUnhandledEventsToAllChildren = {type = "bit", offset = 0x2C, bitLevel = 8},
+    renderRegardlessOfControllerIndex = {type = "bit", offset = 0x2C, bitLevel = 9},
+    passHandledEventsToAllChildren = {type = "bit", offset = 0x2C, bitLevel = 10},
+    returnToMainMenuIfNoHistory = {type = "bit", offset = 0x2C, bitLevel = 11},
+    alwaysUseTagControllerIndex = {type = "bit", offset = 0x2C, bitLevel = 12},
+    alwaysUseNiftyRenderFx = {type = "bit", offset = 0x2C, bitLevel = 13},
+    dontPushHistory = {type = "bit", offset = 0x2C, bitLevel = 14},
+    forceHandleMouse = {type = "bit", offset = 0x2C, bitLevel = 15},
     backgroundBitmap = {type = "word", offset = 0x44},
     eventHandlers = {
         type = "table",
@@ -2155,25 +2286,38 @@ local modelAnimationsStructure = {
     }
 }
 
----@class weapon : blamObject
+---@class item : blamObject
+---@field isInInventory boolean Is weapon in inventory
+---@field ticksUntilDetonation number Ticks until weapon detonates
+---@field droppedByUnit number Object Handle of the unit that dropped the weapon
+---@field lastUpdateTick number Last update tick of the item
+
+local itemStructure = extendStructure(objectStructure, {
+    isInInventory = {type = "bit", offset = 0x1F4, bitLevel = 0},
+    ticksUntilDetonation = {type = "short", offset = 0x1F8},
+    droppedByUnit = {type = "dword", offset = 0x200},
+    lastUpdateTick = {type = "int", offset = 0x204}
+})
+
+---@class weapon : item
 ---@field pressedReloadKey boolean Is weapon trying to reload
 ---@field isWeaponPunching boolean Is weapon playing melee or grenade animation
 ---@field ownerObjectId number Object ID of the weapon owner
 ---@field carrierObjectId number Object ID of the weapon owner
----@field isInInventory boolean Is weapon in inventory
 ---@field primaryTriggerState number Primary trigger state of the weapon
 ---@field totalAmmo number Total ammo of the weapon
 ---@field loadedAmmo number Loaded ammo of the weapon   
+---@field reloadTicksRemainingFirstMagazine number Remaining ticks for weapon to finish reload (1st magazine)
 
-local weaponStructure = extendStructure(objectStructure, {
-    pressedReloadKey = {type = "bit", offset = 0x230, bitLevel = 3},
-    isWeaponPunching = {type = "bit", offset = 0x230, bitLevel = 4},
+local weaponStructure = extendStructure(itemStructure, {
     ownerObjectId = {type = "dword", offset = 0x11C}, -- deprecated
     carrierObjectId = {type = "dword", offset = 0x11C},
-    isInInventory = {type = "bit", offset = 0x1F4, bitLevel = 0},
+    pressedReloadKey = {type = "bit", offset = 0x230, bitLevel = 3},
+    isWeaponPunching = {type = "bit", offset = 0x230, bitLevel = 4},
     primaryTriggerState = {type = "byte", offset = 0x261},
     totalAmmo = {type = "word", offset = 0x2B6},
-    loadedAmmo = {type = "word", offset = 0x2B8}
+    loadedAmmo = {type = "word", offset = 0x2B8},
+    reloadTicksRemainingFirstMagazine = {type = "word", offset = 0x23A}
 })
 
 ---@class weaponTag
@@ -2466,12 +2610,53 @@ local hudGlobalsStructure = {
 }
 
 ---@class cinematicGlobals
----@field isInProgress boolean
 ---@field isShowingLetterbox boolean
+---@field isInProgress boolean
+---@field isSkipInProgress boolean
+---@field isSupressBspObjectCreation boolean
 
 local cinematicGlobalsStructure = {
+    isShowingLetterbox = {type = "bit", offset = 0x8, bitLevel = 0},
     isInProgress = {type = "bit", offset = 0x9, bitLevel = 0},
-    isShowingLetterbox = {type = "bit", offset = 0x8, bitLevel = 0}
+    isSkipInProgress = {type = "bit", offset = 0xa, bitLevel = 0},
+    isSupressBspObjectCreation = {type = "bit", offset = 0xb, bitLevel = 0}
+}
+
+---@class cameraState
+---@field type number Camera type
+---@field x number Camera x position
+---@field y number Camera y position
+---@field z number Camera z position
+---@field devcamX number Devcam x position
+---@field devcamY number Devcam y position
+---@field devcamZ number Devcam z position
+---@field finalX number Final x position
+---@field finalY number Final y position
+---@field finalZ number Final z position
+---@field vX number Camera vector x rotation
+---@field vY number Camera vector y rotation
+---@field vZ number Camera vector z rotation
+---@field v2X number Camera second vector x rotation
+---@field v2Y number Camera second vector y rotation
+---@field v2Z number Camera second vector z rotation
+
+local cameraStateStructure = {
+    type = {type = "word", offset = 0x0},
+    devcamX = {type = "float", offset = 0x54},
+    devcamY = {type = "float", offset = 0x58},
+    devcamZ = {type = "float", offset = 0x5C},
+    finalX = {type = "float", offset = 0x100},
+    finalY = {type = "float", offset = 0x104},
+    finalZ = {type = "float", offset = 0x108},
+    x = {type = "float", offset = 0x168},
+    y = {type = "float", offset = 0x16C},
+    z = {type = "float", offset = 0x170},
+    vX = {type = "float", offset = 0x120},
+    vY = {type = "float", offset = 0x124},
+    vZ = {type = "float", offset = 0x128},
+    v2X = {type = "float", offset = 0x12C},
+    v2Y = {type = "float", offset = 0x130},
+    v2Z = {type = "float", offset = 0x134}
 }
 
 ------------------------------------------------------------------------------
@@ -2512,7 +2697,7 @@ blam.null = null
 ---Get the current game camera type
 ---@return number?
 function blam.getCameraType()
-    local camera = read_word(addressList.cameraType)
+    local camera = read_word(addressList.cameraState)
     if camera then
         if camera == 22192 then
             return cameraTypes.scripted
@@ -2539,7 +2724,7 @@ function blam.getJoystickInput(joystickOffset)
     joystickOffset = joystickOffset or 0
     -- Nothing is pressed by default
     ---@type boolean | number
-    local inputValue = false
+    local inputValue = 0
     -- Look for every input from every joystick available
     for controllerId = 0, 3 do
         local inputAddress = addressList.joystickInput + controllerId * 0xA0
@@ -2551,6 +2736,8 @@ function blam.getJoystickInput(joystickOffset)
             local tempValue = read_word(inputAddress + 96)
             if (tempValue == joystickOffset - 100) then
                 inputValue = true
+            else
+                inputValue = false
             end
         else
             inputValue = inputValue + read_byte(inputAddress + joystickOffset)
@@ -2822,6 +3009,16 @@ function blam.modelAnimations(tag)
     return nil
 end
 
+---Create an Item object from a given address
+---@param address? number
+---@return item?
+function blam.item(address)
+    if address and isValid(address) then
+        return createBindTable(address, itemStructure)
+    end
+    return nil
+end
+
 --- Create a Weapon object from the given object address
 ---@param address? number
 ---@return weapon?
@@ -2913,14 +3110,14 @@ function blam.getObject(idOrIndex)
     local objectAddress
 
     -- Get object address
-    if (idOrIndex) then
+    if idOrIndex then
         -- Get object ID
-        if (idOrIndex < 0xFFFF) then
+        if idOrIndex < 0xFFFF then
             local index = idOrIndex
 
             -- Get objects table
             local table = createBindTable(addressList.objectTable, dataTableStructure)
-            if (index > table.capacity) then
+            if index > table.capacity then
                 return nil
             end
 
@@ -2984,11 +3181,13 @@ end
 function blam.getMaximumNetworkObjects()
     local syncedObjectsTable = getSyncedObjectsTable()
     if not syncedObjectsTable then
-        return engineConstants.defaultNetworkObjectsCount
+        return blam.MAXIMUM_NETWORK_OBJECTS
     end
 
     -- For some reason fist element entry is always used, so we need to substract 1
-    return syncedObjectsTable.maximumObjectsCount - 1
+    local logicCount = syncedObjectsTable.maximumObjectsCount - 1
+    -- Return less to prevent saturation issues (reading latest objects cause problems)
+    return logicCount - 2
 end
 
 --- Return an element from the synced objects table
@@ -3355,9 +3554,10 @@ function blam.getAbsoluteObjectCoordinates(object)
     if not isNull(object.parentObjectId) then
         local parentObject = blam.object(get_object(object.parentObjectId))
         if parentObject then
-            coordinates.x = coordinates.x + parentObject.x
-            coordinates.y = coordinates.y + parentObject.y
-            coordinates.z = coordinates.z + parentObject.z
+           local parentCoordinates = blam.getAbsoluteObjectCoordinates(parentObject)
+           coordinates.x = coordinates.x + parentCoordinates.x
+           coordinates.y = coordinates.y + parentCoordinates.y
+           coordinates.z = coordinates.z + parentCoordinates.z
         end
     end
     return coordinates
@@ -3367,6 +3567,70 @@ end
 ---@return cinematicGlobals
 function blam.cinematicGlobals()
     return createBindTable(read_dword(addressList.cinematicGlobals), cinematicGlobalsStructure)
+end
+
+--- Returns current game difficulty index
+---@return number
+function blam.getGameDifficultyIndex()
+    local hscGlobals = read_dword(addressList.hscGlobalsPointer)
+    return read_byte(hscGlobals + 0xe)
+end
+
+--- Returns current game camera state
+---@return cameraState
+function blam.getCameraState()
+    return createBindTable(addressList.cameraState, cameraStateStructure)
+end
+
+--- Get or set object handle in global object name list
+---@overload fun(index: number, handle?: number): number?
+---@param objectName string
+---@param handle? number
+---@return number?
+function blam.objectNameHandle(objectName, handle)
+    local nameIndex
+
+    if type(objectName) == "number" then
+        -- If index is provided, use it directly
+        nameIndex = objectName
+    else
+        -- Find the index of the object name in the scenario object names list
+        local scenario = blam.scenario(0)
+        assert(scenario, "No scenario loaded, can't get object names list.")
+        if scenario then
+            local objectNamesList = scenario.objectNames
+            for index, name in pairs(objectNamesList) do
+                if name == objectName then
+                    nameIndex = index
+                    break
+                end
+            end
+        end
+    end
+    if not nameIndex then
+        error("Object name \"" .. objectName .. "\" not found in scenario object names list.")
+    end
+
+    local objectNamesListAddress = read_dword(addressList.objectNamesList)
+    if handle then
+        -- Set the object handle in the global object name list
+        write_dword(objectNamesListAddress + (nameIndex * 4), handle)
+    else
+        -- Get the object handle from the global object name list
+        return read_dword(objectNameListAddress + (nameIndex * 4))
+    end
+end
+
+--- Converts ticks to seconds (30 ticks per second)
+---@param ticks number
+function blam.ticksToSeconds(ticks)
+    return round(ticks / 30)
+end
+
+--- Converts seconds to ticks (30 ticks per second)
+--- @param seconds number
+function blam.secondsToTicks(seconds)
+    return 30 * seconds
 end
 
 return blam

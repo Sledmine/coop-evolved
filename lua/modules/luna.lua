@@ -1,4 +1,4 @@
-local luna = {_VERSION = "2.5.0"}
+local luna = {_VERSION = "2.10.0"}
 
 luna.string = {}
 
@@ -7,6 +7,7 @@ local find = string.find
 local insert = table.insert
 local format = string.format
 local char = string.char
+local floor = math.floor
 
 --- Split a string into a table of substrings by `sep`, or by each character if `sep` is not provided.
 ---@param s string
@@ -401,7 +402,7 @@ function table.extend(t, ...)
 end
 
 --- Append values to a table.
---- It will append all values to the end of the table.
+--- It will append all given values to the end of the table.
 ---@generic V
 ---@param t V[]
 ---@vararg V
@@ -542,6 +543,26 @@ function table.flatten(t)
     return flattened
 end
 
+--- Return a table with only unique values from `t`.
+---@generic K, V
+---@param t table<K, V>
+---@return V[]
+---@nodiscard
+function table.unique(t)
+    assert(t ~= nil, "table.unique: t must not be nil")
+    assert(type(t) == "table" or type(t) == "userdata", "table.unique: t must be a table")
+    local seen = {}
+    local unique = {}
+    ---@diagnostic disable-next-line: param-type-mismatch
+    for _, v in pairs(t) do
+        if not seen[v] then
+            seen[v] = true
+            unique[#unique + 1] = v
+        end
+    end
+    return unique
+end
+
 luna.table.copy = table.copy
 luna.table.indexof = table.indexof
 luna.table.flip = table.flip
@@ -559,6 +580,44 @@ luna.table.keyof = table.keyof
 luna.table.flatten = table.flatten
 luna.table.extend = table.extend
 luna.table.append = table.append
+
+luna.math = {}
+
+--- Return a rounded number, optionally to a precision.
+---
+--- If `p` is not provided, it will round to the nearest integer.
+---@param n number
+---@param p? number
+---@return number
+---@nodiscard
+function math.round(n, p)
+    assert(n ~= nil, "math.round: n must not be nil")
+    assert(type(n) == "number", "math.round: n must be a number")
+    assert(p == nil or type(p) == "number", "math.round: p must be a number")
+    p = p or 1
+    return floor(n / p + .5) * p
+end
+
+--- Return the remainder of `n` divided by `m`.
+--- It will always return a positive number, even if `n` is negative.
+---@param n number
+---@param m number
+---@return number
+---@nodiscard
+function math.mod(n, m)
+    assert(n ~= nil, "math.mod: n must not be nil")
+    assert(type(n) == "number", "math.mod: n must be a number")
+    assert(m ~= nil, "math.mod: m must not be nil")
+    assert(type(m) == "number", "math.mod: m must be a number")
+    local r = n - math.floor(n / m) * m
+    if (m > 0 and r < 0) or (m < 0 and r > 0) then
+        r = r + m
+    end
+    return r
+end
+
+luna.math.round = math.round
+luna.math.mod = math.mod
 
 luna.file = {}
 
@@ -639,7 +698,9 @@ function luna.file.frombytes(path, bytes)
     assert(bytes ~= nil, "file.frombytes: bytes must not be nil")
     local file = io.open(path, "wb")
     if file then
-        file:write(char(unpack(bytes)))
+        for i = 1, #bytes do
+            file:write(char(bytes[i]))
+        end
         file:close()
         return true
     end
@@ -654,7 +715,11 @@ function luna.file.tobytes(path)
     assert(path ~= nil, "file.tobytes: path must not be nil")
     local file = io.open(path, "rb")
     if file then
-        local bytes = {string.byte(file:read "*a", 1, -1)}
+        local bytes = {}
+        local content = file:read "*a"
+        for i = 1, #content do
+            bytes[i] = content:byte(i)
+        end
         file:close()
         return bytes
     end
@@ -692,12 +757,72 @@ function luna.binary.write(path, content)
     return false
 end
 
+luna.url = {}
+
+--- Return a table with all query parameters from a URL.
+--- If the URL has no query parameters, it will return an empty table.
+---@param url string
+---@return {[string]: string}
+---@nodiscard
+function luna.url.params(url)
+    assert(url ~= nil, "url.query: url must not be nil")
+    local query = {}
+    for key, value in url:gmatch "([^&=?]-)=([^&=?]*)" do
+        query[key] = value
+    end
+    return query
+end
+
+--- Return a query string given a params table.
+---@param params {[string]: string}
+---@return string
+---@nodiscard
+function luna.url.query(params)
+    assert(params ~= nil, "url.query: params must not be nil")
+    local query = {}
+    for key, value in pairs(params) do
+        table.insert(query, key .. "=" .. value)
+    end
+    return table.concat(query, "&")
+end
+
+--- Return a URL string with all characters encoded to be an RFC compatible URL.
+---@param s string
+---@return string
+---@nodiscard
+function luna.url.encode(s)
+    assert(s ~= nil, "url.encode: s must not be nil")
+    return (s:gsub("[^%w%-_%.~]", function(c)
+        return format("%%%02X", c:byte())
+    end))
+end
+
+--- Return a URL string with all encoded characters decoded.
+---@param s string
+---@return string
+---@nodiscard
+function luna.url.decode(s)
+    assert(s ~= nil, "url.decode: s must not be nil")
+    return (s:gsub("%%(%x%x)", function(hex)
+        return char(tonumber(hex, 16))
+    end))
+end
+
 --- Return a boolean from `v` if it is a boolean like value.
 ---@param v string | boolean | number
 ---@return boolean
 function luna.bool(v)
     assert(v ~= nil, "bool: v must not be nil")
     return v == true or v == "true" or v == 1 or v == "1"
+end
+
+--- Return a bit (number as 0 or 1) from `v` if it is a boolean like value.
+---@param v string | boolean | number
+---@return integer
+---@nodiscard
+function luna.bit(v)
+    assert(v ~= nil, "bit: v must not be nil")
+    return luna.bool(v) and 1 or 0
 end
 
 --- Return an integer from `v` if possible.
