@@ -22,25 +22,22 @@ For a map to be considered a coop map, it needs to have the following properties
   make some adjustments, like probably migrating encounters or creating new ones to redefine the
   teams using a different team index or similar, we do plan to fix this in the internal game code
   so alliances can be defined in the future, but for now, this is the best solution)
-- Weapon spawns should be converted to item collections (As for the game a coop map is a multiplayer
-  map, the game will not spawn weapons defined in the weapons block of the scenario, multiplayer
-  maps use item collections to spawn weapons, so we need to convert the weapon spawns to item
-  collections, at least for now, we are working on a system to spawn weapons in multiplayer maps,
-  so we can keep logic like spawning a special weapon defined in the scenario based on scripting
-  logic or similar, but for now, we need to convert them to item collections, if you spawn a weapon
-  without using item collections, the game will garbage collect it at some point)
+- Weapon spawns will not use item collections anymore (Mimic as of today takes over how items are
+  collected, making normal "weapons" from the scenario block or weapons dropped by enemies actually
+  usable)
 
 For all the above properties, we have created a set of scripts that will help you to convert your
 singleplayer map to a coop map, you can find them in the "scripts" folder under the "lua" folder,
 but you will need to do some adjustments to the map to make it work properly, like adding spawn
 points, defining in the scripts teams assigned for each encounter, etc. The scripts will not do
-this for you, but they will help you to convert the map to a coop map. The scripts can be run as
-follows:
+all the porting for you, but they will help you to convert the map to a coop map.
+
+Scripts can be run as follows just as an example:
 ```bash
 # Converts scenario type to multiplayer, sets AI encounter to team player or enemy
 luajit lua/scripts/fixMultiplayerIssues.lua <scenarioPath>
-# Converts weapon spawns to item collections
-luajit lua/scripts/fixWeaponSpawns.lua <scenarioPath>
+# Creates external tag collection with referenced scripted tags
+luajit lua/scripts/migrateScenarioReferences.lua <scenarioPath>
 ```
 
 ## AI encounters
@@ -76,28 +73,6 @@ statically basically putting them into the same "default_by_unit" team, so they 
 each other, this is just static, remember that the game will not allow alliances between teams,
 so if you have a team that is allied with another team, you will need to define this in the script
 and can not be change dynamically trough scripting.
-
-## Weapon spawns
-**NOTE:** The `fixWeaponSpawns.lua` script will convert the weapon spawns to item collections, but
-it will not remove the weapon spawns from the scenario, so if your map script has logic that spawns
-weapons, it will still work but remember your item will be garbage collected at some point, so
-you might want to change that for a custom logic that creates a weapon right when needed or that
-keeps it alive somehow, script can be run as follows:
-```bash
-luajit lua/scripts/fixWeaponSpawns.lua <scenarioPath>
-```
-Script is pretty much straight forward, it will look for the weapon spawns in the scenario and will
-convert them to item collections keeping rotation and position of the weapons spawn using a long 
-respawn time to make sure the item collection is not removed from the map, it ONLY will convert
-weapons that don't have a name assigned so it does not conflict with a script that may be using the
-name to spawn a weapon, so if you have a weapon spawn with a name assigned, it will not be
-converted, this helps to provide player with weapons and ammo when needed using weapons that should
-be already available in the map.
-
-Example when in b30 (The Silent Cartographer) map, there are some weapons suppossed to spawn after
-a certain event, when the pelican from the helping marines arrives and crashes, weapons will be 
-spawn near the pelican, these weapons will not be converted to item collections, so they will spawn
-as expected, but will be removed from the map after a while.
 
 # Getting HSC tag references
 Singleplayer maps will have a Halo Script file that is used to define the logic of the map,
@@ -149,12 +124,22 @@ from the Halo Script file, so you can use it as a module in your Lua script, if 
 create everything as global variables and functions (not recommended), so you can use it
 as a module in your Lua script, checkout the Coop Evolved project structure for more information on
 how to use and run these scripts, an example of the transpiled scripts:
+
+Take this Halo Script for example:
 ```lisp
 (global "boolean" global_dialog_on false)
 (global "boolean" global_music_on false)
 (global "long" global_delay_music (* 30 300))
 (global "long" global_delay_music_alt (* 30 300))
 (global "short" global_random 0)
+
+(script static "unit" player0
+  (unit (list_get (players) 0))
+)
+
+(script static "unit" player1
+  (unit (list_get (players) 1))
+)
 
 (script startup mission_a10
     (fade_out 0 0 0 0)
@@ -171,7 +156,7 @@ how to use and run these scripts, an example of the transpiled scripts:
     (object_set_facing (player1)facing_flag_1)
 )
 ```
-Represented in Lua:
+This is how it will look like transpiled in Lua:
 ```lua
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
@@ -192,6 +177,14 @@ local global_delay_music = 30 * 300
 local global_delay_music_alt = 30 * 300
 local global_random = 0
 
+function a10.player0()
+    return hsc.unit(hsc.list_get(hsc.players(), 0))
+end
+
+function a10.player1()
+    return hsc.unit(hsc.list_get(hsc.players(), 1))
+end
+
 function a10.mission_a10()
     hsc.fade_out(0, 0, 0, 0)
     hsc.ai_allegiance("player", "human")
@@ -210,11 +203,33 @@ script.startup(a10.mission_a10)
 
 return a10
 ```
+
+Notice how when it comes to calling another "script" function like "player0" or "player1" it invokes
+the function equivalent using "call" this is similar to the "await" behavior from a promise in
+Javascript or better said the yield concept in a coroutine from Lua, with the main difference that
+it replicates how Halo Script works, by using call, the current "mission_a10" function goes to
+"sleep" or wait until the "player0" function finishes, so function "player0" is free to sleep as
+well by ticks, sleep until a condition is met, return a value and awake or give control back
+where "mission_a10" left after invoking "player0".
+
 All behavior from a Halo Script file has been ported to Lua, as you can tell there are some modules
-that are required to run the script, these modules are part of the Coop Evolved/Mimic project and
-are used to provide a more seamless experience when scripting, also help to detect when an event
-that requires to be synced across all players is triggered, so it can be run on all players and not
-just in the server side of the game, this is really important for coop maps as we need to make sure
-all players are in sync and not just the server, checkout Coop Evolved project for more information
-on how to use these modules, we are working on a documentation for the modules and how to use them
-but for now you can check the current structure of the project as an example.
+that are required at the top to run the script, these modules are part of the Coop Evolved/Mimic
+project and are used to provide a more seamless experience when scripting, also help to detect when
+an event that requires to be synced across all players is triggered, so it can be run on all players
+and not just in the server side of the game, this is really important for coop maps as we need to
+make sure all players are in sync and not just the server.
+
+**WARNING:** This does not mean that every function needs to replicate the exact same behaviour from
+a Halo Script in the transpilation, this is Lua now, so you are able to invoke any function like:
+```lua
+print("Hello from Lua")
+for i = 1, 1000000000 do
+    print("Look mom, I'm jamming the main loop!")
+end
+```
+And these executions will run as a normal linear function execution, be careful with spending too
+much time on them, these will affect the performance per tick if not done correctly.
+
+Checkout the Coop Evolved project for more information on how to use these modules, we are working
+on a better documentation about how to use them on your own for your projects but for now you can
+check the current structure of the project as an example.
