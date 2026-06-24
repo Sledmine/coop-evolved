@@ -127,12 +127,13 @@ will not find the tags required and gameplay might not work as expected.
 
 ## Halo Script to Lua
 Halo Script is a scripting language used in Halo CE to create custom experiences mostly for singleplayer
-maps, it is not supported in coop maps because it is heavily based on the singleplayer engine and is
-really limited for a scripting language, it is not even a real scripting language, it is more like a
-compiled language that is compiled everytime you need to run it, so it is not convenient for a
-map that needs to be tweaked and adapted to multiplayer easily, it was probably interpreted at some point
-in development but as of now workflow compiles it everytime you run it, so it is not ideal for
-multiplayer experiences or new mods that require a lot of testing and aim for better features and
+maps, it is not 100% supported in multiplayer cause it was heavily designed targeting the singleplayer engine behavior,
+it is really limited for a scripting language, it is not even a real scripting language, it is more like a
+compiled language, every time you make a change you need to recompile it, so it is not convenient for a
+map that needs to be tweaked and adapted to multiplayer progresively, it was probably interpreted at some point
+in development but as of now workflow compiles it everytime you run it.
+
+So it is not ideal for multiplayer experiences or new mods that require a lot of testing and aim for better features and
 fast workflow, so we have created a tool that allows you to convert or better said "transpile" Halo
 Script to Lua, this is another script called "hscToLua.lua" that will take a Halo Script file
 and will convert it to Lua, it is not perfect and might fail with really specific edge cases, but it
@@ -142,12 +143,12 @@ follows:
 luajit mimic/lua/scripts/hscToLua.lua <hscFile> --module a10
 ```
 This will create a Lua file under the current terminal directory with the same name as the Halo
-Script file, but with the extension ".lua" if the `--module` parameter is specified it will
+Script file, but with extension ".lua" if the `--module` parameter is specified it will
 create the Lua file wrapped inside a module like table with all the methods and variables
 from the Halo Script file, so you can use it as a module in your Lua script, if not it will
 create everything as global variables and functions (not recommended), so you can use it
 as a module in your Lua script, checkout the Coop Evolved project structure for more information on
-how to use and run these scripts, an exaple of the transpiled scripts:
+how to use and run these scripts, an example of the transpiled scripts:
 ```lisp
 (global "boolean" global_dialog_on false)
 (global "boolean" global_music_on false)
@@ -174,7 +175,9 @@ Represented in Lua:
 ```lua
 ---------- Transpiled from HSC to Lua ----------
 local script = require "script"
-local wake = require"script".wake
+local wake = script.wake
+local call = script.call
+local sleep = script.sleep
 local hsc = require "hsc"
 local easy = "easy"
 local normal = "normal"
@@ -189,7 +192,7 @@ local global_delay_music = 30 * 300
 local global_delay_music_alt = 30 * 300
 local global_random = 0
 
-function a10.mission_a10(call, sleep)
+function a10.mission_a10()
     hsc.fade_out(0, 0, 0, 0)
     hsc.ai_allegiance("player", "human")
     hsc.ai_grenades(false)
