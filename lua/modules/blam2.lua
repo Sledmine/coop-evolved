@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "2.0.2-dev", debug = false}
+local blam = {_VERSION = "2.0.3-dev", debug = false}
 
 ---Physics gravity default constant
 blam.PHYSICS_GRAVITY_DEFAULT = 996779464
@@ -448,23 +448,37 @@ end
 ---@param tagClassInt number | string
 ---@return string?
 local function integerToTagGroup(tagClassInt)
-    local tagClassHex = tohex(tagClassInt)
-    local tagClass
     if isNull(tagClassInt) then
-        return
+        return nil
     end
-    if tagClassHex then
-        local byte = ""
-        tagClass = ""
-        for char in string.gmatch(tagClassHex, ".") do
-            byte = byte .. char
-            if #byte % 2 == 0 then
-                tagClass = tagClass .. string.char(tonumber(byte, 16))
-                byte = ""
-            end
+
+    if type(tagClassInt) == "string" then
+        if #tagClassInt == 4 then
+            return tagClassInt
         end
+
+        local tagClassHex = tohex(tagClassInt)
+        if tagClassHex then
+            return fromhex(tagClassHex)
+        end
+
+        return tagClassInt
     end
-    return tagClass
+
+    local value = tonumber(tagClassInt)
+    if not value then
+        return nil
+    end
+
+    if value < 0 then
+        value = value + 0x100000000
+    end
+
+    local b1 = math.floor(value / 0x1000000) % 0x100
+    local b2 = math.floor(value / 0x10000) % 0x100
+    local b3 = math.floor(value / 0x100) % 0x100
+    local b4 = value % 0x100
+    return string.char(b1, b2, b3, b4)
 end
 
 blam.integerToTagGroup = integerToTagGroup
@@ -805,6 +819,16 @@ local function createBindStruct(baseAddress, struct, parentStruct, parentMeta)
         _addr = string.format("0x%x", baseAddress)
     }
 
+    local function getBaseFallbackStruct()
+        local baseFieldMeta, baseFieldAddress = getFieldMetadata(struct, "base", baseAddress,
+                                                                 parentStruct)
+        if baseFieldMeta and baseFieldAddress and
+            (baseFieldMeta.is == "struct" or baseFieldMeta.is == "union" or baseFieldMeta.fields) then
+            return createBindStruct(baseFieldAddress, baseFieldMeta.fields, struct, baseFieldMeta)
+        end
+        return nil
+    end
+
     setmetatable(tableStruct, {
         __index = function(t, key)
             -- Check for meta methods first
@@ -816,7 +840,13 @@ local function createBindStruct(baseAddress, struct, parentStruct, parentMeta)
             end
 
             local fieldMeta, address = getFieldMetadata(struct, key, baseAddress, parentStruct)
-            assert(fieldMeta and address, "Field '" .. key .. "' not found in struct")
+            if not (fieldMeta and address) then
+                local baseStruct = getBaseFallbackStruct()
+                if baseStruct then
+                    return baseStruct[key]
+                end
+            end
+            assert(fieldMeta and address, "Field '" .. key .. "' not found in struct", 2)
             local value
 
             -- Address is not valid, likely a null pointer, we can return nil without trying to read it
@@ -858,7 +888,14 @@ local function createBindStruct(baseAddress, struct, parentStruct, parentMeta)
             return value
         end,
         __newindex = function(t, key, value)
-            local fieldMeta, address = getFieldMetadata(struct, key, baseAddress)
+            local fieldMeta, address = getFieldMetadata(struct, key, baseAddress, parentStruct)
+            if not (fieldMeta and address) then
+                local baseStruct = getBaseFallbackStruct()
+                if baseStruct then
+                    baseStruct[key] = value
+                    return
+                end
+            end
             assert(fieldMeta and address, "Field '" .. key .. "' not found in struct")
             printdebug(string.format("0x%x", address),
                        key .. " (" .. tostring(fieldMeta.type) .. ") WRITE = " .. tostring(value))
@@ -1065,7 +1102,6 @@ blam.tagDataHeader = createBindStruct(addressList.tagDataHeader, tagDataHeaderSt
 
 -- Add utilities to library
 blam.dumpTable = dumpTable
-blam.consoleOutput = consoleOutput
 blam.null = NULL
 
 ---Get the current game camera type
@@ -1129,7 +1165,7 @@ local function createObject(address, structName)
             end
             return createBindStruct(address, struct)
         else
-            return nil
+            error("Missing struct file: " .. structName)
         end
     end
 end
@@ -1169,13 +1205,16 @@ local function createTag(address)
         -- print("tag.primaryGroup", tag.primaryGroup)
         -- print("tagStructureModuleName", tagStructureModuleName)
 
-        local success, struct = pcall(require, "structures.tag." .. tagStructureModuleName)
-        if success and struct then
+        local struct = package.loaded["structures.tag." .. tagStructureModuleName]
+        if struct then
             if type(struct) ~= "table" then
                 error("Tag structure is not a table for tag: " .. tag.primaryGroup)
             end
             tag.data = createBindStruct(tag.data --[[@as number]] , struct)
         else
+            -- TODO Add a metatable that searchs if the data field is being accesed, if so
+            -- then throw warning about data being missing
+            --logger:warning("Missing strug file for tag: {}", tagStructureModuleName)
             tag.data = nil
         end
 
@@ -1188,7 +1227,7 @@ end
 ---@param tagIdOrTagPath string | number
 ---@param tagClass? string
 ---@return tagEntry?
-function blam.getTagEntry(tagIdOrTagPath, tagClass, ...)
+function blam.getTagEntry(tagIdOrTagPath, tagClass)
     local tagId
     local tagPath
 
@@ -1199,11 +1238,6 @@ function blam.getTagEntry(tagIdOrTagPath, tagClass, ...)
         tagPath = tagIdOrTagPath
     elseif not tagIdOrTagPath then
         return nil
-    end
-
-    if (...) then
-        consoleOutput(debug.traceback("Wrong number of arguments on get tag function", 2),
-                      consoleColors.error)
     end
 
     local tagAddress
@@ -1220,7 +1254,7 @@ function blam.getTagEntry(tagIdOrTagPath, tagClass, ...)
     end
 
     if tagAddress then
-        printdebug("Tag address found: " .. string.format("0x%x", tagAddress))
+        --wdprintdebug("Tag address found: " .. string.format("0x%x", tagAddress))
         return createTag(tagAddress)
     end
 end
@@ -1487,6 +1521,22 @@ function blam.rcon.unpatch()
     end
 end
 
+--- Convert a 4-char tag group into its integer representation for fast comparisons.
+---@param tagGroup string
+---@return number?
+local function tagGroupToInteger(tagGroup)
+    if type(tagGroup) ~= "string" or #tagGroup ~= 4 then
+        return nil
+    end
+
+    local b1, b2, b3, b4 = string.byte(tagGroup, 1, 4)
+    if not b4 then
+        return nil
+    end
+
+    return b1 * 0x1000000 + b2 * 0x10000 + b3 * 0x100 + b4
+end
+
 --- Find a tag entry by keyword and tag group
 --- This function will return the first tag that matches the keyword and tag group.
 --- If no tag is found, it will return nil.
@@ -1494,10 +1544,22 @@ end
 ---@param tagGroup tagGroup
 ---@return tagEntry? tag
 function blam.tag.findTag(keyword, tagGroup)
+    local tagClassInt = tagGroupToInteger(tagGroup)
+    if not tagClassInt then
+        return nil
+    end
+
+    local tagArray = blam.tagDataHeader.array
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
-        local tag = blam.getTagEntry(tagIndex)
-        if tag and tag.path:find(keyword, 1, true) and tag.primaryClass == tagGroup then
-            return tag
+        local entryAddress = tagArray + tagIndex * 0x20
+        if read_dword(entryAddress) == tagClassInt then
+            local pathAddress = read_dword(entryAddress + 0x10)
+            if not isNull(pathAddress) then
+                local path = read_string(pathAddress)
+                if path and path:find(keyword, 1, true) then
+                    return blam.getTagEntry(tagIndex)
+                end
+            end
         end
     end
     return nil
@@ -1510,11 +1572,23 @@ end
 ---@param tagGroup tagGroup
 ---@return tagEntry[] tag
 function blam.tag.findTags(keyword, tagGroup)
+    local tagClassInt = tagGroupToInteger(tagGroup)
     local tagsList = {}
+    if not tagClassInt then
+        return tagsList
+    end
+
+    local tagArray = blam.tagDataHeader.array
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
-        local tag = blam.getTagEntry(tagIndex)
-        if tag and tag.path:find(keyword, 1, true) and tag.primaryClass == tagGroup then
-            tagsList[#tagsList + 1] = tag
+        local entryAddress = tagArray + tagIndex * 0x20
+        if read_dword(entryAddress) == tagClassInt then
+            local pathAddress = read_dword(entryAddress + 0x10)
+            if not isNull(pathAddress) then
+                local path = read_string(pathAddress)
+                if path and path:find(keyword, 1, true) then
+                    tagsList[#tagsList + 1] = blam.getTagEntry(tagIndex)
+                end
+            end
         end
     end
     return tagsList
@@ -1751,8 +1825,11 @@ end
 ---@param handle number Object handle, it can be an object index or id
 ---@param objectGroup objectGroup
 function blam.gameState.getObject(handle, objectGroup)
-    local handle
     local objectAddress
+    local handle = handle
+    if type(handle) == "table" then
+        handle = handle.value
+    end
 
     -- Get object address
     if handle then
@@ -1766,24 +1843,22 @@ function blam.gameState.getObject(handle, objectGroup)
                 return nil
             end
 
-            -- Calculate object ID (this may be invalid, be careful)
+            -- Calculate object handle (this may be invalid, be careful)
             handle = (read_word(table.firstElementAddress + index * table.elementSize) * 0x10000) +
                          index
-        else
-            handle = idOrIndex
         end
 
         objectAddress = get_object(handle)
 
         if objectAddress then
-            local objectStructName
+            local objectStructName = "object"
             for name, objectGroupValue in pairs(objectClasses) do
                 if objectGroup == objectGroupValue then
                     objectStructName = name
                     break
                 end
             end
-            createObject(objectAddress, objectStructName)
+            return createObject(objectAddress, objectStructName)
         end
     end
     return nil

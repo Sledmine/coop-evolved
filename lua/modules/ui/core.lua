@@ -1,24 +1,16 @@
 local blam = require "blam"
+local script = require "script"
 local balltze = Balltze
 local engine = Engine
 
 local core = {}
 
-local timeToWaitForDOM = 66
-
----Executes a function after a delay
----@param milliseconds number
----@param callback function
-function delay(milliseconds, callback)
-    local timer
-    timer = Balltze.misc.setTimer(milliseconds, function()
-        -- Prevent the entire game from crashing as Balltze does not handle errors in timers lol
-        local success, message = pcall(callback)
-        if not success then
-            logger:error("Error in delay callback: %s", message)
-        end
-        timer.stop()
-    end)
+function core.getRenderedUIWidgetTagHandle()
+    -- TODO BALLTZE MIGRATE Ensure this works when the menu is not OPEN and does not crash
+    local rootWidget = engine.userInterface.getRootWidget()
+    if rootWidget then
+        return rootWidget.definitionTagHandle.value
+    end
 end
 
 --- Get the tag widget of the current ui open in the game
@@ -82,30 +74,46 @@ function core.getWidgetValues(widgetTagId)
     end
 end
 
-function core.setWidgetValues(widgetTagId, values)
-    local function setValuesDOMSafe()
-        -- Verify there is a widget loaded in the DOM
-        local widget = engine.userInterface.findWidget(widgetTagId)
-        if widget then
-            for key, value in pairs(values) do
-                if type(value) == "table" then
-                    for subKey, subValue in pairs(value) do
-                        widget[key][subKey] = subValue
-                    end
-                else
-                    widget[key] = value
+local function setWidgetValuesDOMSafe(widgetTagHandle, values)
+    -- Verify there is a widget loaded in the DOM
+    local isWidgetPresent, widget = pcall(engine.userInterface.findWidget, widgetTagHandle)
+    if isWidgetPresent and widget then
+        for key, value in pairs(values) do
+            if type(value) == "table" then
+                for subKey, subValue in pairs(value) do
+                    widget[key][subKey] = subValue
                 end
+            else
+                widget[key] = value
             end
-            return true
         end
+        return true
     end
-    if not setValuesDOMSafe() then
-        -- If there is no widget loaded in the DOM, wait 33ms and try again
-        -- (this is a workaround for the DOM not being loaded yet)
-        -- TODO BALLTZE MIGRATE
-        -- utils.delay(33, function()
-        --    setValuesDOMSafe()
-        -- end)
+    return false
+end
+
+---Set the values of a widget in the DOM
+---@param widgetTagHandleValue number
+---@param values MetaEngineWidgetParams
+---@param isAsync? boolean Control if the function should try to set values async if it fails
+function core.setWidgetValues(widgetTagHandleValue, values, isAsync)
+    local isAsync = isAsync == nil and true or isAsync
+    if not setWidgetValuesDOMSafe(widgetTagHandleValue, values) then
+        -- If it fails, try again in a script thread until it works or times out after N ticks
+        -- This will prevent crashes and ensure widget gets updated if it takes a while to
+        -- render in game DOM, despite update being called prior to rendering the widget
+
+        -- Useful for allowing async updates to widgets that are not yet loaded, or running
+        -- updates in events such as onOpen that are called before the widget is loaded
+        if not isAsync then
+            return
+        end
+        script.thread(function(_, sleep)
+            -- Wait until desired widget is loaded in the DOM
+            sleep(function()
+                return setWidgetValuesDOMSafe(widgetTagHandleValue, values)
+            end, 1, constants.maximumTicksForDOMRenderTime)
+        end)()
     end
 end
 
@@ -124,6 +132,14 @@ function core.replaceWidgetInDom(widgetTagHandleValue, newWidgetTagHandleValue)
     if replaced and widget then
         engine.userInterface.replaceWidget(widget, newWidgetTagHandleValue)
     end
+end
+
+---Returns the current screen resolution
+---@return number width, number height
+function core.getScreenResolution()
+    local width = read_word(0x637CF2)
+    local height = read_word(0x637CF0)
+    return width, height
 end
 
 local currentWidgetIdAddress = 0x6B401C
@@ -158,6 +174,18 @@ function core.getWidgetCursorPosition()
         local cursorY = read_int(cursorGlobals + 0x8)
         return cursorX, cursorY
     end
+end
+
+---Copy text to user clipboard
+---@param text string
+function core.copyToClipboard(text)
+    return balltze.misc.setClipboard(text)
+end
+
+---Get text from user clipboard
+---@return string | nil
+function core.getClipboard()
+    return balltze.misc.getClipboard()
 end
 
 function core.getStringFromWidget(widgetTagId)
