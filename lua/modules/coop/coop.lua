@@ -1,15 +1,15 @@
 local blam = require "blam"
 local constants = require "coop.constants"
-local tagClasses = blam.tagClasses
 local isNull = blam.isNull
 local getIndexById = blam.getIndexById
 local balltze = Balltze
 local engine = Engine
-local findTags = engine.tag.findTags
 local objectClasses = blam.objectClasses
 local objectNetworkRoleClasses = blam.objectNetworkRoleClasses
 local blam2 = require "blam2"
+local tagGroups = blam2.tag.groups
 local core = require "coop.core"
+local tagClasses = engine.tag.classes
 
 local hsc = require "hsc"
 
@@ -44,18 +44,15 @@ function coop.getRequiredVotes(playersCount)
 end
 
 function coop.getAvailableBipeds()
-    -- local bipedTags = findTags("_mp", engine.tag.classes.biped)
-    -- FIXME Use blam for cross compatibility as we move to use Balltze
-    local bipedTags = blam.findTagsList("_mp", tagClasses.biped) or {}
-    -- assert(bipedTags, "Failed to load multiplayer biped tags")
+    local bipedTags = blam2.tag.findTags("_mp", tagGroups.biped) or {}
+    assert(bipedTags, "Failed to load multiplayer biped tags")
     local bipedsList = {}
     for index, tag in pairs(bipedTags) do
         local tagPath = tag.path
         if tagPath:endswith("_mp") then
             local tagSplit = tagPath:split "\\"
             local bipedName = tagSplit[#tagSplit]:gsub("_mp", ""):gsub("_", " "):upper()
-            -- bipedsList[index] = {name = bipedName, id = tag.handle.value}
-            bipedsList[index] = {name = bipedName, id = tag.id}
+            bipedsList[index] = {name = bipedName, id = tag.handle.value}
             table.sort(bipedsList, function(a, b)
                 return a.name < b.name
             end)
@@ -65,7 +62,7 @@ function coop.getAvailableBipeds()
 end
 
 function coop.openCoopMenu()
-    local coopMenuTag = blam.findTag("coop_menu_screen", tagClasses.uiWidgetDefinition)
+    local coopMenuTag = blam2.tag.findTag("coop_menu_screen", tagGroups.uiWidgetDefinition)
     assert(coopMenuTag, "Failed to load coop menu tag")
     load_ui_widget(coopMenuTag.path)
 end
@@ -213,24 +210,28 @@ end
 function coop.swapFirstPerson()
     local player = blam.player(get_player())
     assert(player, "Failed to load player")
-    local playerObject = blam.object(get_object(player.objectId))
-    local globals = blam.globalsTag()
+    local playerObject = engine.gameState.getObject(player.objectId, objectClasses.biped)
+    local globals = constants.globals
+    assert(globals, "Failed to load globals tag")
+    local globalsData = globals.data
+    assert(globalsData, "Failed to load globals data")
     if player and playerObject and globals then
-        local bipedTagEntry = blam.getTag(playerObject.tagId)
-        if bipedTagEntry then
-            local pathData = bipedTagEntry.path:split "\\"
-            local bipedName = pathData[#pathData]
-            local finalModelEntry = constants.gbxmodels.defaultFp
-            local customFpEntry = blam.findTag(bipedName .. "_fp", tagClasses.gbxmodel)
-            if customFpEntry then
-                finalModelEntry = customFpEntry
-            end
-            if finalModelEntry then
-                -- Update first person interface globals to use the new model
-                local newFirstPersonInterface = globals.firstPersonInterface
-                newFirstPersonInterface[1].firstPersonHands = finalModelEntry.id
-                globals.firstPersonInterface = newFirstPersonInterface
-            end
+        local bipedTagEntry = blam2.tag.getTag(playerObject.tagHandle.value, tagGroups.biped)
+        assert(bipedTagEntry, "Failed to load biped tag entry")
+        local pathData = bipedTagEntry.path:split "\\"
+        local bipedName = pathData[#pathData]
+        local finalModelEntry = constants.gbxmodels.defaultFp
+        assert(finalModelEntry, "Failed to load default first person model")
+        local customFpEntry = engine.tag.findTags(bipedName .. "_fp", tagClasses.gbxmodel)[1]
+        if customFpEntry then
+            finalModelEntry = customFpEntry --[[@as tagEntry]]
+        else
+            logger:debug("No custom first person model found for biped " .. bipedName)
+        end
+        if finalModelEntry then
+            -- Update first person interface globals to use the new model
+            local firstPersonHands = globalsData.firstPersonInterface.elements[1].firstPersonHands
+            firstPersonHands.tagHandle.value = finalModelEntry.handle.value
         end
     end
 end
@@ -242,6 +243,7 @@ function coop.changeBiped(desiredBipedIndex)
     assert(globals, "Failed to load globals tag")
     local desiredBiped = AvailableBipeds[desiredBipedIndex]
     assert(desiredBiped, "Failed to load biped")
+    -- BALLTZE MIGRATE
     local player = blam.player(get_player())
     if desiredBiped and player then
         local mpInfo = globals.multiplayerInformation
@@ -250,7 +252,7 @@ function coop.changeBiped(desiredBipedIndex)
         globals.multiplayerInformation = mpInfo
         -- Check if object exists before trying to delete it, otherwise triggers exception
         -- BALLTZE MIGRATE
-        if (get_object(player.objectId)) then
+        if get_object(player.objectId) then
             delete_object(player.objectId)
         end
     end

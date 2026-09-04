@@ -1,7 +1,10 @@
 local blam = require "blam"
+local blam2 = require "blam2"
 local utils = require "coop.utils"
-local tagClasses = blam.tagClasses
-local findTag = blam.findTag
+local tagGroups = blam2.tag.groups
+local findTag = blam2.tag.findTag
+local getTagEntry = blam2.getTagEntry
+local engine = Engine
 
 local constants = {}
 
@@ -36,10 +39,11 @@ constants.seats = {
 }
 
 function constants.get()
-    constants.widgets = {coopMenu = findTag("coop_menu_screen", tagClasses.uiWidgetDefinition)}
+    constants.widgets = {coopMenu = findTag("coop_menu_screen", tagGroups.uiWidgetDefinition)}
     constants.gbxmodels = {
-        defaultFp = blam.getTag([[[shm]\halo_1\characters\cyborg\fp\fp]], tagClasses.gbxmodel)
+        defaultFp = getTagEntry([[[shm]\halo_1\characters\cyborg\fp\fp]], tagGroups.gbxmodel)
     }
+    constants.globals = engine.tag.getTag("globals\\globals", engine.tag.classes.globals)
 end
 
 return constants

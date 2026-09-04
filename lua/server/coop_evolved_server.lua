@@ -5,15 +5,14 @@ DebugPerformance = false
 IsLevelDebugMode = false
 AutoStart = false
 require "luna"
-
--- Bring compatibility modules (Lua 5.3 and Balltze API)
 require "compat53"
 require "balltzeCompat"
+
+local blam = require "blam"
 
 local engine = Engine
 local balltze = Balltze
 
-local blam = require "blam"
 local tagClasses = blam.tagClasses
 local objectClasses = blam.objectClasses
 console_out = cprint
@@ -483,7 +482,7 @@ function OnTick()
     end
 end
 
-function OnMapLoad()
+function PluginFirstTick()
     constants.get()
 
     CoopServerState.difficulty = coop.difficulties[blam.getGameDifficultyIndex()]
@@ -590,12 +589,6 @@ function PluginLoad()
     Balltze.event.rconMessage.subscribe(function(event)
         if event.time == "before" then
             return OnRconMessage(event.playerIndex, event.message, event.password)
-        end
-    end)
-
-    Balltze.event.mapLoad.subscribe(function(event)
-        if event.time == "before" then
-            OnMapLoad()
         end
     end)
 

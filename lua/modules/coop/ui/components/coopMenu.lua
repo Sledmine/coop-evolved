@@ -10,7 +10,7 @@ local engine = Engine
 local function coopMenu()
     assert(constants.widgets.coopMenu, "coop_menu_screen tag not found")
 
-    local coopMenu = component.new(constants.widgets.coopMenu.id)
+    local coopMenu = component.new(constants.widgets.coopMenu.handle.value)
     local votesCount = component.new(coopMenu:findChildWidgetTag("votes_count").id)
     --local votesLabel = component.new(coopMenu:findChildWidgetTag("votes_label").id)
     local bipedsList = list.new(coopMenu:findChildWidgetTag("options").id, 1, 13)
@@ -29,6 +29,12 @@ local function coopMenu()
     readyButton:onClick(function()
         blam.rcon.dispatch("Ready")
         engine.userInterface.closeWidget()
+    end)
+
+    coopMenu:onOpen(function()
+        bipedsList:setItems(bipeds)
+        votesCount:setText(tostring(CoopState.remainingVotes))
+        gameDifficulty:setBitmapIndex(table.indexof(coop.difficulties, CoopState.difficulty))
     end)
 
     -- Render
