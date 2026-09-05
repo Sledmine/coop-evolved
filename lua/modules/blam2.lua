@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "2.0.3-dev", debug = false}
+local blam = {_VERSION = "2.0.4-dev", debug = false}
 
 ---Physics gravity default constant
 blam.PHYSICS_GRAVITY_DEFAULT = 996779464
@@ -858,7 +858,27 @@ local function createBindStruct(baseAddress, struct, parentStruct, parentMeta)
             if cTypes[fieldMeta.type] and cTypes[fieldMeta.type].read then
                 value = cTypes[fieldMeta.type].read(address, fieldMeta.offset)
             elseif fieldMeta.is == "struct" or fieldMeta.is == "union" or fieldMeta.fields then
-                value = createBindStruct(address, fieldMeta.fields, struct, fieldMeta)
+                -- Special-case: structs that are just fixed-size string containers
+                -- e.g. String32 definitions that have a single field named "string" which
+                -- is an array of chars. Allow reading `trigger.name` directly as a Lua string
+                -- instead of requiring `trigger.name.string`.
+                local treatedAsString
+                if fieldMeta.fields and type(fieldMeta.fields) == "table" then
+                    for _, f in ipairs(fieldMeta.fields) do
+                        if f.name == "string" and f.is == "array" and f.elementType == "char" then
+                            -- address points to start of the struct, string field offset is relative
+                            local stringAddr = address + (f.offset or 0)
+                            -- read_string will stop at the first null byte
+                            treatedAsString = read_string(stringAddr)
+                            break
+                        end
+                    end
+                end
+                if treatedAsString then
+                    value = treatedAsString
+                else
+                    value = createBindStruct(address, fieldMeta.fields, struct, fieldMeta)
+                end
             elseif fieldMeta.is == "array" and fieldMeta.count then
                 local array = {}
                 for i = 0, fieldMeta.count - 1 do
@@ -909,6 +929,34 @@ local function createBindStruct(baseAddress, struct, parentStruct, parentMeta)
             if cTypes[fieldMeta.type] and cTypes[fieldMeta.type].write then
                 cTypes[fieldMeta.type].write(address, value, fieldMeta.offset)
             elseif fieldMeta.is == "struct" or fieldMeta.is == "union" or fieldMeta.fields then
+                -- Special-case: write directly to fixed-size string container structs
+                local wroteString
+                if fieldMeta.fields and type(fieldMeta.fields) == "table" then
+                    for _, f in ipairs(fieldMeta.fields) do
+                        if f.name == "string" and f.is == "array" and f.elementType == "char" then
+                            if type(value) ~= "string" then
+                                error("Expected a string for assignment to string struct field")
+                            end
+                            local stringAddr = address + (f.offset or 0)
+                            local maxLen = f.count or f.size or #value
+                            -- write bytes up to maxLen and pad remainder with 0
+                            for i = 1, (f.count or maxLen) do
+                                local byte = 0
+                                if i <= #value then
+                                    byte = string.byte(value, i) or 0
+                                else
+                                    byte = 0
+                                end
+                                write_byte(stringAddr + (i - 1), byte)
+                            end
+                            wroteString = true
+                            break
+                        end
+                    end
+                end
+                if wroteString then
+                    return
+                end
                 -- If it's a struct, we can set fields directly as it will trigger the __index metamethod
                 if type(value) == "table" then
                     for k, v in pairs(value) do
