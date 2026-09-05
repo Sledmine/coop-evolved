@@ -26,6 +26,7 @@ end
 assert(require "structures.tag.biped")
 assert(require "structures.tag.globals")
 assert(require "structures.tag.uiWidgetDefinition")
+--assert(require "structures.tag.scenario")
 
 -- Settings
 DebugMode = false
@@ -75,8 +76,6 @@ function PluginMetadata()
         maps = loadWhenIn
     }
 end
-
-local loaded = false
 
 function PluginLoad()
     logger = balltze.logger.createLogger("Coop Evolved")

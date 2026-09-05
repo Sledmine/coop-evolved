@@ -58,7 +58,7 @@ script.startup(function(_, sleep)
         logger:debug("Current map name: \"{}\"", mapName)
         local levelName = mapName:split("_coop")[1]
         logger:debug("Attempting to load level script for \"{}\"", levelName)
-        local ok, result = pcall(require, "levels." .. levelName)
+        --local ok, result = pcall(require, "levels." .. levelName)
         if not ok then
             logger:warning("Error loading level script: {}", result)
         else
@@ -103,3 +103,11 @@ local function firstPersonSwap(_, sleep)
     sleep(3)
 end
 script.continuous(firstPersonSwap)
+
+-- Experimental, does not work yet, keep here for later
+local function overrideBspTriggers(_, sleep)
+    coop.overrideBspTriggers()
+    sleep(1)
+    --script.continuous(coop.startCbspMonitor)
+end
+--script.startup(overrideBspTriggers)

@@ -10,8 +10,8 @@ local blam2 = require "blam2"
 local tagGroups = blam2.tag.groups
 local core = require "coop.core"
 local tagClasses = engine.tag.classes
-
 local hsc = require "hsc"
+local utils = require "coop.utils"
 
 local coop = {}
 
@@ -256,6 +256,84 @@ function coop.changeBiped(desiredBipedIndex)
             delete_object(player.objectId)
         end
     end
+end
+
+local globalScenarioTagEntry
+
+function coop.overrideBspTriggers()
+    if not globalScenarioTagEntry then
+        globalScenarioTagEntry = engine.tag.findTags("", engine.tag.classes.scenario)[1]
+    end
+    assert(globalScenarioTagEntry, "Failed to load scenario tag")
+    local globalScenario = globalScenarioTagEntry.data
+    assert(globalScenario, "Failed to load scenario data")
+    local bspTriggersCount = globalScenario.triggerVolumes.count
+    logger:debug("Overriding {} BSP triggers...", bspTriggersCount)
+    for triggerIndex = 1, bspTriggersCount do
+        local trigger = globalScenario.triggerVolumes.elements[triggerIndex]
+        if trigger then
+            if trigger.name:lower():startswith("bsp") then
+                logger:debug("Overriding trigger " .. trigger.name)
+                local bspFromTo = trigger.name:replace("bsp", ""):split ","
+                local from = bspFromTo[1]
+                local to = bspFromTo[2]
+                trigger.name = "cbsp" .. from .. "-" .. to
+                --trigger.name = ""
+            elseif trigger.name:lower():startswith("cbsp") then
+                logger:debug("Overriden trigger found " .. trigger.name)
+                logger:debug("parameters: {}", inspect(trigger.parameters))
+                logger:debug("unknown: {}", inspect(trigger.unknown))
+            end
+        end
+    end
+    --hsc.volume_teleport_players_not_inside("cbsp0-1", "teleport_bsp0_door")
+    --hsc.volume_teleport_players_not_inside("bsp0,1", "teleport_bsp0_door")
+
+end
+
+--- Start a dedicated continuous monitor for cbsp triggers.
+function coop.startCbspMonitor(_, sleep)
+    -- Ensure we have the scenario data available
+    assert(globalScenarioTagEntry, "Failed to load scenario tag")
+    local globalScenario = globalScenarioTagEntry.data
+    assert(globalScenario, "Failed to load scenario data")
+    local currentBsp = hsc.structure_bsp_index()
+    --logger:debug("Starting CBSP monitor for BSP {}...", tostring(currentBsp))
+    for triggerIndex = 1, globalScenario.triggerVolumes.count do
+        local trig = globalScenario.triggerVolumes.elements[triggerIndex]
+        if trig and trig.name and trig.name:lower():startswith("cbsp") then
+            local parts = trig.name:replace("cbsp", ""):split "-"
+            local from = tonumber(parts[1])
+            local to = tonumber(parts[2])
+            if from and to and currentBsp == from then
+                local playersList = hsc.players()
+                local playerCount = hsc.list_count(playersList)
+                local insideUnit = nil
+                local insidePlayerIndex = nil
+                for i = 0, playerCount - 1 do
+                    local unit = hsc.unit(hsc.list_get(playersList, i))
+                    if hsc.volume_test_object(trig.name, unit) then
+                        insideUnit = unit
+                        insidePlayerIndex = i
+                        break
+                    end
+                end
+                if insideUnit then
+                    logger:info("CBSP monitor: trigger {} activated by player index {}", trig.name, tostring(insidePlayerIndex))
+                    for i = 0, playerCount - 1 do
+                        local unit = hsc.unit(hsc.list_get(playersList, i))
+                        if not hsc.volume_test_object(trig.name, unit) then
+                            hsc.object_teleport(unit, insideUnit)
+                        end
+                    end
+                    logger:info("CBSP monitor: switching BSP {} -> {}", tostring(from), tostring(to))
+                    hsc.switch_bsp(to)
+                    sleep(utils.secondsToTicks(1))
+                end
+            end
+        end
+    end
+    sleep(1)
 end
 
 return coop
