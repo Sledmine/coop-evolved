@@ -1,3 +1,0 @@
----@class MetaEngineTagDataScenery: MetaEngineTagDataBasicObject  
-
-

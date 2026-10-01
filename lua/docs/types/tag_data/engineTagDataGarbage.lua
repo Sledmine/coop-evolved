@@ -1,3 +1,0 @@
----@class MetaEngineTagDataGarbage: MetaEngineTagDataItem  
-
-

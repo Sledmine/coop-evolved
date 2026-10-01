@@ -1,3 +1,0 @@
----@class MetaEngineTagDataDeviceLightFixture: MetaEngineTagDataDevice  
-
-
