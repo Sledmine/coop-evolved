@@ -2,35 +2,27 @@ local balltze = Balltze
 local engine = Engine
 inspect = require "inspect"
 
-local blam = require "blam"
 local coop = require "coop.coop"
 local utils = require "coop.utils"
 local constants = require "coop.constants"
 local component = require "ui.component"
-local ether = require "ui.react"
 local script = require "script"
 require "coop.gameplay.utils"
+local hsc = require "hsc"
+local hscDoc = require "hscDoc"
+local parser = require "coop.network.parser"
+local createHscPacket = parser.createHscPacket
 
 script.startup(function(_, sleep)
-    -- Keep this cause I messed up with the ether thing, fuck it
-    sleep(1)
-
     component.callbacks()
     if constants.widgets.coopMenu then
         AvailableBipeds = coop.getAvailableBipeds()
-        -- Tell bundler to load the coop menu module with comment below
-        -- require("coop.ui.components.coopMenu")
-        ether.mount("coopMenu", constants.widgets.coopMenu.handle.value)
-
-        CoopState = ether.reactive(CoopState, function()
-            ether.render(constants.widgets.coopMenu.handle.value)
-        end)
     end
 
-    local serverType = engine.netgame.getServerType()
+    local serverType = engine.game.getGameConnectionType()
 
     -- We are on a local server, enable all spawns and find new spawn every X seconds
-    if serverType == "local" then
+    if serverType == "networkServer" or serverType == "local" then
         coop.enableSpawn(true)
         script.continuous(function(_, sleep)
             coop.findNewSpawn()
@@ -42,7 +34,7 @@ script.startup(function(_, sleep)
     -- This way we can let level scripts handle logic to fetch tags, variables, etc
     -- But preventing running the actual logic of the level script...
     -- Allowing the server to just handle networking and player management
-    if serverType == "dedicated" then
+    if serverType == "networkClient" then
         logger.debug("Dedicated server detected, disabling startup and continuous scripts")
         ---@diagnostic disable-next-line: duplicate-set-field
         script.startup = function()
@@ -53,38 +45,57 @@ script.startup(function(_, sleep)
     end
 
     -- Load the actual level script for the current map, if it exists
-    if serverType ~= "sapp" then
-        local mapName = engine.map.getCurrentMapHeader().name
-        logger.debug("Current map name: \"{}\"", mapName)
-        local levelName = mapName:split("_coop")[1]
-        logger.debug("Attempting to load level script for \"{}\"", levelName)
-        local ok, result = pcall(require, "levels." .. levelName)
-        if not ok then
-            logger.warning("Error loading level script: {}", result)
-        else
-            logger.debug("Loaded level script for \"{}\"", levelName)
-            if DebugPerformance then
-                script.setReferenceContext(result)
-                if false then
-                    script.continuous(function(_, sleep)
-                        -- logger.debug("{}", inspect(script.getStatus()))
-                        for i, thread in ipairs(script.getStatus()) do
-                            if thread.type == "continuous" then
-                                -- logger.debug("Running continuous script thread #{}: {}", i, thread.referenceFile)
-                                print(string.format(
-                                          "Running continuous script thread #%d: %s | last %.3f ms | avg %.3f ms | max %.3f ms | total %.3f ms | runs %d",
-                                          i, thread.referenceFile, (thread.lastRunTime or 0) * 1000,
-                                          (thread.averageRunTime or 0) * 1000,
-                                          (thread.maxRunTime or 0) * 1000,
-                                          (thread.totalRunTime or 0) * 1000, thread.runCount or 0))
-                            end
-                        end
-                        print("----")
-                        sleep(120)
-                    end)
+    local mapName = engine.cacheFile.getLoadedCacheFileHeader().scenarioName
+    logger.info("Current map name: \"{}\"", mapName)
+    local levelName = mapName:split("_coop")[1]
+    logger.debug("Attempting to load level script for \"{}\"", levelName)
+    local ok, result = pcall(require, "levels." .. levelName)
+    if not ok then
+        logger.warning("Error loading level script: {}", result)
+    else
+        logger.debug("Loaded level script for \"{}\"", levelName)
+    end
+
+    if serverType == "networkServer" then
+        hsc.addMiddleWare(function(functionName, args)
+            local funcMeta = table.find(hscDoc.functions, function(v, k)
+                return v.funcName == functionName
+            end)
+            assert(funcMeta, "Function " .. functionName .. " not found in hscDoc")
+            if funcMeta.isSynchronizable then
+                local hscPacket = createHscPacket(functionName, args)
+                if hscPacket then
+                    logger.info("HSC Packet: {}", hscPacket)
+                    balltze.network.broadcast(constants.coopNetworkChannel, hscPacket)
                 end
             end
-        end
+        end)
+    end
+
+    if serverType == "networkClient" then
+        balltze.network.subscribe(constants.coopNetworkChannel, function(packet,
+                                                                         senderPlayerIndex)
+            logger.info("Received HSC Packet: {}", packet)
+            local hscCommand = parser.parseHscPacket(packet)
+            assert(hscCommand, "Error, hsc command is not valid")
+            if DebugMode then
+                logger.debug("Executing HSC command: {}", hscCommand)
+                if DebugLevel >= 2 then
+                    logger.debug("Received HSC packet: {}", message)
+                end
+            end
+            engine.script.execute(hscCommand)
+            if hscCommand:includes("camera_set") then
+                local params = hscCommand:split " "
+                local cutsceneCameraPoint = params[2]
+                if DebugMode then
+                    if DebugLevel >= 2 then
+                        logger.debug("Unlocking cinematic camera: {}", cutsceneCameraPoint)
+                    end
+                end
+                engine.script.execute("object_pvs_set_camera " .. cutsceneCameraPoint)
+            end
+        end)
     end
 end)
 
@@ -102,12 +113,12 @@ local function firstPersonSwap(_, sleep)
     end
     sleep(3)
 end
---script.continuous(firstPersonSwap)
+-- script.continuous(firstPersonSwap)
 
 -- Experimental, does not work yet, keep here for later
 local function overrideBspTriggers(_, sleep)
     coop.overrideBspTriggers()
     sleep(1)
-    --script.continuous(coop.startCbspMonitor)
+    -- script.continuous(coop.startCbspMonitor)
 end
---script.startup(overrideBspTriggers)
+-- script.startup(overrideBspTriggers)

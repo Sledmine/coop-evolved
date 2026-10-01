@@ -1,9 +1,4 @@
-local blam = require "blam"
-local blam2 = require "blam2"
 local utils = require "coop.utils"
-local tagGroups = blam2.tag.groups
-local findTag = blam2.tag.findTag
-local getTagEntry = blam2.getTagEntry
 local engine = Engine
 
 local constants = {}
@@ -14,12 +9,11 @@ constants.firstPlayerIndex = 0
 constants.lastPlayerIndex = 15
 constants.maximumNetworkObjectsForItems = 345
 constants.secondsForWaitingPlayersInPelican = 90
-constants.ticksForPelicanPlayerWait = utils.secondsToTicks(constants.secondsForWaitingPlayersInPelican)
-
-if Engine.netgame.getServerType() == "sapp" then
-    constants.firstPlayerIndex = 1
-    constants.lastPlayerIndex = 16
-end
+constants.ticksForPelicanPlayerWait = utils.secondsToTicks(
+                                          constants.secondsForWaitingPlayersInPelican)
+constants.firstPlayerIndex = 0
+constants.lastPlayerIndex = 15
+constants.coopNetworkChannel = "coop_evolved_network"
 
 constants.seats = {
     pelican = {
@@ -39,11 +33,16 @@ constants.seats = {
 }
 
 function constants.get()
-    constants.widgets = {coopMenu = findTag("coop_menu_screen", tagGroups.uiWidgetDefinition)}
-    constants.gbxmodels = {
-        defaultFp = getTagEntry([[[shm]\halo_1\characters\cyborg\fp\fp]], tagGroups.gbxmodel)
+    constants.widgets = {
+        coopMenu = engine.tag.filterTags("ui_widget_definition", "coop_menu_screen")[1]
     }
-    constants.globals = engine.tag.getTag("globals\\globals", engine.tag.classes.globals)
+    constants.gbxmodels = {
+        defaultFp = engine.tag.filterTags("gbxmodel", [[[shm]\halo_1\characters\cyborg\fp\fp]])[1]
+    }
+    constants.globals = engine.tag.filterTags("globals", "globals")[1]
+    ---@type TagEntry[]
+    constants.bipeds = engine.tag.filterTags("biped", "_mp")
+    constants.scenario = engine.tag.filterTags("scenario", "")[1]
 end
 
 return constants

@@ -2,7 +2,12 @@
 local component = require "ui.component"
 
 ---@class uiComponentButtonClass : uiComponent
-local button = setmetatable({}, {__index = component})
+local button = setmetatable({
+    ---@type string
+    type = "button",
+    ---@type any
+    value = nil
+}, {__index = component})
 
 ---@class uiComponentButtonEvents : uiComponentEvents
 ---@field onClick fun(value?: string | boolean | number):boolean | nil
@@ -10,16 +15,28 @@ local button = setmetatable({}, {__index = component})
 ---@class uiComponentButton : uiComponentButtonClass
 ---@field events uiComponentButtonEvents
 
----@param tagId number
+---@param handleValue integer
 ---@return uiComponentButton
-function button.new(tagId)
-    local instance = setmetatable(component.new(tagId), {__index = button}) --[[@as uiComponentButton]]
+function button.new(handleValue)
+    local instance = setmetatable(component.new(handleValue), {__index = button}) --[[@as uiComponentButton]]
     return instance
 end
 
 ---@param self uiComponentButton
 function button.onClick(self, callback)
     self.events.onClick = callback
+end
+
+---@param self uiComponentButton
+---@param value any
+function button.setValue(self, value)
+    self.value = value
+end
+
+---@param self uiComponentButton
+---@return any
+function button.getValue(self)
+    return self.value
 end
 
 return button

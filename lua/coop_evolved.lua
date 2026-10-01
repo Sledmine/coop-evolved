@@ -2,7 +2,7 @@ local balltze = Balltze
 local engine = Engine
 require "luna"
 inspect = require "inspect"
-local logger = balltze.logger
+logger = balltze.logger
 
 -- Override assert function to print traceback as well
 local luaAssert = assert
@@ -40,44 +40,22 @@ AvailableBipeds = {}
 CoopState = {remainingVotes = 0, difficulty = coop.difficulties[4]}
 RunCinematics = true
 
-function PluginMetadata()
-    return {
-        name = "Coop Evolved",
-        author = "Insurrection Team",
-        version = "1.10.0",
-        targetApi = "1.0.0",
-        reloadable = true,
-        maps = loadWhenIn
-    }
-end
-
 function PluginOnGameStart()
-    logger = balltze.logger.createLogger("Coop Evolved")
-    logger.muteDebug(not DebugMode)
-
-    balltze.event.rconMessage.subscribe(function(event)
-        if event.time == "before" then
-            if blam.rcon.handle(event.context:message()) == false then
-                event:cancel()
-            end
-        end
-    end)
-
     for command, data in pairs(commands) do
-        balltze.command.registerCommand(command, command, data.description, data.help,
-                                        data.save or false, data.minArgs or 0, data.maxArgs or 0,
-                                        false, true, function(args)
-            -- logger.debug("{}", inspect(args))
+        --logger.debug("Registering command \"{}\" with help \"{}\"", command, data.help)
+        balltze.registerCommand(command, data.description, data.help, data.save or false,
+                                data.minArgs or 0, data.maxArgs or 0, true, true, function(args)
+            -- Balltze.logger.debug("{}", inspect(args))
             if (args and data.minArgs and data.maxArgs) and (#args < data.minArgs) or
                 (#args > data.maxArgs) then
-                logger.error("Invalid number of arguments. Usage: {}, Example: {}", data.help,
-                             data.example)
+                balltze.logger.error("Invalid number of arguments. Usage: {}, Example: {}",
+                                     data.help, data.example)
                 return true
             end
             -- data.func(table.unpack(args or {}))
             local ok, message = pcall(data.func, table.unpack(args or {}))
             if not ok then
-                logger.error("Error executing command \"{}\": {}", command, message)
+                balltze.logger.error("Error executing command \"{}\": {}", command, message)
             end
             return true
         end)
@@ -102,8 +80,6 @@ function PluginOnGameStart()
     end)
 
     require "coopEvolved.main"
-
-    return true
 end
 
 function PluginUnload()
