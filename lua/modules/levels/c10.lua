@@ -1748,7 +1748,7 @@ function c10.playersEnterPelican()
         hsc.unit_enter_vehicle(playerUnit, insertionPelican, targetSeatName)
         currentSeatIndex = currentSeatIndex + 1
         if currentSeatIndex > #constants.seats.pelican then
-            logger:warning("All pelican seats are occupied.")
+            logger.warning("All pelican seats are occupied.")
             break
         end
     end

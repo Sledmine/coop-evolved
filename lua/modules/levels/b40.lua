@@ -136,11 +136,11 @@ function b40.playersEnterPelican(targetVehicleName)
             -- Alternate between seats
             local seatName = constants.seats.pelican[currentSeatIndex]
             if not seatName then
-                logger:warning("Not enough seats in \"{}\" for all players! Player {} will not enter the vehicle.", targetVehicleName, playerIndex)
+                logger.warning("Not enough seats in \"{}\" for all players! Player {} will not enter the vehicle.", targetVehicleName, playerIndex)
                 return
             end
             seatName = seatName:lower()
-            logger:debug("Player {} entering \"{}\" at seat \"{}\"", playerIndex, targetVehicleName, seatName)
+            logger.debug("Player {} entering \"{}\" at seat \"{}\"", playerIndex, targetVehicleName, seatName)
             hsc.unit_enter_vehicle(playerUnit, targetVehicleName, seatName)
             -- Move to the next seat for the next player
             currentSeatIndex = currentSeatIndex + 1
@@ -159,7 +159,7 @@ function b40.pelican_up(call, sleep)
     -- Sleep here to wait for recording animation to start
     -- Recorded animation will override the unit closed/open state without it
     sleep(1)
-    logger:debug("Closing pelican doors for \"{}\" to sell the illusion of being driven by foehammer", targetVehicleName)
+    logger.debug("Closing pelican doors for \"{}\" to sell the illusion of being driven by foehammer", targetVehicleName)
     hsc.unit_close(targetVehicleName)
 
     b40.playersEnterPelican(targetVehicleName)

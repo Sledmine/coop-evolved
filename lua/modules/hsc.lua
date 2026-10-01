@@ -54,7 +54,7 @@ end
 local function getVariable(varName)
     local exists, result = pcall(get_global, varName)
     if not exists then
-        logger:error("Failed to get HSC variable {}: {}", varName, result)
+        logger.error("Failed to get HSC variable {}: {}", varName, result)
         return nil
     end
     return result
@@ -129,10 +129,10 @@ function hsc.cond(...)
         -- In the meantime we will return the first function that returns true
         -- as it works for most scenarios.
         if type(func) == "function" then
-            -- logger:debug("Evaluating cond function at index {}:", i)
+            -- logger.debug("Evaluating cond function at index {}:", i)
             -- Only return if func result is true
             local result = func()
-            -- logger:debug("Evaluating cond function result: {}", result)
+            -- logger.debug("Evaluating cond function result: {}", result)
             if result then
                 return result
             end
@@ -169,15 +169,15 @@ function hsc.cinematic_skip_stop_internal()
 end
 
 function hsc.game_save()
-    logger:debug("game_save not Lua implemented!")
+    logger.debug("game_save not Lua implemented!")
 end
 
 function hsc.game_save_totally_unsafe()
-    logger:debug("game_save_totally_unsafe not Lua implemented!")
+    logger.debug("game_save_totally_unsafe not Lua implemented!")
 end
 
 function hsc.game_save_no_timeout()
-    logger:debug("game_save_no_timeout not Lua implemented!")
+    logger.debug("game_save_no_timeout not Lua implemented!")
 end
 
 function hsc.game_is_cooperative()
@@ -217,7 +217,7 @@ function hsc.game_skip_ticks(ticks)
     if engine.netgame.getServerType() == "none" then
         return native("game_skip_ticks", ticks)
     end
-    logger:debug("game_skip_ticks not supported on networked games")
+    logger.debug("game_skip_ticks not supported on networked games")
 end
 
 function hsc.pin(value, min, max)
@@ -281,7 +281,7 @@ end
 
 function hsc.log_print(message)
     -- Assuming `logger` is available in the environment
-    logger:info(tostring(message))
+    logger.info(tostring(message))
 end
 
 function hsc.list_count_not_dead(object_list)
@@ -308,7 +308,7 @@ function hsc.objects_distance_to_object(object_list, object)
     --    end
     -- end
     -- return distances
-    logger:debug("objects_distance_to_object not implemented")
+    logger.debug("objects_distance_to_object not implemented")
     return 0
 end
 
@@ -366,14 +366,14 @@ function hsc.unit_enter_vehicle(...)
             -- Attempt to find anything that looks like a number
             local playerIndex = tointeger(unitName:match("(%d+)"))
             if not playerIndex then
-                logger:error("Failed to parse player index from unit name: {}", unitName)
+                logger.error("Failed to parse player index from unit name: {}", unitName)
                 return
             end
             playerIndex = playerIndex + 1 -- Convert to 1-based index
 
             local objectName = params[2]
             local targetSeatName = params[3]
-            --logger:debug("unit_enter_vehicle( playerIndex: {}, objectName: {}, targetSeatName: {})", playerIndex, objectName, targetSeatName)
+            --logger.debug("unit_enter_vehicle( playerIndex: {}, objectName: {}, targetSeatName: {})", playerIndex, objectName, targetSeatName)
             -- Attempt to find the vehicle object id by name
             local scenario = blam.scenario(0)
             assert(scenario, "Scenario not found")
@@ -383,7 +383,7 @@ function hsc.unit_enter_vehicle(...)
                     if not blam.isNull(object.nameIndex) then
                         local objectScenarioName = scenario.objectNames[object.nameIndex + 1]
                         if objectScenarioName == objectName then
-                            logger:warning("Found vehicle object id {} for name {}", objectId,
+                            logger.warning("Found vehicle object id {} for name {}", objectId,
                                            objectName)
                             local seatIndex = 0
                             local vehicleTag = blam2.getTagEntry(object.tagId,
@@ -398,7 +398,7 @@ function hsc.unit_enter_vehicle(...)
                                     break
                                 end
                             end
-                            logger:debug("Player {} will enter vehicle {} on seat {}", playerIndex,
+                            logger.debug("Player {} will enter vehicle {} on seat {}", playerIndex,
                                          objectId, seatIndex)
                             enter_vehicle(objectId, playerIndex, seatIndex)
                             return
@@ -481,7 +481,7 @@ function hsc.display_scenario_help(index)
     -- TODO Reimplement scenario help display in Lua to support custom maps and display given string
     --if engine.netgame.getServerType() ~= "sapp" then
     --    local mapName = engine.map.getCurrentMapHeader().name
-    --    logger:debug("Displaying scenario help for map {} at index {}", mapName, index)
+    --    logger.debug("Displaying scenario help for map {} at index {}", mapName, index)
     --    
     --    return engine.userInterface.openWidget
     --end
@@ -495,7 +495,7 @@ setmetatable(hsc, {
         end)
         if hscFunction then
             if not hscFunction.isNative then
-                logger:error("Function " .. key ..
+                logger.error("Function " .. key ..
                                  " is not native, needs to be reimplemented from Lua")
                 return function()
                 end
@@ -527,12 +527,12 @@ setmetatable(hsc, {
                 return function(...)
                     local args = getScriptArgs({...})
                     local functionInvokation = getFunctionInvocation(hscFunction, args)
-                    -- logger:debug("Executing: {}", functionInvokation)
+                    -- logger.debug("Executing: {}", functionInvokation)
                     executeScript(functionInvokation, hscFunction.funcName, args)
                 end
             end
         else
-            logger:error("Function " .. key .. " not found in HSC documentation")
+            logger.error("Function " .. key .. " not found in HSC documentation")
             return function()
 
             end

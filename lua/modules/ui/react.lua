@@ -12,7 +12,7 @@ local prefix = "@reactive_"
 ---@param tagId number
 function ether.mount(component, tagId)
     if not mounted[tagId] then
-        logger:debug("Mounting component: " .. component)
+        logger.debug("Mounting component: " .. component)
         mounted[tagId] = require("coop.ui.components." .. component)()
     end
     return mounted[tagId]
@@ -36,14 +36,14 @@ function ether.render(tagHandle)
         end
         return true
     end
-    logger:debug("Failed to render component with tag handle: " .. tagHandle)
+    logger.debug("Failed to render component with tag handle: " .. tagHandle)
     return false
 end
 
 ---Unmount all UI components
 function ether.unmountAll()
     for k, v in pairs(mounted) do
-        logger:debug("Unmounting component " .. k)
+        logger.debug("Unmounting component " .. k)
         mounted[k] = nil
     end
 end

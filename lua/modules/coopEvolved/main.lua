@@ -43,7 +43,7 @@ script.startup(function(_, sleep)
     -- But preventing running the actual logic of the level script...
     -- Allowing the server to just handle networking and player management
     if serverType == "dedicated" then
-        logger:debug("Dedicated server detected, disabling startup and continuous scripts")
+        logger.debug("Dedicated server detected, disabling startup and continuous scripts")
         ---@diagnostic disable-next-line: duplicate-set-field
         script.startup = function()
         end
@@ -55,22 +55,22 @@ script.startup(function(_, sleep)
     -- Load the actual level script for the current map, if it exists
     if serverType ~= "sapp" then
         local mapName = engine.map.getCurrentMapHeader().name
-        logger:debug("Current map name: \"{}\"", mapName)
+        logger.debug("Current map name: \"{}\"", mapName)
         local levelName = mapName:split("_coop")[1]
-        logger:debug("Attempting to load level script for \"{}\"", levelName)
-        --local ok, result = pcall(require, "levels." .. levelName)
+        logger.debug("Attempting to load level script for \"{}\"", levelName)
+        local ok, result = pcall(require, "levels." .. levelName)
         if not ok then
-            logger:warning("Error loading level script: {}", result)
+            logger.warning("Error loading level script: {}", result)
         else
-            logger:debug("Loaded level script for \"{}\"", levelName)
+            logger.debug("Loaded level script for \"{}\"", levelName)
             if DebugPerformance then
                 script.setReferenceContext(result)
                 if false then
                     script.continuous(function(_, sleep)
-                        -- logger:debug("{}", inspect(script.getStatus()))
+                        -- logger.debug("{}", inspect(script.getStatus()))
                         for i, thread in ipairs(script.getStatus()) do
                             if thread.type == "continuous" then
-                                -- logger:debug("Running continuous script thread #{}: {}", i, thread.referenceFile)
+                                -- logger.debug("Running continuous script thread #{}: {}", i, thread.referenceFile)
                                 print(string.format(
                                           "Running continuous script thread #%d: %s | last %.3f ms | avg %.3f ms | max %.3f ms | total %.3f ms | runs %d",
                                           i, thread.referenceFile, (thread.lastRunTime or 0) * 1000,
@@ -91,18 +91,18 @@ end)
 local lastBipedTagHandle
 
 local function firstPersonSwap(_, sleep)
-    local biped = blam.biped(get_dynamic_player())
-    if not biped then
+    local player = engine.player.getPlayer()
+    if not player then
         return
     end
-    if biped.tagId ~= lastBipedTagHandle then
-        lastBipedTagHandle = biped.tagId
+    if player.unitHandle.value ~= lastBipedTagHandle then
+        lastBipedTagHandle = player.unitHandle.value
         coop.swapFirstPerson()
-        logger:debug("Swapping first person...")
+        logger.debug("Swapping first person...")
     end
     sleep(3)
 end
-script.continuous(firstPersonSwap)
+--script.continuous(firstPersonSwap)
 
 -- Experimental, does not work yet, keep here for later
 local function overrideBspTriggers(_, sleep)

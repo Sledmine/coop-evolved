@@ -19,7 +19,7 @@ local function coopMenu()
 
     bipedsList:scrollable(false)
     bipedsList:onSelect(function(item)
-        logger:debug("Changing biped to " .. item.value)
+        logger.debug("Changing biped to " .. item.value)
         blam.rcon.dispatch("ChangeBiped", item.value)
     end)
     local bipeds = table.map(AvailableBipeds, function(biped, index)

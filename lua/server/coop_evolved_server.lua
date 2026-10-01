@@ -193,7 +193,7 @@ local function createHscPacket(functionName, funcArgs)
     local funcMeta = table.find(hscDoc.functions, function(v, k)
         return v.funcName == functionName
     end)
-    logger:debug("Creating HSC packet for function: \"{}\" with args: {}", functionName,
+    logger.debug("Creating HSC packet for function: \"{}\" with args: {}", functionName,
                  inspect(funcArgs))
     if not funcMeta then
         error("Function " .. functionName .. " not found in hscDoc")
@@ -203,7 +203,7 @@ local function createHscPacket(functionName, funcArgs)
         if argType == "object" then
             local objectIndex = getObjectIndexByName(argValue)
             if objectIndex then
-                -- logger:debug("Value {} is an object, converting to object index!", argValue)
+                -- logger.debug("Value {} is an object, converting to object index!", argValue)
                 return objectIndex
             end
         elseif argType == "tag" then
@@ -211,7 +211,7 @@ local function createHscPacket(functionName, funcArgs)
             if not argIsSubExpression then
                 local tagEntry = blam.getTag(argValue, tagType)
                 if tagEntry then
-                    -- logger:debug("Value {} is a tag, converting to tag handle!", argValue)
+                    -- logger.debug("Value {} is a tag, converting to tag handle!", argValue)
                     return tagEntry.id
                 end
             end
@@ -225,10 +225,10 @@ local function createHscPacket(functionName, funcArgs)
         if not objectNameIndex then
             -- This usually happens when the argument is a sub-expression like (object_get_first ...)
             -- We can change this later when Lua is able to resolve expression results to actual values
-            logger:error("Failed to convert object name index to integer!")
+            logger.error("Failed to convert object name index to integer!")
             return
         end
-        -- logger:debug("Object name index: {}", objectNameIndex)
+        -- logger.debug("Object name index: {}", objectNameIndex)
         local scenario = blam.scenario(0)
         assert(scenario, "Failed to load scenario tag")
 
@@ -238,7 +238,7 @@ local function createHscPacket(functionName, funcArgs)
         -- for vehicleElementIndex = 1, scenarioEntry.data.vehicles.count do
         --    local vehicleElement = scenarioEntry.data.vehicles.elements[vehicleElementIndex]
         --    if vehicleElement.name == objectNameIndex - 1 then
-        --        logger:warning("Forcing close state in vehicle \"{}\"", funcArgs[1])
+        --        logger.warning("Forcing close state in vehicle \"{}\"", funcArgs[1])
         --        script.thread(function (_, sleep)
         --            sleep(30)
         --            hsc.unit_close(funcArgs[1])
@@ -250,12 +250,12 @@ local function createHscPacket(functionName, funcArgs)
             local object = blam.getObject(objectId)
             if object and object.nameIndex == objectNameIndex - 1 then
                 if object.class == objectClasses.biped then
-                    -- logger:debug("Object {} is a biped, not syncing!", objectNameIndex)
+                    -- logger.debug("Object {} is a biped, not syncing!", objectNameIndex)
                     return
                 elseif object.class == objectClasses.vehicle then
-                    -- logger:debug("Object {} is a vehicle, not syncing!", objectNameIndex)
+                    -- logger.debug("Object {} is a vehicle, not syncing!", objectNameIndex)
                 elseif object.class == objectClasses.weapon then
-                    -- logger:debug("Object {} is a weapon, not syncing!", objectNameIndex)
+                    -- logger.debug("Object {} is a weapon, not syncing!", objectNameIndex)
                     return
                 end
             end
@@ -275,7 +275,7 @@ hsc.addMiddleWare(function(functionName, args)
     if funcMeta.isSynchronizable then
         local hscPacket = createHscPacket(functionName, args)
         if hscPacket then
-            -- logger:debug("HSC Packet: {}", hscPacket)
+            -- logger.debug("HSC Packet: {}", hscPacket)
             broadcastMessage(hscPacket)
         end
     end
@@ -290,7 +290,7 @@ function GetReadyForCoop(playerIndex)
         for mapPattern, camera in pairs(introCameras) do
             if engine.map.getCurrentMapHeader().name:includes(mapPattern) then
                 isStaticCameraAvailable = true
-                logger:warning("Using static camera: {}", camera)
+                logger.warning("Using static camera: {}", camera)
                 cameraName = camera
                 break
             end
@@ -298,16 +298,16 @@ function GetReadyForCoop(playerIndex)
         if not isStaticCameraAvailable then
             local mapPrefix = engine.map.getCurrentMapHeader().name:split("_")[1]
             local customCameraName = mapPrefix .. "_start"
-            logger:warning("Using custom camera name: {}", customCameraName)
+            logger.warning("Using custom camera name: {}", customCameraName)
             cameraName = customCameraName
         end
 
         if cameraName then
-            logger:debug("Setting starting camera to: {}", cameraName)
+            logger.debug("Setting starting camera to: {}", cameraName)
             monocastMessage(playerIndex, "sync_camera_control 1")
             monocastMessage(playerIndex, "sync_camera_set " .. cameraName .. " 0")
         else
-            logger:warning("No starting camera found for this map")
+            logger.warning("No starting camera found for this map")
         end
 
         -- Dispatch coop menu event
@@ -345,9 +345,9 @@ function StartCoop()
             local levelName = engine.map.getCurrentMapHeader().name:split("_coop")[1]
             local ok, result = pcall(require, "levels." .. levelName)
             if not ok then
-                logger:warning("Error loading level script: {}", result)
+                logger.warning("Error loading level script: {}", result)
             else
-                logger:debug("Loaded level script for \"{}\"", levelName)
+                logger.debug("Loaded level script for \"{}\"", levelName)
                 if DebugPerformance then
                     script.setReferenceContext(result)
                 end
@@ -367,7 +367,7 @@ function StartCoop()
             return currentBspIndex ~= lastBspIndex
         end)
         lastBspIndex = currentBspIndex
-        logger:debug("BSP index changed to {}, finding new spawn points!", lastBspIndex)
+        logger.debug("BSP index changed to {}, finding new spawn points!", lastBspIndex)
         coop.findNewSpawn(nil, true)
         sleep(utils.secondsToTicks(3))
     end)
@@ -533,7 +533,7 @@ function PluginFirstTick()
 end
 
 function PluginLoad()
-    logger:muteDebug(not DebugMode)
+    logger.muteDebug(not DebugMode)
 
     AvailableBipeds = coop.getAvailableBipeds()
 

@@ -1262,7 +1262,7 @@ local function createTag(address)
         else
             -- TODO Add a metatable that searchs if the data field is being accesed, if so
             -- then throw warning about data being missing
-            --logger:warning("Missing strug file for tag: {}", tagStructureModuleName)
+            --logger.warning("Missing strug file for tag: {}", tagStructureModuleName)
             tag.data = nil
         end
 

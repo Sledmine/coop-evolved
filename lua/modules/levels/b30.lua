@@ -1672,7 +1672,7 @@ end
 
 --- Function to have players enter Pelicans in a round-robin fashion.
 function b30.playersEnterPelican()
-    logger:debug("Player count: {}", getPlayerCount())
+    logger.debug("Player count: {}", getPlayerCount())
     local pelicans = {"insertion_pelican_1", "insertion_pelican_2"}
     local currentSeatIndex = 1
     for playerIndex = 0, getPlayerCount() - 1 do
@@ -1680,7 +1680,7 @@ function b30.playersEnterPelican()
         -- Alternate between the two Pelicans
         local targetVehicleName = pelicans[math.mod(playerIndex, #pelicans) + 1]
         local seatName = constants.seats.pelican[currentSeatIndex]
-        logger:debug("Player {} entering vehicle {} at seat {}", playerIndex, targetVehicleName,
+        logger.debug("Player {} entering vehicle {} at seat {}", playerIndex, targetVehicleName,
                      seatName)
         -- TODO Check seats available in all pelicans to avoiding a unit already occupying a seat
         -- So we can keep the marines inside pelicans in general instead of being removed

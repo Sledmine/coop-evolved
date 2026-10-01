@@ -2479,7 +2479,7 @@ function a10.mission_bsp(call, sleep)
     hsc.device_set_power(setupHallwayDoor, 1)
     hsc.device_set_position(setupHallwayDoor, 1)
 
-    logger:debug("Waiting for a player to cross into bsp1")
+    logger.debug("Waiting for a player to cross into bsp1")
     -- local hallwayTrigger = "coop_bsp0_trigger"
     local hallwayTrigger = "bsp0,1"
     sleep(function()
@@ -2488,7 +2488,7 @@ function a10.mission_bsp(call, sleep)
     -- Wait a few as some players might be outside the bsp for a short time after crossing the
     -- trigger, which would cause them to be teleported back in and get stuck in a paradox state...
     sleep(3)
-    logger:debug("A player has entered bsp1, teleporting all others and closing doors")
+    logger.debug("A player has entered bsp1, teleporting all others and closing doors")
     hsc.volume_teleport_players_not_inside(hallwayTrigger, "teleport_bsp0_door")
     hsc.ai_free("first_contact")
     hsc.device_set_position(setupHallwayDoor, 0)
@@ -3628,7 +3628,7 @@ function a10.tutorial_setup(call, sleep)
     hsc.ai_command_list("cryo_tech/asst", "introduction_1")
 
     -- Create cryotubes for all players
-    logger:debug("Creating cryotubes for all players")
+    logger.debug("Creating cryotubes for all players")
     a10.prepareCryotubes()
     a10.enterCryotubes(true)
 

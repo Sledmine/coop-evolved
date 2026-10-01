@@ -39,7 +39,7 @@ end
 ---@param scriptThread ScriptThread
 local function removeThreadFromTrace(scriptThread)
     local scriptThreadIndex = table.indexof(callTrace, scriptThread)
-    -- logger:debug("Removing dead script {}.", scriptThreadIndex)
+    -- logger.debug("Removing dead script {}.", scriptThreadIndex)
     if scriptThread.parent then
         scriptThread.parent.child = nil
     end
@@ -98,9 +98,9 @@ end
 ---@param ticks number
 local function sleepThreadFor(ticks)
     if ticks == -1 then
-        -- logger:debug("Sleeping until woken up")
+        -- logger.debug("Sleeping until woken up")
     else
-        -- logger:debug("Sleeping for " .. ticks .. " ticks")
+        -- logger.debug("Sleeping for " .. ticks .. " ticks")
     end
     local currentTicks = getTickCount()
     while ticks == -1 or (getTickCount() - currentTicks < ticks) do
@@ -112,7 +112,7 @@ end
 ---@param everyNTicks? number
 ---@param maximumTicks? number
 local function sleepThreadUntil(evaluateCondition, everyNTicks, maximumTicks)
-    -- logger:debug("Sleeping until condition is true")
+    -- logger.debug("Sleeping until condition is true")
     local currentTicks = getTickCount()
     while not evaluateCondition() and
         (not maximumTicks or getTickCount() - currentTicks < maximumTicks) do
@@ -147,7 +147,7 @@ function script.sleep(...)
         local scriptFunc = args[2]
         local scriptThread = findScriptThreadByFunc(scriptFunc)
         if not scriptThread then
-            -- logger:warning("Tried to sleep a script that does not exist.")
+            -- logger.warning("Tried to sleep a script that does not exist.")
             -- error("Cannot sleep for a function that does not exist", 2)
             return
         end
@@ -161,10 +161,10 @@ function script.sleep(...)
             -- As for now usual campaign scenarios imply to "kill" the thread
             -- Remove child thread if it exists, we are replacing it with a new sleep thread
             removeThreadFromTrace(scriptThread.child)
-            -- logger:warning("Script thread for function \"{}\" already has a child, removing it and replacing with new sleep thread", scriptFunc)
+            -- logger.warning("Script thread for function \"{}\" already has a child, removing it and replacing with new sleep thread", scriptFunc)
         end
         if ticks == -1 then
-            logger:debug("Sleeping script thread for function \"{}\" until woken up", scriptFunc)
+            logger.debug("Sleeping script thread for function \"{}\" until woken up", scriptFunc)
         end
         local _, sleepThread = script.thread(function()
             sleepThreadFor(ticks)
@@ -214,11 +214,11 @@ function script.call(funcToCall, ...)
         -- 
         return funcToCall(function(func, ...)
             -- error("Cannot call a function while another function is being called", 2)
-            logger:debug("Cannot call a function while another function is being called")
+            logger.debug("Cannot call a function while another function is being called")
             -- Just return the function result directly, we cannot yield here
             return func(...)
         end, function()
-            logger:error("Cannot sleep while another function is being called")
+            logger.error("Cannot sleep while another function is being called")
         end, ...)
     end
 
@@ -242,9 +242,9 @@ local function handleScriptThread(scriptThread, result)
     local threadResult
     if not scriptThread.started then
         threadResult = scriptThread.run()
-        -- logger:debug("No child, thread result: " .. tostring(threadResult))
+        -- logger.debug("No child, thread result: " .. tostring(threadResult))
     else
-        -- logger:debug("Parent, got result: " .. tostring(result))
+        -- logger.debug("Parent, got result: " .. tostring(result))
         local ok, result = resumeScriptThread(scriptThread, result)
         if not ok then
             error(result, 2)
@@ -262,7 +262,7 @@ local function handleScriptThread(scriptThread, result)
                 local ok, result = pcall(handleScriptThread, scriptThread.parent, threadResult)
                 if not ok then
                     -- error(debug.traceback(scriptThread.parent.thread, result), 2)
-                    logger:error(debug.traceback(scriptThread.parent.thread, result))
+                    logger.error(debug.traceback(scriptThread.parent.thread, result))
                 end
             end
         end
@@ -322,8 +322,8 @@ end
 function script.startup(func)
     local foundScript = findScriptThreadByFunc(func)
     if foundScript then
-        logger:error("Tried to add a script that already exists.")
-        logger:error("Existing script trace: {}", debug.traceback(foundScript.thread))
+        logger.error("Tried to add a script that already exists.")
+        logger.error("Existing script trace: {}", debug.traceback(foundScript.thread))
         return
     end
     local metadata = {type = "startup"}
@@ -333,8 +333,8 @@ end
 function script.continuous(func)
     local foundScript = findScriptThreadByFunc(func)
     if foundScript then
-        logger:error("Tried to add a script that already exists.")
-        logger:error("Existing script trace: {}", debug.traceback(foundScript.thread))
+        logger.error("Tried to add a script that already exists.")
+        logger.error("Existing script trace: {}", debug.traceback(foundScript.thread))
         return
     end
     local metadata = {type = "continuous"}
@@ -344,7 +344,7 @@ end
 function script.wake(func)
     local foundScript = findScriptThreadByFunc(func)
     if foundScript then
-        logger:debug("Waking script thread for function.")
+        logger.debug("Waking script thread for function.")
         local child = getBottomMostScriptChild(foundScript)
         if child and child.isSleep then
             -- Technically this is a sleep thread, so we can just remove it from the trace
@@ -360,7 +360,7 @@ function script.wake(func)
         -- So we do not declare them as dormant as we do with "startup" and "continuous" scripts,
         -- we just create a new thread for them when they are woken up
 
-        -- logger:error("Tried to wake a script that does not exist. Creating a new thread for it.")
+        -- logger.error("Tried to wake a script that does not exist. Creating a new thread for it.")
         script.thread(func)
     end
 end

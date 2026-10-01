@@ -1,0 +1,30 @@
+{
+    "name": "Coop Evolved",
+    "author": "Insurrection Team",
+    "plugin_main": "coop_evolved.lua",
+    "version": "1.0.0",
+    "target_api": "2.0.0",
+    "maps": [
+        "a10_coop_evolved_dev",
+        "a30_coop_evolved_dev",
+        "a50_coop_evolved_dev",
+        "b30_coop_evolved_dev",
+        "b40_coop_evolved_dev",
+        "c10_coop_evolved_dev",
+        "c20_coop_evolved_dev",
+        "c40_coop_evolved_dev",
+        "d20_coop_evolved_dev",
+        "d40_coop_evolved_dev",
+        "a10_coop_evolved",
+        "a30_coop_evolved",
+        "a50_coop_evolved",
+        "b30_coop_evolved",
+        "b40_coop_evolved",
+        "c10_coop_evolved",
+        "c20_coop_evolved",
+        "c40_coop_evolved",
+        "d20_coop_evolved",
+        "d40_coop_evolved"
+    ],
+    "reloadable": true
+}

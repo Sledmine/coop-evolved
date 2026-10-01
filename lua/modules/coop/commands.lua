@@ -32,7 +32,7 @@ return {
         maxArgs = 1,
         func = function(enable)
             DebugMode = luna.bool(enable)
-            logger:muteDebug(not DebugMode)
+            logger.muteDebug(not DebugMode)
             return false
         end
     },

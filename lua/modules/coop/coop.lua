@@ -139,10 +139,10 @@ function coop.findNewSpawn(exceptionPlayerIndex, bypassVehicleCheck)
                 local playerBiped = blam.biped(get_dynamic_player(playerIndex))
                 if playerBiped then
                     if not isNull(playerBiped.vehicleObjectId) then
-                        -- logger:debug("Player {} is in a vehicle, bypassing vehicle check for spawn point selection", playerIndex)
+                        -- logger.debug("Player {} is in a vehicle, bypassing vehicle check for spawn point selection", playerIndex)
                         isEveryPlayerInAVehicle = true
                     else
-                        -- logger:debug("Player {} is not in a vehicle", playerIndex)
+                        -- logger.debug("Player {} is not in a vehicle", playerIndex)
                         isEveryPlayerInAVehicle = false
                         break
                     end
@@ -208,13 +208,18 @@ function coop.registerVote(playerIndex)
 end
 
 function coop.swapFirstPerson()
-    local player = blam.player(get_player())
+    local player = engine.player.getPlayer()
     assert(player, "Failed to load player")
-    local playerObject = engine.gameState.getObject(player.objectId, objectClasses.biped)
+    local playerObject = engine.object.getObject(player.unitHandle.value, "biped")
+    if not playerObject then
+        return
+    end
     local globals = constants.globals
     assert(globals, "Failed to load globals tag")
+
     local globalsData = globals.data
     assert(globalsData, "Failed to load globals data")
+    
     if player and playerObject and globals then
         local bipedTagEntry = blam2.tag.getTag(playerObject.tagHandle.value, tagGroups.biped)
         assert(bipedTagEntry, "Failed to load biped tag entry")
@@ -226,7 +231,7 @@ function coop.swapFirstPerson()
         if customFpEntry then
             finalModelEntry = customFpEntry --[[@as tagEntry]]
         else
-            logger:debug("No custom first person model found for biped " .. bipedName)
+            logger.debug("No custom first person model found for biped " .. bipedName)
         end
         if finalModelEntry then
             -- Update first person interface globals to use the new model
@@ -248,7 +253,7 @@ function coop.changeBiped(desiredBipedIndex)
     if desiredBiped and player then
         local mpInfo = globals.multiplayerInformation
         mpInfo[1].unit = desiredBiped.id
-        logger:debug("Replacing biped with " .. desiredBiped.name)
+        logger.debug("Replacing biped with " .. desiredBiped.name)
         globals.multiplayerInformation = mpInfo
         -- Check if object exists before trying to delete it, otherwise triggers exception
         -- BALLTZE MIGRATE
@@ -268,21 +273,21 @@ function coop.overrideBspTriggers()
     local globalScenario = globalScenarioTagEntry.data
     assert(globalScenario, "Failed to load scenario data")
     local bspTriggersCount = globalScenario.triggerVolumes.count
-    logger:debug("Overriding {} BSP triggers...", bspTriggersCount)
+    logger.debug("Overriding {} BSP triggers...", bspTriggersCount)
     for triggerIndex = 1, bspTriggersCount do
         local trigger = globalScenario.triggerVolumes.elements[triggerIndex]
         if trigger then
             if trigger.name:lower():startswith("bsp") then
-                logger:debug("Overriding trigger " .. trigger.name)
+                logger.debug("Overriding trigger " .. trigger.name)
                 local bspFromTo = trigger.name:replace("bsp", ""):split ","
                 local from = bspFromTo[1]
                 local to = bspFromTo[2]
                 trigger.name = "cbsp" .. from .. "-" .. to
                 --trigger.name = ""
             elseif trigger.name:lower():startswith("cbsp") then
-                logger:debug("Overriden trigger found " .. trigger.name)
-                logger:debug("parameters: {}", inspect(trigger.parameters))
-                logger:debug("unknown: {}", inspect(trigger.unknown))
+                logger.debug("Overriden trigger found " .. trigger.name)
+                logger.debug("parameters: {}", inspect(trigger.parameters))
+                logger.debug("unknown: {}", inspect(trigger.unknown))
             end
         end
     end
@@ -298,7 +303,7 @@ function coop.startCbspMonitor(_, sleep)
     local globalScenario = globalScenarioTagEntry.data
     assert(globalScenario, "Failed to load scenario data")
     local currentBsp = hsc.structure_bsp_index()
-    --logger:debug("Starting CBSP monitor for BSP {}...", tostring(currentBsp))
+    --logger.debug("Starting CBSP monitor for BSP {}...", tostring(currentBsp))
     for triggerIndex = 1, globalScenario.triggerVolumes.count do
         local trig = globalScenario.triggerVolumes.elements[triggerIndex]
         if trig and trig.name and trig.name:lower():startswith("cbsp") then
@@ -319,14 +324,14 @@ function coop.startCbspMonitor(_, sleep)
                     end
                 end
                 if insideUnit then
-                    logger:info("CBSP monitor: trigger {} activated by player index {}", trig.name, tostring(insidePlayerIndex))
+                    logger.info("CBSP monitor: trigger {} activated by player index {}", trig.name, tostring(insidePlayerIndex))
                     for i = 0, playerCount - 1 do
                         local unit = hsc.unit(hsc.list_get(playersList, i))
                         if not hsc.volume_test_object(trig.name, unit) then
                             hsc.object_teleport(unit, insideUnit)
                         end
                     end
-                    logger:info("CBSP monitor: switching BSP {} -> {}", tostring(from), tostring(to))
+                    logger.info("CBSP monitor: switching BSP {} -> {}", tostring(from), tostring(to))
                     hsc.switch_bsp(to)
                     sleep(utils.secondsToTicks(1))
                 end

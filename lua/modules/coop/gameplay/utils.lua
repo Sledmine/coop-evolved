@@ -114,13 +114,13 @@ end
 ---@param targetPelicanName string Unit name of the pelican to have players enter
 ---@param isMagical? boolean If true, players enter pelican without any animation.
 function playersEnterPelican(targetPelicanName ,isMagical)
-    logger:debug("Player count: {}", getPlayerCount())
+    logger.debug("Player count: {}", getPlayerCount())
     local currentSeatIndex = 1
     for playerIndex = 0, getPlayerCount() - 1 do
         local playerUnit = getPlayerUnit(playerIndex)
         -- Alternate between seats
         local seatName = constants.seats.pelican[currentSeatIndex]
-        logger:debug("Player {} entering vehicle {} at seat {}", playerIndex, targetPelicanName,
+        logger.debug("Player {} entering vehicle {} at seat {}", playerIndex, targetPelicanName,
                      seatName)
         if isMagical then
             hsc.vehicle_load_magic(targetPelicanName, seatName, playerUnit)
