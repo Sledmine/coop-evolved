@@ -1,0 +1,3 @@
+[submodule "docs/balltze"]
+	path = docs/balltze
+	url = https://github.com/MangoFizz/balltze-luadocs.git
