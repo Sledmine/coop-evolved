@@ -1,17 +1,16 @@
 local sqrt = math.sqrt
 local abs = math.abs
-local blam = require "blam"
 
 local core = {}
 
 ---Get distance between two objects
----@param object blamObject
----@param target blamObject
+---@param object DynamicObjectBase
+---@param target DynamicObjectBase
 ---@return number distance
 function core.getDistanceBetweenObjects(object, target)
     if target and object then
-        local objectCoordinates = blam.getAbsoluteObjectCoordinates(object)
-        local targetCoordinates = blam.getAbsoluteObjectCoordinates(target)
+        local objectCoordinates = object.position
+        local targetCoordinates = target.position
         local distance = sqrt((targetCoordinates.x - objectCoordinates.x) ^ 2 +
                                   (targetCoordinates.y - objectCoordinates.y) ^ 2 +
                                   (targetCoordinates.z - objectCoordinates.z) ^ 2)
@@ -21,8 +20,8 @@ function core.getDistanceBetweenObjects(object, target)
 end
 
 --- Check if object is near by to another object
----@param object blamObject
----@param target blamObject
+---@param object DynamicObjectBase
+---@param target DynamicObjectBase
 ---@param maximumDistance number
 function core.isObjectNearToObject(object, target, maximumDistance)
     if target and object then

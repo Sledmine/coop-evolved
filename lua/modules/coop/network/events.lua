@@ -1,4 +1,3 @@
-local blam = require "blam"
 local coop = require "coop.coop"
 
 blam.rcon.event("CoopMenu", function()

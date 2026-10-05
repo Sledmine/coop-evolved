@@ -1,4 +1,3 @@
-local blam = require "blam"
 local constants = require "coop.constants"
 local tagClasses = blam.tagClasses
 local component = require "ui.component"
@@ -12,7 +11,7 @@ local function coopMenu()
 
     local coopMenu = component.new(constants.widgets.coopMenu.handle.value)
     local votesCount = component.new(coopMenu:findChildWidgetTag("votes_count").id)
-    --local votesLabel = component.new(coopMenu:findChildWidgetTag("votes_label").id)
+    -- local votesLabel = component.new(coopMenu:findChildWidgetTag("votes_label").id)
     local bipedsList = list.new(coopMenu:findChildWidgetTag("options").id, 1, 13)
     local readyButton = button.new(bipedsList:findChildWidgetTag("ready_button").id)
     local gameDifficulty = component.new(coopMenu:findChildWidgetTag("game_difficulty").id)
@@ -20,14 +19,16 @@ local function coopMenu()
     bipedsList:scrollable(false)
     bipedsList:onSelect(function(item)
         logger.debug("Changing biped to " .. item.value)
-        blam.rcon.dispatch("ChangeBiped", item.value)
+        -- BALLTZE MIGRATE
+        -- blam.rcon.dispatch("ChangeBiped", item.value)
     end)
     local bipeds = table.map(AvailableBipeds, function(biped, index)
         return {label = biped.name, value = tostring(index)}
     end)
 
     readyButton:onClick(function()
-        blam.rcon.dispatch("Ready")
+        -- BALLTZE MIGRATE
+        -- blam.rcon.dispatch("Ready")
         engine.userInterface.closeWidget()
     end)
 

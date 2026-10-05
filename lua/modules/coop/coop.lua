@@ -1,4 +1,5 @@
 local constants = require "coop.constants"
+local script = require "script"
 local balltze = Balltze
 local engine = Engine
 local core = require "coop.core"
@@ -8,6 +9,15 @@ local utils = require "coop.utils"
 local coop = {}
 
 coop.difficulties = {"Easy", "Normal", "Heroic", "Legendary"}
+
+coop.state = {playerVotes = {}, isGameStarted = false}
+
+local sayToPlayers = function(message)
+    engine.terminal.print("{}", message)
+end
+if engine.game.getGameConnectionType() == "networkServer" then
+    sayToPlayers = hsc.sv_say
+end
 
 function coop.enableSpawn(enableAll)
     local scenarioEntry = constants.scenario
@@ -37,7 +47,8 @@ function coop.disableSpawn()
     end
 end
 
-function coop.getRequiredVotes(playersCount)
+function coop.getRequiredVotes()
+    local playersCount = getPlayerCount()
     if DebugMode then
         return 1
     end
@@ -78,20 +89,18 @@ end
 ---@param bypassVehicleCheck? boolean If true, will not check if player is near a vehicle, used for when player is already in a vehicle
 ---@return boolean isCandidate
 function coop.isRespawnCandidate(playerBiped, bypassVehicleCheck)
-    -- if not bypassVehicleCheck then
-    --    for objectIndex = 0, blam.MAXIMUM_OBJECTS - 1 do
-    --        local object, objectHandle = blam.getObject(objectIndex)
-    --        if object and objectHandle then
-    --            -- Check if player is near any vehicle, if it is do not consider it a respawn
-    --            if object.class == objectClasses.vehicle then
-    --                -- TODO Consider bounding radius as well
-    --                if core.isObjectNearToObject(playerBiped, object, 1) then
-    --                    return false
-    --                end
-    --            end
-    --        end
-    --    end
-    -- end
+    if not bypassVehicleCheck then
+        local vehicleObjects = engine.object.filterObjects("vehicle")
+        for _, objectHandle in pairs(vehicleObjects) do
+            local vehicle = engine.object.getObject(objectHandle)
+            if vehicle then
+                -- TODO Consider bounding radius as well
+                if core.isObjectNearToObject(playerBiped, vehicle, 1) then
+                    return false
+                end
+            end
+        end
+    end
     return not playerBiped.flags1.outsideOfMap and playerBiped.flags1.onGround
 end
 
@@ -112,7 +121,6 @@ function coop.updateSpawn(playerBiped)
             playerSpawns[spawnIndex].position.z = playerBiped.position.z + 0.3
         end
     else
-        -- local vehicle = blam.object(get_object(playerBiped.vehicleObjectId))
         local vehicle = engine.object.getObject(playerBiped.parentObject.value, "vehicle")
         if vehicle then
             for spawnIndex, spawn in pairs(playerSpawns) do
@@ -140,7 +148,6 @@ function coop.findNewSpawn(exceptionPlayerIndex, bypassVehicleCheck)
         local isEveryPlayerInAVehicle = false
         for playerIndex = constants.firstPlayerIndex, constants.lastPlayerIndex do
             if playerIndex ~= exceptionPlayerIndex then
-                -- local playerBiped = blam.biped(get_dynamic_player(playerIndex))
                 local player = engine.player.getPlayer(playerIndex)
                 if player then
                     local playerBiped = engine.object.getObject(player.unitHandle.value, "biped")
@@ -168,9 +175,7 @@ function coop.findNewSpawn(exceptionPlayerIndex, bypassVehicleCheck)
                         if coop.isRespawnCandidate(playerBiped,
                                                    bypassVehicleCheck or isEveryPlayerInAVehicle) then
                             coop.updateSpawn(playerBiped)
-                            -- BALLTZE MIGRATE
-                            --playerUsedForSpawn = player.name
-                            playerNameAsSpawn = playerIndex
+                            playerNameAsSpawn = player.name
                             break
                         end
                     end
@@ -178,7 +183,7 @@ function coop.findNewSpawn(exceptionPlayerIndex, bypassVehicleCheck)
             end
         end
         if playerNameAsSpawn then
-            tellFunction("Using " .. playerNameAsSpawn .. " as respawn point..")
+            sayToPlayers("Using " .. playerNameAsSpawn .. " as respawn point..")
         end
     end
     return true
@@ -188,17 +193,27 @@ end
 ---@param playerIndex number
 ---@return number remainingVotes
 function coop.registerVote(playerIndex)
-    if not IsCoopStarted then
-        local playerName = get_var(playerIndex, "$name")
+    if not coop.state.isGameStarted then
         local requiredVotes = coop.getRequiredVotes()
-        VotesList[playerIndex] = true
-        local votesCount = #table.keys(VotesList)
+        coop.state.playerVotes[playerIndex] = true
+        local votesCount = #table.keys(coop.state.playerVotes)
         local remainingVotes = requiredVotes - votesCount
-        say_all(playerName .. " is ready for coop! (" .. votesCount .. " / " .. requiredVotes .. ")")
+
+        local player = engine.player.getPlayer(playerIndex)
+        if not player then
+            return remainingVotes
+        end
+
+        sayToPlayers(
+            player.name .. " is ready for coop! (" .. votesCount .. " / " .. requiredVotes .. ")")
         if votesCount >= requiredVotes then
-            IsCoopStarted = true
+            coop.state.isGameStarted = true
             coop.enableSpawn(true)
-            timer(3000, "StartCoop")
+            script.startup(function(_, sleep)
+                sleep(3000)
+                sayToPlayers("Coop is starting!")
+                StartMission()
+            end)
         end
         return remainingVotes
     end
@@ -219,7 +234,7 @@ function coop.swapFirstPerson()
     assert(globalsData, "Failed to load globals data")
 
     if player and playerObject and globals then
-        local bipedTagEntry = engine.tag.getTagEntry(playerObject.tagHandle.value, "biped")
+        local bipedTagEntry = engine.tag.getTagEntry(playerObject.tagHandle.value)
         assert(bipedTagEntry, "Failed to load biped tag entry")
         local pathData = bipedTagEntry.path:split "\\"
         local bipedName = pathData[#pathData]
@@ -338,6 +353,141 @@ function coop.startCbspMonitor(_, sleep)
         end
     end
     sleep(1)
+end
+
+local maxItemDistanceRespawn = 10
+local maximumNetworkItems = 180
+
+---Evaluate if this object should be kept by the overrider system
+---@param item ItemObject
+---@param objectHandle ObjectHandle
+---@param networkItemsCount integer
+local function evaluateObjectKeeper(item, objectHandle, networkItemsCount)
+    -- Clear items that we clearly don't want to keep
+    if item.flags1.outsideOfMap then
+        -- Force item to despawn if outside map
+        item.lastUpdateTick = 0
+        return
+    end
+    if isWeaponEmptyRemovalEnabled then
+        local isWeapon = item.objectType == "weapon"
+        if isWeapon then
+            local weapon = engine.object.getObject(objectHandle, "weapon")
+            if weapon and weapon.age >= 1 then
+                -- Remove empty weapons to free up network object slots
+                item.lastUpdateTick = 0
+                return
+            end
+        end
+    end
+
+    -- Check if we are exceeding the network object budget, if so only keep items that are near players
+    local isBudgetExceeded = networkItemsCount > maximumNetworkItems
+    if isBudgetExceeded then
+        -- Assume we don't want this item anymore, unless a player is nearby
+        item.lastUpdateTick = 0
+
+        -- Check if any player is near to item
+        local isAnyPlayerNear = false
+        for playerIndex = constants.firstPlayerIndex, constants.lastPlayerIndex do
+            local player = engine.player.getPlayer(playerIndex)
+            if player then
+                local playerObject = engine.object.getObject(player.unitHandle)
+                if playerObject then
+                    if core.isObjectNearToObject(item, playerObject, maxItemDistanceRespawn) then
+                        isAnyPlayerNear = true
+                        break
+                    end
+                end
+            end
+        end
+        if isAnyPlayerNear then
+            -- Keep item alive if any player is near
+            item.lastUpdateTick = engine.game.getTickCount()
+            -- logger:debug("Keeping item with handle {} alive because a player is nearby, distance: {}", objectHandle, core.getDistanceBetweenObjects(item, playerObject))
+            return
+        end
+    end
+
+    -- Maybe we can here force spawn of objects if we have determined we ran of budget
+    -- But we will clear items after this tick, so can safely spawn more (?)
+
+    -- Keep item alive
+    item.lastUpdateTick = engine.game.getTickCount()
+end
+
+--- Get if given value equals a null value in game engine terms
+---@param value any
+---@return boolean
+function isNull(value)
+    if value == 0xFF or value == 0xFFFF or value == 0xFFFFFFFF or value == nil then
+        return true
+    end
+    return false
+end
+
+local objectNetworkRoleClasses = {
+    master = 0,
+    puppet = 1,
+    locallyControlledPuppet = 2,
+    localOnly = 3
+}
+
+local weaponLoadedRoundsCache = {}
+
+---@param weaponTagHandle TagHandle
+local function cachedWeaponLoadedRounds(weaponTagHandle)
+    local maximumRoundsLoaded = weaponLoadedRoundsCache[weaponTagHandle.value]
+    if not maximumRoundsLoaded then
+        local weapon = engine.tag.getTagData(weaponTagHandle, "weapon")
+        assert(weapon)
+        -- TODO We assume AI at least AS OF NOW only uses the first weapon magazine
+        -- We might make it use others in the future tho
+        weaponLoadedRoundsCache[weaponTagHandle.value] = weapon.magazines[1].roundsLoadedMaximum
+        return weaponLoadedRoundsCache[weaponTagHandle.value]
+    end
+    return maximumRoundsLoaded
+end
+
+---Dynamically control networked items to prevent them from despawning
+function coop.dynamicallyControlNetworkItems()
+    local weaponObjects = engine.object.filterObjects("weapon")
+    local equipmentObjects = engine.object.filterObjects("equipment")
+    local networkItems = table.extend({}, weaponObjects, equipmentObjects)
+    local networkItemsCount = #networkItems
+
+    for _, objectHandle in pairs(networkItems) do
+        local object = engine.object.getObject(objectHandle)
+        if object then
+            local isWeapon = object.objectType == "weapon"
+            local isEquipment = object.objectType == "equipment"
+            local isItem = isWeapon or isEquipment
+            local isPlayerOwned = not object.player:isNull()
+            local isNetworkObject = not (object.networkRole == objectNetworkRoleClasses.localOnly)
+            local isNamedObject = not isNull(object.nameListIndex)
+            local isAIOwned = false
+            if isItem and isNetworkObject then
+                local item = engine.object.getObject(objectHandle,
+                                                     isEquipment and "equipment" or "weapon") --[[@as ItemObject]]
+                assert(item, "Failed to load item object")
+                if not isPlayerOwned and not item.parentObject:isNull() and engine.object.getObjectType(item.parentObject) ==
+                    "biped" then
+                    isAIOwned = true
+                end
+                if isAIOwned and isWeapon then
+                    local weapon = item --[[@as WeaponObject]]
+                    weapon.magazines[1].roundsLoaded = cachedWeaponLoadedRounds(item.tagHandle)
+                end
+
+                -- Always keep named objects from despawning
+                if isNamedObject then
+                    item.lastUpdateTick = engine.game.getTickCount()
+                else
+                    evaluateObjectKeeper(item, objectHandle, networkItemsCount)
+                end
+            end
+        end
+    end
 end
 
 return coop

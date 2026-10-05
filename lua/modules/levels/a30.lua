@@ -4095,21 +4095,4 @@ function a30.mission_killer(call, sleep)
 end
 script.startup(a30.mission_killer)
 
--- Debugging purposes 
---script.startup(function(_, sleep)
---    hsc.game_won = function ()
---        
---    end
---    hsc.switch_bsp(1)
---    
---    teleportPlayersTo("foehammer_rubble_flag")
---    sleep(10)
---    local blam = require "blam"
---    --blam.biped(get_dynamic_player()).x = -499
---
---    --blam.biped(get_dynamic_player()).y = 27.65
---    --blam.biped(get_dynamic_player()).z = 67.06
---    wake(a30.mission_extraction_rubble)
---end)
-
 return a30

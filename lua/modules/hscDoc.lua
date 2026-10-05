@@ -693,7 +693,7 @@ hscDoc.functions = { {
   hash = "09318",
   isNative = true,
   -- FIXME Check if syncing functions that kills units is secure
-  isSynchronizable = false,
+  isSynchronizable = true,
   returnType = "void"
 }, {
   args = { "unit" },
@@ -6344,6 +6344,14 @@ hscDoc.functions = { {
   isNative = true,
   isSynchronizable = false,
   returnType = "real"
+},
+{
+  args = {"string"},
+  funcName = "sv_say",
+  hash = "DC842",
+  isNative = true,
+  isSynchronizable = false,
+  returnType = "void"
 } }
 
 return hscDoc

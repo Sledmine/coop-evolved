@@ -4,8 +4,6 @@ local hsc = {}
 
 local luna = require "luna"
 local hscDoc = require "hscDoc"
-local blam2 = require "blam2"
-local blam = require "blam"
 local engine = Engine
 local hscExecuteScript = engine.script.execute
 
@@ -22,7 +20,29 @@ local cacheHscGlobals = {
     unit = "lua_unit"
 }
 
-local function getScriptArgs(args)
+--- Get if given value equals a null value in game engine terms
+---@param value any
+---@return boolean
+function isNull(value)
+    if value == 0xFF or value == 0xFFFF or value == 0xFFFFFFFF or value == nil then
+        return true
+    end
+    return false
+end
+
+---Get function script args list as a string array
+---@param args table
+---@return string[]
+local function getArgs(args)
+    return table.map(args, function(v, k)
+        return tostring(v)
+    end)
+end
+
+---Map script arguments for script execution
+---@param args table
+---@return string[]
+function hsc.getScriptArgs(args)
     return table.map(args, function(v, k)
         if type(v) == "string" then
             local isSubExpression = v:startswith("(") and v:endswith(")")
@@ -34,6 +54,11 @@ local function getScriptArgs(args)
     end)
 end
 
+---Execute a Halo script function, also triggering middleware functions if any
+---@param script string
+---@param functionName string
+---@param args table
+---@param metadata table
 local function executeScript(script, functionName, args, metadata)
     hscExecuteScript(script)
     for _, middleware in ipairs(middlewares) do
@@ -44,7 +69,7 @@ local function executeScript(script, functionName, args, metadata)
 end
 
 local function getFunctionInvocation(hscFunction, args)
-    return hscFunction.funcName .. " " .. table.concat(args, " ")
+    return hscFunction.funcName .. " " .. table.concat(hsc.getScriptArgs(args), " ")
 end
 
 local function getSetVariableInvocation(varName, varValue)
@@ -73,8 +98,10 @@ function hsc.begin(...)
     local functions = {...}
     if type(functions[1]) == "table" then
         -- If the first argument is a table, treat it as a list of functions
+        ---@diagnostic disable-next-line: cast-local-type
         functions = functions[1]
     end
+    ---@diagnostic disable-next-line: param-type-mismatch
     for i, func in ipairs(functions) do
         if type(func) == "function" then
             -- Return last evaluated function
@@ -96,6 +123,7 @@ function hsc.begin_random(...)
     local functions = {...}
     if type(functions[1]) == "table" then
         -- If the first argument is a table, treat it as a list of functions
+        ---@diagnostic disable-next-line: cast-local-type
         functions = functions[1]
     end
     local functionsToRandomize = table.copy(functions)
@@ -140,13 +168,14 @@ function hsc.cond(...)
             error("Invalid begin block is not a function: " .. tostring(func))
         end
     end
+    return false
 end
 
 local difficulties = {"easy", "normal", "hard", "impossible"}
 ---Get the current game difficulty
 ---@return "easy" | "normal" | "hard" | "impossible"
 function hsc.game_difficulty_get()
-    return difficulties[blam.getGameDifficultyIndex() + 1]
+    return engine.game.getDifficulty()
 end
 hsc.game_difficulty_get_real = hsc.game_difficulty_get
 
@@ -316,18 +345,15 @@ function hsc.objects_distance_to_flag(object_list, cutscene_flag)
 end
 
 function hsc.physics_constants_reset()
-    blam2.restoreGlobalGravity()
+    -- BALLTZE MIGRATE
 end
 
 function hsc.physics_set_gravity(value)
-    blam2.restoreGlobalGravity()
-    local currentGravity = blam2.globalGravity()
-    local newGravity = currentGravity * value
-    blam2.globalGravity(newGravity)
+    -- BALLTZE MIGRATE
 end
 
 function hsc.physics_get_gravity()
-    return blam2.globalGravity()
+    -- BALLTZE MIGRATE
 end
 
 function hsc.debug_camera_save_name(name)
@@ -357,51 +383,52 @@ end
 
 function hsc.unit_enter_vehicle(...)
     local params = {...}
-    -- BALLTZE MIGRATE
-    --if engine.game.getGameConnectionType() == "networkServer" then
-    if false then
+
+    -- We need to override the enter vehicle function so that it syncs properly in multiplayer
+    if engine.game.getGameConnectionType() == "networkServer" then
         local unitName = params[1]
+        -- We only care to sync when there is a player involved, not required for other units
         local unitIsPlayer = unitName:includes("player")
         if unitIsPlayer then
             -- Attempt to find anything that looks like a number
             local playerIndex = tointeger(unitName:match("(%d+)"))
             if not playerIndex then
-                Balltze.logger.error("Failed to parse player index from unit name: {}", unitName)
+                logger.error("Failed to parse player index from unit name: {}", unitName)
                 return
             end
-            playerIndex = playerIndex + 1 -- Convert to 1-based index
+            local player = engine.player.getPlayer(playerIndex)
+            if not player then
+                logger.warning("Player for entering vehicle not found")
+                return
+            end
 
-            local objectName = params[2]
+            local targetObjectName = params[2]
             local targetSeatName = params[3]
-            --Balltze.logger.debug("unit_enter_vehicle( playerIndex: {}, objectName: {}, targetSeatName: {})", playerIndex, objectName, targetSeatName)
-            -- Attempt to find the vehicle object id by name
-            local scenario = blam.scenario(0)
+
+            logger.debug("unit_enter_vehicle( playerIndex: {}, objectName: {}, targetSeatName: {})",
+                         playerIndex, targetObjectName, targetSeatName)
+
+            -- Attempt to find the vehicle object handle by name
+            local scenarioEntry = engine.tag.filterTags("scenario", "")[1]
+            assert(scenarioEntry, "Scenario tag not found")
+            local scenario = engine.tag.getTagData(scenarioEntry.handle, "scenario")
             assert(scenario, "Scenario not found")
-            for objectId in pairs(blam.getObjects()) do
-                local object = blam.getObject(objectId)
-                if object and object.class == blam.objectClasses.vehicle then
-                    if not blam.isNull(object.nameIndex) then
-                        local objectScenarioName = scenario.objectNames[object.nameIndex + 1]
-                        if objectScenarioName == objectName then
-                            Balltze.logger.warning("Found vehicle object id {} for name {}",
-                                                   objectId, objectName)
-                            local seatIndex = 0
-                            local vehicleTag = blam2.getTagEntry(object.tagId,
-                                                                 blam2.tag.groups.vehicle)
-                            assert(vehicleTag,
-                                   "Vehicle tag not found for object id " .. tostring(objectId))
-                            local vehicle = vehicleTag.data --[[@as MetaEngineTagDataVehicle]]
-                            for i = 1, #vehicle.seats do
-                                local seat = vehicle.seats[i]
-                                if seat.label.string:lower() == targetSeatName:lower() then
-                                    seatIndex = i - 1 -- Convert to 0-based index
-                                    break
-                                end
-                            end
-                            Balltze.logger.debug(
-                                "Player {} will enter vehicle {} on seat {}", playerIndex,
-                                objectId, seatIndex)
-                            enter_vehicle(objectId, playerIndex, seatIndex)
+
+            local vehicleObjects = engine.object.filterObjects("vehicle")
+            for _, objectHandle in pairs(vehicleObjects) do
+                logger.debug("VEHICLE {}:{}", _, objectHandle.value)
+                local object = engine.object.getObject(objectHandle)
+                -- if object and not isNull(object.nameListIndex) then
+                if object and object.nameListIndex then
+                    logger.debug("Index: {}", object.nameListIndex)
+                    local objectNameSlot = scenario.objectNames[object.nameListIndex + 1]
+                    if objectNameSlot then
+                        local objectName = objectNameSlot.name or "INVALID_NAME"
+                        logger.debug("Name: {}", objectName)
+                        if objectName == targetObjectName then
+                            --logger.debug("Player {} will enter vehicle {} on seat {}", playerIndex, objectHandle, targetSeatName)
+                            engine.object.unitEnterVehicle(player.unitHandle, objectHandle,
+                                                           targetSeatName)
                             return
                         end
                     end
@@ -410,8 +437,8 @@ function hsc.unit_enter_vehicle(...)
         end
     end
 
-    -- Invoke the original HSC function
-    --return native("unit_enter_vehicle", ...)
+    -- Fallback to use the original HSC function
+    return native("unit_enter_vehicle", ...)
 end
 
 function hsc.activate_team_nav_point_flag(navpoint, team, cutscene_flag, real)
@@ -480,13 +507,36 @@ end
 
 function hsc.display_scenario_help(index)
     -- TODO Reimplement scenario help display in Lua to support custom maps and display given string
-    --if getServerType() ~= "sapp" then
+    -- if getServerType() ~= "sapp" then
     --    local mapHeader = engine.cacheFile.getLoadedCacheFileHeader()
     --    local mapName = mapHeader and mapHeader.name or ""
     --    Balltze.logger.debug("Displaying scenario help for map {} at index {}", mapName, index)
     --    
     --    return engine.uiWidget.launchWidget
-    --end
+    -- end
+end
+
+-- Send a message to all players in the game, using the in-game chat system
+---@param message string The message to send
+function hsc.sv_say(message)
+    return native("sv_say", message)
+end
+
+--- Get current structure bsp index
+function hsc.structure_bsp_index()
+    return native("structure_bsp_index")
+end
+
+---Set camera control state for all players in the game, using the in-game camera system
+---@param state boolean Give control to the camera if true, otherwise give control back to the player
+function hsc.camera_control(state)
+    return native("camera_control", state)
+end
+
+---Set current game BSP index
+---@param index integer
+function hsc.switch_bsp(index)
+    return native("switch_bsp", index)
 end
 
 -- Bind existing in game HSC functions to Lua
@@ -507,7 +557,7 @@ setmetatable(hsc, {
             if returnType == "boolean" or returnType == "short" or returnType == "long" or
                 returnType == "real" then
                 return function(...)
-                    local args = getScriptArgs({...})
+                    local args = getArgs({...})
                     local functionInvocation = getFunctionInvocation(hscFunction, args)
                     local variableAssignment = getSetVariableInvocation(cacheHscGlobals[returnType],
                                                                         functionInvocation)
@@ -521,13 +571,13 @@ setmetatable(hsc, {
                 -- Let game hs script execution handle not primitive types
             elseif returnType ~= "void" then
                 return function(...)
-                    local args = getScriptArgs({...})
+                    local args = getArgs({...})
                     local functionInvocation = getFunctionInvocation(hscFunction, args)
                     return "(" .. functionInvocation .. ")"
                 end
             else
                 return function(...)
-                    local args = getScriptArgs({...})
+                    local args = getArgs({...})
                     local functionInvokation = getFunctionInvocation(hscFunction, args)
                     -- Balltze.logger.debug("Executing: {}", functionInvokation)
                     executeScript(functionInvokation, hscFunction.funcName, args)

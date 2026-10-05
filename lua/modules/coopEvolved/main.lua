@@ -11,7 +11,40 @@ require "coop.gameplay.utils"
 local hsc = require "hsc"
 local hscDoc = require "hscDoc"
 local parser = require "coop.network.parser"
-local createHscPacket = parser.createHscPacket
+
+function StartMission()
+    script.startup(function(_, sleep)
+        sleep(utils.secondsToTicks(10))
+        sleep(function()
+            logger.debug("Waiting until all players have spawned...")
+            local allPlayersHaveSpawned = false
+            local playerCount = getPlayerCount()
+            if playerCount > 0 then
+                for playerIndex = 0, playerCount - 1 do
+                    local player = engine.player.getPlayer(playerIndex)
+                    if player and not player.unitHandle:isNull() then
+                        local playerUnit = engine.object.getObject(player.unitHandle)
+                        allPlayersHaveSpawned = playerUnit ~= nil
+                    end
+                end
+            end
+            return allPlayersHaveSpawned
+        end, 30)
+        -- Load the actual level script for the current map, if it exists
+        local mapName = engine.cacheFile.getLoadedCacheFileHeader().scenarioName
+        logger.info("Current map name: \"{}\"", mapName)
+
+        local levelName = mapName:split("_coop")[1]
+        logger.debug("Attempting to load level script for \"{}\"", levelName)
+
+        local ok, result = pcall(require, "levels." .. levelName)
+        if not ok then
+            logger.warning("Error loading level script: {}", result)
+        else
+            logger.debug("Loaded level script for \"{}\"", levelName)
+        end
+    end)
+end
 
 script.startup(function(_, sleep)
     component.callbacks()
@@ -44,60 +77,76 @@ script.startup(function(_, sleep)
         end
     end
 
-    -- Load the actual level script for the current map, if it exists
-    local mapName = engine.cacheFile.getLoadedCacheFileHeader().scenarioName
-    logger.info("Current map name: \"{}\"", mapName)
-    local levelName = mapName:split("_coop")[1]
-    logger.debug("Attempting to load level script for \"{}\"", levelName)
-    local ok, result = pcall(require, "levels." .. levelName)
-    if not ok then
-        logger.warning("Error loading level script: {}", result)
-    else
-        logger.debug("Loaded level script for \"{}\"", levelName)
-    end
-
-    if serverType == "networkServer" then
-        hsc.addMiddleWare(function(functionName, args)
-            local funcMeta = table.find(hscDoc.functions, function(v, k)
-                return v.funcName == functionName
-            end)
-            assert(funcMeta, "Function " .. functionName .. " not found in hscDoc")
-            if funcMeta.isSynchronizable then
-                local hscPacket = createHscPacket(functionName, args)
-                if hscPacket then
-                    logger.info("HSC Packet: {}", hscPacket)
-                    balltze.network.broadcast(constants.coopNetworkChannel, hscPacket)
-                end
-            end
-        end)
-    end
-
     if serverType == "networkClient" then
         balltze.network.subscribe(constants.coopNetworkChannel, function(packet,
                                                                          senderPlayerIndex)
-            logger.info("Received HSC Packet: {}", packet)
+            -- logger.debug("Received HSC Packet: {}", packet)
             local hscCommand = parser.parseHscPacket(packet)
             assert(hscCommand, "Error, hsc command is not valid")
             if DebugMode then
-                logger.debug("Executing HSC command: {}", hscCommand)
-                if DebugLevel >= 2 then
-                    logger.debug("Received HSC packet: {}", message)
-                end
+                logger.debug("HS: {}", hscCommand)
             end
             engine.script.execute(hscCommand)
             if hscCommand:includes("camera_set") then
                 local params = hscCommand:split " "
                 local cutsceneCameraPoint = params[2]
                 if DebugMode then
-                    if DebugLevel >= 2 then
-                        logger.debug("Unlocking cinematic camera: {}", cutsceneCameraPoint)
-                    end
+                    logger.debug("Unlocking cinematic camera: {}", cutsceneCameraPoint)
                 end
                 engine.script.execute("object_pvs_set_camera " .. cutsceneCameraPoint)
             end
         end)
+    elseif serverType == "networkServer" then
+        hsc.addMiddleWare(function(functionName, args)
+            local funcMeta = table.find(hscDoc.functions, function(v, k)
+                return v.funcName == functionName
+            end)
+            assert(funcMeta, "Function " .. functionName .. " not found in hscDoc")
+            if funcMeta.isSynchronizable then
+                local hscPacket = parser.createHscPacket(functionName, args)
+                if hscPacket then
+                    -- logger.debug("HSC Packet: {}", hscPacket)
+                    balltze.network.broadcast(constants.coopNetworkChannel, hscPacket)
+                end
+            end
+        end)
     end
+
+    StartMission()
 end)
+
+local lastBspIndex = 0
+-- Ensure to find new spawn points when the BSP index changes
+script.continuous(function(_, sleep)
+    local currentBspIndex = lastBspIndex
+    sleep(function()
+        ---@diagnostic disable-next-line: undefined-field
+        currentBspIndex = hsc.structure_bsp_index()
+        return currentBspIndex ~= lastBspIndex
+    end)
+    lastBspIndex = currentBspIndex
+    logger.debug("BSP index changed to {}, finding new spawn points!", lastBspIndex)
+
+    -- Engine volume trigger bsp changes do not sync, force it with this!
+    hsc.switch_bsp(currentBspIndex)
+
+    coop.findNewSpawn(nil, true)
+
+    sleep(utils.secondsToTicks(3))
+end)
+
+local function respawnOutSidePlayers()
+    for playerIndex = constants.firstPlayerIndex, constants.lastPlayerIndex do
+        local player = engine.player.getPlayer(playerIndex)
+        if player and not player.unitHandle:isNull() then
+            local playerUnit = engine.object.getObject(player.unitHandle)
+            if playerUnit and playerUnit.flags1.outsideOfMap then
+                engine.object.deleteObject(player.unitHandle)
+            end
+        end
+    end
+end
+script.continuous(respawnOutSidePlayers)
 
 local lastBipedTagHandle
 
@@ -122,3 +171,46 @@ local function overrideBspTriggers(_, sleep)
     -- script.continuous(coop.startCbspMonitor)
 end
 -- script.startup(overrideBspTriggers)
+
+local isItemsSystemOverridden = true
+
+if engine.game.getGameConnectionType() == "networkServer" then
+    script.startup(function(_, sleep)
+        -- Wait for at least one tick before starting to override the items
+        sleep(1)
+
+        script.continuous(function()
+            if isItemsSystemOverridden then
+                -- Save CPU by sleeping a bit
+                -- logger.info("Dynamically controlling network items...")
+                coop.dynamicallyControlNetworkItems()
+                sleep(10)
+            end
+        end)
+
+        script.continuous(function()
+            if isItemsSystemOverridden then
+                -- logger:debug("Respawning scenario items...")
+                -- coop.dynamicallySpawnScenarioItems()
+                script.sleep(utils.secondsToTicks(10))
+            end
+        end)
+    end)
+end
+
+local latestPlayerCount = 0
+
+-- Check if player count changes and consider it some kind of "player join" so we push the switch bsp
+script.continuous(function(_, sleep)
+    local playerCount = getPlayerCount()
+    sleep(function()
+        --logger.debug("Waiting for new player to join...")
+        playerCount = getPlayerCount()
+        return playerCount > latestPlayerCount
+    end)
+    latestPlayerCount = playerCount
+    logger.debug("Detected new player joined! {}", playerCount)
+
+    -- Engine volume trigger bsp changes do not sync, force it with this!
+    hsc.switch_bsp(hsc.structure_bsp_index())
+end)

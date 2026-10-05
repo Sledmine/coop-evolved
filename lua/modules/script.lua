@@ -164,8 +164,7 @@ function script.sleep(...)
             -- Balltze.logger.warning("Script thread for function \"{}\" already has a child, removing it and replacing with new sleep thread", scriptFunc)
         end
         if ticks == -1 then
-            Balltze.logger.debug("Sleeping script thread for function \"{}\" until woken up",
-                                 scriptFunc)
+            --Balltze.logger.debug("Sleeping script thread for function \"{}\" until woken up", scriptFunc)
         end
         local _, sleepThread = script.thread(function()
             sleepThreadFor(ticks)
@@ -345,7 +344,7 @@ end
 function script.wake(func)
     local foundScript = findScriptThreadByFunc(func)
     if foundScript then
-        Balltze.logger.debug("Waking script thread for function.")
+        --Balltze.logger.debug("Waking script thread for function.")
         local child = getBottomMostScriptChild(foundScript)
         if child and child.isSleep then
             -- Technically this is a sleep thread, so we can just remove it from the trace

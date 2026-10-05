@@ -1,4 +1,3 @@
-local blam = require "blam"
 local coop = require "coop.coop"
 local luna = require "luna"
 
@@ -12,17 +11,7 @@ return {
             coop.enableSpawn(true)
             console_out("Enabling all spawns by force...")
             return false
-        end
-    },
-    test_menu = {
-        description = "Test menu",
-        help = "",
-        minArgs = 0,
-        maxArgs = 0,
-        func = function()
-            blam.rcon.dispatch("CoopMenu")
-            return false
-        end
+        end,
     },
     debug = {
         description = "Debug",
@@ -34,6 +23,7 @@ return {
             DebugMode = luna.bool(enable)
             logger.muteDebug(not DebugMode)
             return false
-        end
+        end,
+        save = true
     },
 }

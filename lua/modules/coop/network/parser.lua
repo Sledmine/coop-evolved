@@ -5,6 +5,7 @@ local parser = {}
 local hscDoc = require "hscDoc"
 local concat = table.concat
 local split = string.split
+local hsc = require "hsc"
 
 local snakeCaseTagClasses = {
     actor_variant = "actv",
@@ -97,7 +98,7 @@ local packetSeparator = ","
 local function getObjectIndexByName(objectName)
     local scenarioEntry = engine.tag.filterTags("scenario", "")[1]
     assert(scenarioEntry, "Failed to load scenario tag")
-    local scenario = engine.tag.getTagData(scenarioEntry.handle.value, "scenario")
+    local scenario = engine.tag.getTagData(scenarioEntry.handle, "scenario")
     assert(scenario, "Failed to load scenario tag")
     local names = table.map(scenario.objectNames, function(object)
         return object.name
@@ -111,7 +112,7 @@ end
 local function getObjectNameByIndex(objectIndex)
     local scenarioEntry = engine.tag.filterTags("scenario", "")[1]
     assert(scenarioEntry, "Failed to load scenario tag")
-    local scenario = engine.tag.getTagData(scenarioEntry.handle.value, "scenario")
+    local scenario = engine.tag.getTagData(scenarioEntry.handle, "scenario")
     assert(scenario, "Failed to load scenario tag")
     local names = table.map(scenario.objectNames, function(object)
         return object.name
@@ -146,8 +147,7 @@ function parser.createHscPacket(functionName, funcArgs)
     local funcMeta = table.find(hscDoc.functions, function(v, k)
         return v.funcName == functionName
     end)
-    logger.debug("Creating HSC packet for function: \"{}\" with args: {}", functionName,
-                 inspect(funcArgs))
+    -- logger.debug("Creating HSC packet for function: \"{}\" with args: {}", functionName, inspect(funcArgs))
     if not funcMeta then
         error("Function " .. functionName .. " not found in hscDoc")
     end
@@ -156,27 +156,32 @@ function parser.createHscPacket(functionName, funcArgs)
         if argType == "object" then
             local objectIndex = getObjectIndexByName(argValue)
             if objectIndex then
-                logger.debug("Value {} is an object, converting to object index!", argValue)
+                -- logger.debug("Value {} is an object, converting to object index!", argValue)
                 return objectIndex
             end
         elseif argType == "tag" then
             local argIsSubExpression = argValue:startswith "(" and argValue:endswith ")"
             if not argIsSubExpression then
-                local tagGroup = table.flip(snakeCaseTagClasses)[tagType]
+                local tagGroup = table.flip(snakeCaseTagClasses)[tagType] --[[@as TagGroup]]
                 assert(tagGroup, "Tag group not found for tag type: " .. tagType)
-                logger.info("Looking for tag in group \"{}\" with value \"{}\"", tagGroup, argValue)
-                local tagEntry = engine.tag.filterTags(tagGroup, argValue)[1]
-                if tagEntry then
-                    -- logger.debug("Value {} is a tag, converting to tag handle!", argValue)
-                    return tagEntry.handle.value
+                --logger.debug("Looking for tag in group \"{}\" with value \"{}\"", tagGroup, argValue)
+                local tagHandle = engine.tag.lookupTag(argValue, tagGroup)
+                if not tagHandle then
+                    logger.error("Could not find tag \"{}\" with value: \"{}\"", tagGroup, argValue)
+                    return ""
                 end
+                -- logger.debug("Value {} is a tag, converting to tag handle!", argValue)
+                assert(tagHandle)
+                return tagHandle.value
             end
         end
         return argValue
     end)
     local name = funcMeta.funcName
+    -- Prevent creating/destroying objects in client that are already synced by netcode
     if (name:startswith("object_create") or name:startswith("object_destroy")) and
         not name:endswith("containing") then
+        --logger.debug("Object create/destroy args: {}", tostring(inspect(args)))
         local objectNameIndex = tointeger(tostring(args[1]))
         if not objectNameIndex then
             -- This usually happens when the argument is a sub-expression like (object_get_first ...)
@@ -184,38 +189,39 @@ function parser.createHscPacket(functionName, funcArgs)
             logger.error("Failed to convert object name index to integer!")
             return
         end
-        -- logger.debug("Object name index: {}", objectNameIndex)
-        --local scenario = blam.scenario(0)
-        --assert(scenario, "Failed to load scenario tag")
-        -- FIXME Dirty hack to force default unit state
-        -- local scenarioEntry = blam2.tag.findTag("", blam2.tag.groups.scenario) --[[@as MetaEngineScenarioTag]]
-        -- assert(scenarioEntry)
-        -- for vehicleElementIndex = 1, scenarioEntry.data.vehicles.count do
-        --    local vehicleElement = scenarioEntry.data.vehicles.elements[vehicleElementIndex]
-        --    if vehicleElement.name == objectNameIndex - 1 then
-        --        logger.warning("Forcing close state in vehicle \"{}\"", funcArgs[1])
-        --        script.thread(function (_, sleep)
-        --            sleep(30)
-        --            hsc.unit_close(funcArgs[1])
-        --        end)()
-        --    end
-        -- end
 
-        -- BALLTZE MIGRATE
-        --for objectId in pairs(blam.getObjects()) do
-        --    local object = blam.getObject(objectId)
-        --    if object and object.nameIndex == objectNameIndex - 1 then
-        --        if object.class == objectClasses.biped then
-        --            -- logger.debug("Object {} is a biped, not syncing!", objectNameIndex)
-        --            return
-        --        elseif object.class == objectClasses.vehicle then
-        --            -- logger.debug("Object {} is a vehicle, not syncing!", objectNameIndex)
-        --        elseif object.class == objectClasses.weapon then
-        --            -- logger.debug("Object {} is a weapon, not syncing!", objectNameIndex)
-        --            return
-        --        end
-        --    end
-        --end
+        local bipedObjects = engine.object.filterObjects("biped")
+        local biped = table.find(bipedObjects, function(v, k)
+            local object = engine.object.getObject(v, "biped")
+            assert(object)
+            return object.nameListIndex == objectNameIndex
+        end)
+        if biped then
+            -- logger.debug("Object {} is a biped, not syncing!", objectNameIndex)
+            return
+        end
+
+        local weaponObjects = engine.object.filterObjects("weapon")
+        local weapon = table.find(weaponObjects, function(v, k)
+            local object = engine.object.getObject(v, "weapon")
+            assert(object)
+            return object.nameListIndex == objectNameIndex
+        end)
+        if weapon then
+            -- logger.debug("Object {} is a weapon, not syncing!", objectNameIndex)
+            return
+        end
+
+        local vehicleObjects = engine.object.filterObjects("vehicle")
+        local vehicle = table.find(vehicleObjects, function(v, k)
+            local object = engine.object.getObject(v, "vehicle")
+            assert(object)
+            return object.nameListIndex == objectNameIndex
+        end)
+        if vehicle then
+            -- logger.debug("Object {} is a vehicle, not syncing!", objectNameIndex)
+            return
+        end
     end
 
     local packet = {packetPrefix .. funcMeta.hash, table.unpack(args)}
@@ -224,7 +230,6 @@ function parser.createHscPacket(functionName, funcArgs)
 end
 
 function parser.parseHscPacket(packet)
-    logger.debug("Parsing HSC packet: {}", packet)
     assert(packet and packet:startswith(packetPrefix), "Invalid HSC packet")
     local packetParts = split(packet:replace(packetPrefix, ""), packetSeparator)
     local funcHash = packetParts[1]
@@ -232,6 +237,7 @@ function parser.parseHscPacket(packet)
         return v.hash == funcHash
     end)
     assert(funcMeta, "Function not found in hscDoc")
+    --logger.debug("Packet: {}", tostring(inspect(packetParts)))
     local packetData = table.slice(packetParts, 2)
     packetData = table.map(packetData, function(argValue, argIndex)
         local argIsSubExpression = argValue:startswith "(" and argValue:endswith ")"
@@ -239,7 +245,7 @@ function parser.parseHscPacket(packet)
             return argValue
         end
         local argType = getArgType(funcMeta, argIndex)
-        logger.debug("Arg type: \"{}\" for value: \"{}\"", argType, argValue)
+        -- logger.debug("Arg type: \"{}\" for value: \"{}\"", argType, argValue)
         if argType == "object" then
             if argValue == "none" or argValue == "" then
                 return argValue
@@ -248,19 +254,24 @@ function parser.parseHscPacket(packet)
             assert(objectIndex, "Failed to convert object index to number")
             local objectName = getObjectNameByIndex(objectIndex)
             if objectName then
-                -- logger:debug("Value {} is an object index, converting to object name!", argValue)
+                -- logger.debug("Value {} is an object index, converting to object name!", argValue)
                 return objectName
             end
         elseif argType == "tag" then
-            local tagEntry = engine.tag.getTagEntry(tointeger(argValue))
-            if tagEntry then
-                -- logger:debug("Value {} is a tag handle, converting to tag path!", argValue)
-                return tagEntry.path
+            local handleValue = tointeger(argValue)
+            -- local tagEntry = engine.tag.getTagEntry(handleValue)
+            local tagFound, tagEntry = pcall(engine.tag.getTagEntry, handleValue)
+            if not tagFound then
+                logger.error("Could not find tag with handle: {}", tostring(argValue))
+                return ""
             end
+            assert(tagEntry)
+            -- logger.debug("Value {} is a tag handle, converting to tag path!", argValue)
+            return tagEntry.path
         end
         return argValue
     end)
-    return funcMeta.funcName .. " " .. concat(packetData, " ")
+    return funcMeta.funcName .. " " .. concat(hsc.getScriptArgs(packetData), " ")
 end
 
 return parser
